@@ -20,7 +20,7 @@ export const deleteMeetingCommand = new Command('delete-meeting')
         { name: '→ Enter manually', value: '__manual__' },
       ]
 
-      const selectAnswer = await inquirer.prompt([
+      const selectAnswer = await inquirer.prompt<{ meeting: string }>([
         {
           type: 'list',
           name: 'meeting',
@@ -32,7 +32,7 @@ export const deleteMeetingCommand = new Command('delete-meeting')
 
       if (selectAnswer.meeting === '__manual__') {
         // Manual input
-        const manualAnswer = await inquirer.prompt([
+        const manualAnswer = await inquirer.prompt<{ meeting: string }>([
           {
             type: 'input',
             name: 'meeting',
@@ -46,7 +46,7 @@ export const deleteMeetingCommand = new Command('delete-meeting')
       }
     } else {
       // No meetings found, fallback to manual input
-      const manualAnswer = await inquirer.prompt([
+      const manualAnswer = await inquirer.prompt<{ meeting: string }>([
         {
           type: 'input',
           name: 'meeting',
@@ -66,7 +66,7 @@ export const deleteMeetingCommand = new Command('delete-meeting')
     console.log('  - Obsidian notes (meeting note, transcript page)')
     console.log('')
 
-    const confirmAnswer = await inquirer.prompt([
+    const confirmAnswer = await inquirer.prompt<{ confirmed: boolean }>([
       {
         type: 'confirm',
         name: 'confirmed',
@@ -100,7 +100,7 @@ export const deleteMeetingCommand = new Command('delete-meeting')
     child.on('exit', (code) => {
       if (code !== 0) {
         console.error(`\nDeletion failed with exit code ${code}`)
-        process.exit(code || 1)
+        process.exit(code ?? 1)
       }
     })
   })
