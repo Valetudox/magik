@@ -248,6 +248,45 @@ Make multiple small commits with pushes rather than one large commit. Each commi
     } else {
       console.log(`\n✓ Successfully completed! Branch '${branchName}' is on remote`);
       console.log(`  View at: https://github.com/${owner}/${repo}/tree/${branchName}`);
+
+      // Step 7: Create pull request
+      console.log("\nCreating pull request...");
+
+      const prBody = `## Task
+
+${prompt}
+
+## Changes
+
+This PR was automatically generated using Claude Code in an E2B sandbox.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)`;
+
+      const prResult = await sandbox.commands.run(
+        `cd ${workspacePath} && gh pr create --title '${escapeShellArg(branchName)}' --body '${escapeShellArg(prBody)}'`,
+        {
+          timeoutMs: 0,
+          onStdout: (line) => console.log(line),
+          onStderr: (line) => console.error(line),
+        }
+      );
+
+      if (prResult.exitCode !== 0) {
+        console.log(`\n⚠ Warning: Failed to create pull request: ${prResult.stderr}`);
+        console.log(`Branch '${branchName}' was pushed successfully. You can create the PR manually.`);
+        console.log(`  View at: https://github.com/${owner}/${repo}/tree/${branchName}`);
+      } else {
+        // Extract PR URL from gh output (it's in stdout)
+        const prUrl = prResult.stdout.trim().split('\n').find(line => line.startsWith('https://'));
+
+        if (prUrl) {
+          console.log(`\n✓ Successfully created pull request!`);
+          console.log(`  PR URL: ${prUrl}`);
+        } else {
+          console.log(`\n✓ Pull request created successfully!`);
+          console.log('Output:', prResult.stdout);
+        }
+      }
     }
   } catch (error) {
     console.error("\n✗ Repository workflow failed:", error);

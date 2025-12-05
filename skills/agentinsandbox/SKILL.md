@@ -68,6 +68,8 @@ Clone a repo, create a branch, run a prompt, commit changes, and push.
 3. Runs Claude with your prompt
 4. Claude makes multiple commits as it works
 5. Pushes branch to GitHub
+6. **Creates a pull request automatically**
+7. Logs the PR URL for review
 
 ---
 
