@@ -12,7 +12,7 @@ export const recordCommand = new Command('record')
   .description('Record audio to WAV file (processing handled by Airflow DAG)')
   .action(async () => {
     // Interactive prompts
-    const answers = await inquirer.prompt([
+    const answers = await inquirer.prompt<{ name: string; language: string }>([
       {
         type: 'input',
         name: 'name',
@@ -41,7 +41,7 @@ export const recordCommand = new Command('record')
     const recordScriptPath = join(SCRIPTS_DIR, 'audio', 'recordAudio.sh')
 
     // Function to create metadata file
-    const createMetadata = () => {
+    function createMetadata() {
       const metadata = {
         meeting_name: name,
         language: language,
@@ -58,7 +58,8 @@ export const recordCommand = new Command('record')
         console.log('Processing pipeline will start automatically via Airflow DAG.')
         console.log('Monitor progress at: http://localhost:8080')
       } catch (error) {
-        console.error(`Warning: Failed to create metadata file: ${error}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error(`Warning: Failed to create metadata file: ${errorMessage}`)
         console.log(`Recording saved, but you may need to process manually: ${wavPath}`)
       }
     }

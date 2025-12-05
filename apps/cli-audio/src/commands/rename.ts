@@ -11,7 +11,6 @@ export const renameCommand = new Command('rename')
     const recentMeetings = await getRecentMeetings()
 
     let old: string
-    let newName: string
 
     if (recentMeetings.length > 0) {
       // Show list of recent meetings + option to enter manually
@@ -21,7 +20,7 @@ export const renameCommand = new Command('rename')
         { name: '→ Enter manually', value: '__manual__' },
       ]
 
-      const selectAnswer = await inquirer.prompt([
+      const selectAnswer = await inquirer.prompt<{ old: string }>([
         {
           type: 'list',
           name: 'old',
@@ -33,7 +32,7 @@ export const renameCommand = new Command('rename')
 
       if (selectAnswer.old === '__manual__') {
         // Manual input
-        const manualAnswer = await inquirer.prompt([
+        const manualAnswer = await inquirer.prompt<{ old: string }>([
           {
             type: 'input',
             name: 'old',
@@ -47,7 +46,7 @@ export const renameCommand = new Command('rename')
       }
     } else {
       // No meetings found, fallback to manual input
-      const manualAnswer = await inquirer.prompt([
+      const manualAnswer = await inquirer.prompt<{ old: string }>([
         {
           type: 'input',
           name: 'old',
@@ -59,7 +58,7 @@ export const renameCommand = new Command('rename')
     }
 
     // Ask for new name
-    const newNameAnswer = await inquirer.prompt([
+    const newNameAnswer = await inquirer.prompt<{ new: string }>([
       {
         type: 'input',
         name: 'new',
@@ -68,7 +67,7 @@ export const renameCommand = new Command('rename')
       },
     ])
 
-    newName = newNameAnswer.new
+    const newName = newNameAnswer.new
 
     console.log('')
     console.log(`Renaming meeting from '${old}' to '${newName}'...`)
@@ -88,7 +87,7 @@ export const renameCommand = new Command('rename')
     child.on('exit', (code) => {
       if (code !== 0) {
         console.error(`Process exited with code ${code}`)
-        process.exit(code || 1)
+        process.exit(code ?? 1)
       }
     })
   })
