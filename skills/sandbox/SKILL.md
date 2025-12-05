@@ -3,167 +3,210 @@ name: sandbox
 description: Execute prompts using Claude Code CLI in an isolated E2B sandbox
 ---
 
-# Sandbox Execution Skill
+# Sandbox Skill
 
-Execute prompts using Claude Code CLI within an isolated E2B cloud sandbox.
-
-## Overview
-
-This skill provides secure code execution capabilities by running Claude Code CLI prompts in isolated E2B sandboxes. Each execution happens in a fresh, isolated environment that is automatically cleaned up after completion.
+Run Claude Code CLI prompts in isolated E2B sandboxes. Two modes: basic execution or full repository automation.
 
 ## Requirements
 
-- E2B API key must be set in environment (automatically loaded from .bashrc)
-- CLAUDE_CODE_OAUTH_TOKEN must be set in environment (automatically loaded from .bashrc)
+- `E2B_API_KEY` - E2B API key (required for all modes)
+- `CLAUDE_CODE_OAUTH_TOKEN` - Claude Code authentication token (only for modes 1 & 2)
+- `GITHUB_TOKEN` - GitHub token (only for repository automation mode 2) (generate at: https://github.com/settings/tokens/new)
 
-## Workflow
-
-1. **Receive execution request**: Agent receives a prompt that needs to be executed in a sandbox
-2. **Execute script**: Run `./execute-sandbox.ts "<prompt>"`
-3. **Sandbox creation**: Script creates an E2B sandbox with Claude Code CLI
-4. **Prompt execution**: Prompt is piped to Claude CLI within the sandbox
-5. **Stream output**: Output is streamed back in real-time
-6. **Automatic cleanup**: Sandbox is automatically destroyed after execution
-
-## Usage
-
-The skill can be invoked by executing the script with a prompt as an argument:
-
-```bash
-./execute-sandbox.ts "Write a Python script to calculate fibonacci numbers"
-```
-
-Or by piping a prompt to the script:
-
-```bash
-echo "Analyze this code for security vulnerabilities" | ./execute-sandbox.ts
-```
-
-## Examples
-
-- `./execute-sandbox.ts "Write a Python script to calculate fibonacci"`
-- `./execute-sandbox.ts "Create a simple web server in Node.js"`
-- `./execute-sandbox.ts "Analyze the security of this code snippet"`
-- `./execute-sandbox.ts "Generate a diagram showing the architecture"`
+**Note:** Direct code execution scripts (mode 3) only require `E2B_API_KEY`.
 
 ---
 
-## Repository Automation
+## 1. Basic Sandbox Execution
 
-Execute prompts on GitHub repositories with automatic branch creation, commits, and pushing.
+Run a prompt in an isolated sandbox.
 
-### Requirements
+**Script:** `execute-prompt-in-sandbox.ts` (alias: `execute-sandbox.ts`)
 
-- E2B API key (same as sandbox execution)
-- CLAUDE_CODE_OAUTH_TOKEN (same as sandbox execution)
-- **GITHUB_TOKEN** - Personal Access Token with repo access
-  - Generate at: https://github.com/settings/tokens/new
-  - Required scopes: `repo` (full control of private repositories)
-
-### Workflow
-
-1. **Receive automation request**: Agent receives repository URL, branch name, and prompt
-2. **Execute script**: Run `./execute-on-repo.ts <repo-url> <branch-name> "<prompt>"`
-3. **Sandbox creation**: Script creates an E2B sandbox with Claude Code CLI and git
-4. **Repository cloning**: Clone the repository using GitHub token authentication
-5. **Branch creation**: Create a new branch (fails if branch exists remotely)
-6. **Prompt execution**: Execute the Claude prompt with automatic commit instructions
-7. **Multiple commits**: Claude makes multiple commits as it completes logical units of work
-8. **Final commit**: Create final commit if Claude left uncommitted changes
-9. **Push to remote**: Push the branch to GitHub
-10. **Automatic cleanup**: Sandbox is automatically destroyed after completion
-
-### Usage
-
+**Usage:**
 ```bash
-./execute-on-repo.ts <repo-url> <branch-name> "<prompt>"
+./execute-prompt-in-sandbox.ts "<prompt>"
+```
+
+**Examples:**
+```bash
+./execute-prompt-in-sandbox.ts "Write a Python script to calculate fibonacci numbers"
+./execute-prompt-in-sandbox.ts "Create a simple web server in Node.js"
+```
+
+---
+
+## 2. Repository Automation
+
+Clone a repo, create a branch, run a prompt, commit changes, and push.
+
+**Script:** `execute-prompt-on-repo-in-sandbox.ts` (alias: `execute-on-repo.ts`)
+
+**Usage:**
+```bash
+./.claude/skills/sandbox/execute-prompt-on-repo-in-sandbox.ts <repo-url> <branch-name> "<prompt>"
 ```
 
 **Parameters:**
-- `repo-url` - GitHub repository HTTPS URL (e.g., https://github.com/user/repo.git)
-- `branch-name` - Name for the new branch to create (must not exist remotely)
-- `prompt` - What you want Claude to do in the repository
+- `repo-url` - GitHub HTTPS URL (e.g., `https://github.com/user/repo.git`)
+- `branch-name` - New branch name (must not exist remotely)
+- `prompt` - What you want Claude to do
 
-### Examples
-
+**Examples:**
 ```bash
 # Add documentation
-./execute-on-repo.ts https://github.com/myorg/myrepo.git docs/add-readme "Create a comprehensive README.md file with installation instructions, usage examples, and API documentation"
+./.claude/skills/sandbox/execute-prompt-on-repo-in-sandbox.ts https://github.com/myorg/myrepo.git docs/readme "Create a comprehensive README with installation and usage"
 
 # Fix bugs
-./execute-on-repo.ts https://github.com/myorg/myrepo.git fix/auth-bug "Fix the authentication bug in src/auth.ts where tokens are not being validated correctly"
+./.claude/skills/sandbox/execute-prompt-on-repo-in-sandbox.ts https://github.com/myorg/myrepo.git fix/auth-bug "Fix the token validation bug in src/auth.ts"
 
 # Add tests
-./execute-on-repo.ts https://github.com/myorg/myrepo.git test/user-service "Add comprehensive unit tests for UserService including edge cases and error scenarios"
-
-# Refactor code
-./execute-on-repo.ts https://github.com/myorg/myrepo.git refactor/api-handlers "Refactor the API handlers to use async/await and improve error handling"
-
-# Add new feature
-./execute-on-repo.ts https://github.com/myorg/myrepo.git feature/dark-mode "Implement dark mode support with theme toggle in settings"
+./.claude/skills/sandbox/execute-prompt-on-repo-in-sandbox.ts https://github.com/myorg/myrepo.git test/user-service "Add unit tests for UserService"
 ```
 
-### Automatic Commits
+**What happens:**
+1. Clones repo
+2. Creates new branch
+3. Runs Claude with your prompt
+4. Claude makes multiple commits as it works
+5. Pushes branch to GitHub
 
-Claude is instructed via `--append-system-prompt` to commit frequently:
+---
 
-- Makes multiple small commits during execution
-- Each commit represents a logical unit of work
-- Uses semantic commit messages: `type(scope): description`
-- Examples: `feat(api): add user endpoint`, `fix(ui): resolve alignment issue`
+## 3. Direct Code Execution in Sandbox
 
-This means you'll see a series of commits on the branch, not just one large commit at the end.
+Execute TypeScript, Python, or Bash code directly in the sandbox without Claude Code CLI. Pipe your code to these scripts via stdin.
 
-### Error Handling
+**Scripts:**
+- `execute-bash-code.ts` - Execute bash commands/scripts
+- `execute-python-code.ts` - Execute Python code
+- `execute-node-code.ts` - Execute Node.js/TypeScript code
 
-The script validates and handles:
+**Usage:**
+```bash
+echo "your code here" | ./execute-bash-code.ts
+echo "your code here" | ./execute-python-code.ts
+echo "your code here" | ./execute-node-code.ts
 
-- **Missing environment variables**: GITHUB_TOKEN or CLAUDE_CODE_OAUTH_TOKEN not set
-- **Invalid GitHub URL**: URL is not in format `https://github.com/owner/repo(.git)?`
-- **Invalid branch name**: Contains spaces or special characters (~ ^ : ? * [ \)
-- **Branch already exists**: Specified branch name exists on remote
-- **Authentication failure**: GITHUB_TOKEN is invalid or lacks repo access
-- **Repository not found**: Repository URL is incorrect or token lacks permissions
-- **No changes to commit**: Claude didn't modify any files (warning, not error)
-- **Push rejection**: Branch was created by another process during execution
+# Or from a file:
+cat script.py | ./execute-python-code.ts
+cat script.js | ./execute-node-code.ts
+cat script.sh | ./execute-bash-code.ts
+```
 
-### Common Errors
+### TypeScript/JavaScript Execution
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Branch already exists" | Branch name exists on remote | Choose a different branch name |
-| "Authentication failed" | Invalid GITHUB_TOKEN | Check token is valid and has repo access |
-| "Repository not found" | Incorrect URL or permissions | Verify URL and token has read access |
-| "Invalid branch name" | Special characters in name | Use only letters, numbers, hyphens, slashes |
-| "Push rejected" | Branch created elsewhere | Choose a different branch name |
+**Example: Run TypeScript directly**
+```bash
+echo 'const factorial = (n: number): number => {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+};
+console.log("Factorial of 10:", factorial(10));' | ./execute-node-code.ts
+```
 
-### Security
+**Example: Run JavaScript directly**
+```bash
+echo "console.log('Hello from JS:', Math.random());" | ./execute-node-code.ts
+```
 
-- **Token protection**: GITHUB_TOKEN is never logged in command output
-- **Sanitized errors**: Error messages have tokens removed automatically
-- **Ephemeral sandboxes**: All execution in isolated E2B cloud environments
-- **Automatic cleanup**: Credentials cleared when sandbox is destroyed
-- **Scoped access**: Token only used for the specified repository operations
+**Example: From a file**
+```bash
+cat my-script.ts | ./execute-node-code.ts
+```
 
-### Git Identity
+### Python Execution
 
-All commits are made with the identity:
-- **Name**: Claude Code Bot
-- **Email**: bot@claude.com
+**Example: Run Python code directly**
+```bash
+echo 'import json
+import random
 
-This clearly identifies automated commits in the git history.
+data = [random.randint(1, 100) for _ in range(10)]
+with open("output.json", "w") as f:
+    json.dump(data, f, indent=2)
+print("Generated:", data)' | ./execute-python-code.ts
+```
 
-## Technical Details
+**Example: Simple Python execution**
+```bash
+echo 'import sys; print(f"Python {sys.version}")' | ./execute-python-code.ts
+```
 
-- Uses E2B SDK for sandbox management
-- Executes Claude CLI with `--dangerously-skip-permissions` flag (safe within sandbox)
-- No execution timeout (runs until completion)
-- Real-time stdout/stderr streaming
-- Automatic sandbox cleanup on completion or error
+**Example: From a file**
+```bash
+cat my-script.py | ./execute-python-code.ts
+```
 
-## Security
+### Bash Script Execution
 
-- All execution happens in isolated E2B cloud sandboxes
-- No access to local filesystem or network
-- Sandboxes are ephemeral and destroyed after each execution
-- Environment variables are properly isolated
+**Example: Run bash commands directly**
+```bash
+echo 'echo "System Info:"
+uname -a
+df -h
+echo "User: $(whoami)"' | ./execute-bash-code.ts
+```
+
+**Example: Multi-line bash script**
+```bash
+echo '#!/bin/bash
+for i in {1..5}; do
+  echo "Number: $i"
+done' | ./execute-bash-code.ts
+```
+
+**Example: From a file**
+```bash
+cat my-script.sh | ./execute-bash-code.ts
+```
+
+### Retrieving Output Files
+
+When executing code that generates files, include commands to display the file contents in your code.
+
+**Example: Generate JSON and retrieve it**
+```bash
+echo 'import json
+data = {"users": [{"id": i, "name": f"user{i}"} for i in range(5)]}
+with open("data.json", "w") as f:
+    json.dump(data, f, indent=2)
+
+# Read and display the file
+with open("data.json") as f:
+    print(f.read())' | ./execute-python-code.ts
+```
+
+**Example: Generate CSV with bash**
+```bash
+echo 'cat > data.csv << EOF
+name,email,age
+Alice,alice@example.com,30
+Bob,bob@example.com,25
+EOF
+
+echo "=== Generated CSV ==="
+cat data.csv' | ./execute-bash-code.ts
+```
+
+**Example: TypeScript with file output**
+```bash
+echo 'import { writeFileSync, readFileSync } from "fs";
+
+const data = {
+  timestamp: new Date().toISOString(),
+  values: Array.from({ length: 5 }, () => Math.random())
+};
+
+writeFileSync("result.json", JSON.stringify(data, null, 2));
+console.log("Generated result.json:");
+console.log(readFileSync("result.json", "utf-8"));' | ./execute-node-code.ts
+```
+
+**How it works:**
+- Code runs directly in the E2B sandbox environment
+- Files created in `/home/user/` or current directory persist during the session
+- Include file reading commands (cat, print, console.log) in your code to retrieve output
+- Sandbox is ephemeral - files are deleted after session ends
+- No Claude Code CLI overhead - just direct code execution
+

@@ -141,8 +141,8 @@ async function executeRepoWorkflow(
   branchName: string,
   prompt: string
 ): Promise<void> {
-  const { owner, repo } = extractRepoInfo(repoUrl);
-  const workspacePath = "/workspace/repo";
+  const { owner, repo} = extractRepoInfo(repoUrl);
+  const workspacePath = "/home/user/repo";
 
   console.log("Creating E2B sandbox with git and Claude Code CLI...");
 
@@ -183,10 +183,10 @@ async function executeRepoWorkflow(
       }
     }
 
-    // Step 2: Configure git identity
-    console.log("\nConfiguring git identity...");
+    // Step 2: Configure git identity and remote URL with token
+    console.log("\nConfiguring git identity and authentication...");
     await sandbox.commands.run(
-      `cd ${workspacePath} && git config user.name "Claude Code Bot" && git config user.email "bot@claude.com"`,
+      `cd ${workspacePath} && git config user.name "Claude Code Bot" && git config user.email "bot@claude.com" && git remote set-url origin https://\${GITHUB_TOKEN}@github.com/${owner}/${repo}.git`,
       {
         onStdout: (line) => console.log(line),
         onStderr: (line) => console.error(line),
@@ -232,11 +232,18 @@ async function executeRepoWorkflow(
     console.log("\nExecuting Claude Code CLI with prompt...");
     console.log("─".repeat(60));
 
-    const commitInstructions =
-      "After completing each logical unit of work, commit your changes with git. Use descriptive semantic commit messages following the pattern: type(scope): description. Make multiple small commits rather than one large commit. Always run git status to check what files changed before committing.";
+    const fullPrompt = `${prompt}
+
+IMPORTANT: After completing each logical unit of work:
+1. Run git status to check what files changed
+2. Commit your changes with a descriptive semantic commit message (pattern: type(scope): description)
+3. IMMEDIATELY push the commit to the remote repository with: git push origin ${branchName}
+4. Continue with the next unit of work
+
+Make multiple small commits with pushes rather than one large commit. Each commit should be pushed immediately after creation.`;
 
     const executeResult = await sandbox.commands.run(
-      `cd ${workspacePath} && echo '${escapeShellArg(prompt)}' | claude -p --dangerously-skip-permissions --append-system-prompt "${escapeShellArg(commitInstructions)}"`,
+      `cd ${workspacePath} && echo '${escapeShellArg(fullPrompt)}' | claude -p --dangerously-skip-permissions`,
       {
         timeoutMs: 0, // No timeout
         onStdout: (line) => console.log(line),
@@ -250,86 +257,20 @@ async function executeRepoWorkflow(
       throw new Error(`Claude execution failed with exit code ${executeResult.exitCode}`);
     }
 
-    // Step 6: Check for any uncommitted changes
-    console.log("\nChecking for uncommitted changes...");
-    const statusResult = await sandbox.commands.run(
-      `cd ${workspacePath} && git status --porcelain`,
+    // Step 6: Verify branch was pushed
+    console.log("\nVerifying branch was pushed...");
+    const verifyResult = await sandbox.commands.run(
+      `cd ${workspacePath} && git ls-remote --heads origin ${branchName}`,
       { timeoutMs: 0 }
     );
 
-    const hasUncommittedChanges = statusResult.stdout.trim().length > 0;
-
-    if (hasUncommittedChanges) {
-      console.log("Found uncommitted changes, creating final commit...");
-
-      // Stage all changes
-      await sandbox.commands.run(`cd ${workspacePath} && git add -A`, {
-        onStdout: (line) => console.log(line),
-        onStderr: (line) => console.error(line),
-      });
-
-      // Check if there are staged changes
-      const diffResult = await sandbox.commands.run(
-        `cd ${workspacePath} && git diff --staged --quiet`,
-        { timeoutMs: 0 }
-      );
-
-      if (diffResult.exitCode !== 0) {
-        // There are staged changes, commit them
-        const commitMessage = generateCommitMessage(prompt);
-        const commitResult = await sandbox.commands.run(
-          `cd ${workspacePath} && git commit -m '${escapeShellArg(commitMessage)}'`,
-          {
-            onStdout: (line) => console.log(line),
-            onStderr: (line) => console.error(line),
-          }
-        );
-
-        if (commitResult.exitCode !== 0) {
-          throw new Error(`Failed to commit changes: ${commitResult.stderr}`);
-        }
-      }
+    if (verifyResult.stdout.trim().length === 0) {
+      console.log("\n⚠ Warning: Branch was not pushed to remote.");
+      console.log("Claude may not have made any commits or encountered an error.");
     } else {
-      console.log("✓ All changes already committed by Claude");
+      console.log(`\n✓ Successfully completed! Branch '${branchName}' is on remote`);
+      console.log(`  View at: https://github.com/${owner}/${repo}/tree/${branchName}`);
     }
-
-    // Step 7: Check if there are any commits on the branch
-    const logResult = await sandbox.commands.run(
-      `cd ${workspacePath} && git log --oneline`,
-      { timeoutMs: 0 }
-    );
-
-    console.log("\nCommits on branch:");
-    console.log(logResult.stdout);
-
-    // Step 8: Push branch to remote
-    console.log(`\nPushing branch '${branchName}' to remote...`);
-    const pushResult = await sandbox.commands.run(
-      `cd ${workspacePath} && git push -u origin ${branchName}`,
-      {
-        onStdout: (line) => console.log(line),
-        onStderr: (line) => console.error(sanitizeError(line)),
-      }
-    );
-
-    if (pushResult.exitCode !== 0) {
-      if (pushResult.stderr.includes("rejected")) {
-        throw new Error(
-          "Push rejected. Branch may have been created by another process"
-        );
-      } else {
-        throw new Error(
-          `Failed to push branch: ${sanitizeError(pushResult.stderr)}`
-        );
-      }
-    }
-
-    console.log(
-      `\n✓ Successfully pushed branch '${branchName}' to remote`
-    );
-    console.log(
-      `  View at: https://github.com/${owner}/${repo}/tree/${branchName}`
-    );
   } catch (error) {
     console.error("\n✗ Repository workflow failed:", error);
     throw error;

@@ -8,7 +8,8 @@
     "execute-repo": "bun run execute-on-repo.ts"
   },
   "dependencies": {
-    "e2b": "^2.8.1",
-    "dotenv": "^17.2.3"
+    "@e2b/code-interpreter": "^2.3.3",
+    "dotenv": "^17.2.3",
+    "e2b": "^2.8.1"
   }
 }
