@@ -19,13 +19,14 @@ export async function updateSelectedOption(
 
     const selectedOption = await updateSelectedOptionService(id, optionId)
     return { success: true, selectedOption }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Option not found') {
-      reply.status(400).send({ error: error.message })
-    } else {
-      reply.status(500).send({ error: error.message })
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return reply.status(404).send({ error: 'Decision not found' })
     }
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    if (errorMessage === 'Option not found') {
+      return reply.status(400).send({ error: errorMessage })
+    }
+    return reply.status(500).send({ error: errorMessage })
   }
 }

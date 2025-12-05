@@ -24,13 +24,14 @@ export async function createDriver(
 
     const driver = await createDriverService(id, name, description)
     return { success: true, driver }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Driver with this name already exists') {
-      reply.status(400).send({ error: error.message })
-    } else {
-      reply.status(500).send({ error: error.message })
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return reply.status(404).send({ error: 'Decision not found' })
     }
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    if (errorMessage === 'Driver with this name already exists') {
+      return reply.status(400).send({ error: errorMessage })
+    }
+    return reply.status(500).send({ error: errorMessage })
   }
 }
