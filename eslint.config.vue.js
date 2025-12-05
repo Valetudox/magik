@@ -20,6 +20,7 @@ export default tseslint.config(
       },
       globals: {
         // Browser globals for Vue apps
+        console: 'readonly',
         window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
