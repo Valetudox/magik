@@ -27,9 +27,8 @@ onMounted(async () => {
   }
 })
 
-function goToDetail(event: any, { item }: any) {
-  const spec = item as SpecificationSummary
-  router.push(`/${spec.id}`)
+function goToDetail(_event: unknown, { item }: { item: SpecificationSummary }) {
+  router.push(`/${item.id}`)
 }
 </script>
 
@@ -80,7 +79,7 @@ function goToDetail(event: any, { item }: any) {
               class="clickable-rows"
               @click:row="goToDetail"
             >
-              <template #item.title="{ item }">
+              <template #[`item.title`]="{ item }">
                 <strong>{{ item.title }}</strong>
               </template>
 
