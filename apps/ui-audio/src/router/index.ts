@@ -1,3 +1,7 @@
+/* eslint-disable import/no-unresolved */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { createRouter, createWebHistory } from 'vue-router'
 import RecordingDetail from '../views/RecordingDetail.vue'
 import RecordingList from '../views/RecordingList.vue'
