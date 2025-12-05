@@ -1,0 +1,17 @@
+{
+  "name": "@magik/audio",
+  "version": "1.0.0",
+  "description": "Audio recording and conversion scripts",
+  "type": "module",
+  "scripts": {
+    "record": "bash scripts/recordAudio.sh",
+    "record-live": "bash scripts/recordLive.sh",
+    "convert-mp3": "bash scripts/convertToMp3.sh"
+  },
+  "keywords": [
+    "audio",
+    "recording",
+    "mp3"
+  ],
+  "license": "MIT"
+}

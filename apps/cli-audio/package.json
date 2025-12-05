@@ -1,0 +1,37 @@
+{
+  "name": "@magik/cli-audio",
+  "version": "1.0.0",
+  "description": "Audio recording and transcription CLI tool with Obsidian integration",
+  "type": "module",
+  "bin": {
+    "magik": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "lint": "eslint src --max-warnings 0",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "keywords": [
+    "audio",
+    "recording",
+    "transcription",
+    "obsidian"
+  ],
+  "dependencies": {
+    "@speechmatics/real-time-client": "^8.2.0",
+    "@types/inquirer": "^9.0.9",
+    "axios": "^1.13.2",
+    "commander": "^14.0.2",
+    "form-data": "^4.0.5",
+    "inquirer": "^12.11.0",
+    "marked": "^17.0.1",
+    "mic": "^2.1.2",
+    "wav": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}

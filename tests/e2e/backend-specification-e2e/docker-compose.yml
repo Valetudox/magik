@@ -1,0 +1,35 @@
+services:
+  backend-specification:
+    build:
+      context: ../../../
+      dockerfile: apps/backend-specification/Dockerfile
+    ports:
+      - '14002:4002'
+    environment:
+      - PORT=4002
+      - SPECIFICATIONS_DIR=/data/specifications
+      - NODE_ENV=test
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4002/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - ../../../specs:/data/specifications:ro
+
+  schemathesis:
+    image: python:3.11-slim
+    depends_on:
+      backend-specification:
+        condition: service_healthy
+    volumes:
+      - ../../../apps/backend-specification/openapi.yaml:/schema/openapi.yaml:ro
+      - ./schemathesis-tests:/tests:ro
+      - /tmp:/tmp:rw
+    working_dir: /tests
+    command: >
+      bash -c "
+        pip install --no-cache-dir -r requirements.txt &&
+        pytest test_specification_api.py --base-url=http://backend-specification:4002 -v
+      "

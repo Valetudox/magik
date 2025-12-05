@@ -1,0 +1,35 @@
+[Unit]
+Description=Magik Decision Management System
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/magic/repositories/magik
+EnvironmentFile=/home/magic/repositories/magik/.env.production
+
+# Start services
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d
+
+# Stop services
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
+
+# Reload services (for updates)
+ExecReload=/usr/bin/docker compose -f docker-compose.prod.yml up -d --force-recreate
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+# User and group
+User=magic
+Group=magic
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

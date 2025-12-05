@@ -1,0 +1,15 @@
+{
+  "name": "@magik/meeting",
+  "version": "1.0.0",
+  "description": "Meeting management scripts for renaming and deleting meetings",
+  "type": "module",
+  "scripts": {
+    "rename": "bash scripts/renameMeeting.sh",
+    "delete": "bash scripts/deleteMeeting.sh"
+  },
+  "keywords": [
+    "meeting",
+    "management"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@magik/backend-specification-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for backend-specification API",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:local",
+    "test:local": "docker compose up --build --abort-on-container-exit",
+    "test:deployed": "docker compose -f docker-compose.deployed.yml up --build --abort-on-container-exit",
+    "test:down": "docker compose down -v",
+    "test:clean": "docker compose down -v --rmi all"
+  }
+}

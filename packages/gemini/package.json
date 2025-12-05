@@ -1,0 +1,18 @@
+{
+  "name": "@magik/gemini",
+  "version": "1.0.0",
+  "description": "Google Gemini integration for knowledge base and transcript management",
+  "type": "module",
+  "scripts": {
+    "upload": "python3 scripts/upload_transcript.py",
+    "query": "python3 scripts/query_knowledge_base.py",
+    "delete": "python3 scripts/delete_transcript.py"
+  },
+  "keywords": [
+    "gemini",
+    "ai",
+    "knowledge-base",
+    "transcription"
+  ],
+  "license": "MIT"
+}

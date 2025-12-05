@@ -1,0 +1,17 @@
+{
+  "name": "@magik/transcription",
+  "version": "1.0.0",
+  "description": "Audio transcription and speaker setup scripts",
+  "type": "module",
+  "scripts": {
+    "transcribe": "bash scripts/transcribeAudio.sh",
+    "format": "bash scripts/formatTranscript.sh",
+    "setup-speakers": "bash scripts/setupSpeakers.sh"
+  },
+  "keywords": [
+    "transcription",
+    "audio",
+    "speakers"
+  ],
+  "license": "MIT"
+}

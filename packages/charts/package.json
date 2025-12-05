@@ -1,0 +1,11 @@
+{
+  "name": "@magik/charts",
+  "version": "1.0.0",
+  "description": "Data visualization and chart generation",
+  "type": "module",
+  "scripts": {
+    "segmentation-incidents": "uv run scripts/segmentation-incidents.py"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

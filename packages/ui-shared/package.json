@@ -1,0 +1,30 @@
+{
+  "name": "@magik/ui-shared",
+  "version": "1.0.0",
+  "description": "Shared Vue components for Magik UI applications",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .vue,.ts,.tsx --max-warnings 0",
+    "lint:fix": "eslint . --ext .vue,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0",
+    "vue-router": "^4.0.0",
+    "vuetify": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.10.11"
+  }
+}

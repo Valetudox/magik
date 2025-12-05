@@ -1,0 +1,39 @@
+services:
+  # Backend Socket Service
+  backend-socket:
+    build:
+      context: ../../..
+      dockerfile: apps/backend-socket/Dockerfile
+    container_name: backend-socket
+    ports:
+      - '13001:3001'
+    environment:
+      - PORT=3001
+    networks:
+      - test-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Schemathesis Test Runner
+  schemathesis:
+    image: python:3.12-slim
+    container_name: schemathesis-tests
+    depends_on:
+      backend-socket:
+        condition: service_healthy
+    volumes:
+      - ../../../apps/backend-socket:/schema:ro
+      - ./schemathesis-tests:/tests:ro
+    working_dir: /tests
+    networks:
+      - test-network
+    command: >
+      sh -c "pip install -q -r requirements.txt && pytest test_socket_broadcast.py --base-url=http://backend-socket:3001 -v --tb=line -rA --hypothesis-show-statistics"
+
+networks:
+  test-network:
+    driver: bridge

@@ -1,0 +1,345 @@
+openapi: 3.0.3
+info:
+  title: Backend Socket API
+  description: |
+    WebSocket broadcast service using Socket.IO and Fastify with Zod validation.
+
+    This service provides:
+    - Socket.IO WebSocket connections for real-time communication
+    - HTTP API endpoint to broadcast messages to all connected clients
+    - Health check endpoint for monitoring
+    - Request/response validation using Zod schemas
+
+    ## WebSocket Connection
+
+    Clients can connect to the WebSocket server at `ws://localhost:3001` using Socket.IO client library.
+
+    ### Events
+    - **connection**: Emitted when a client connects
+    - **disconnect**: Emitted when a client disconnects
+    - **[channel]**: Dynamic channels based on broadcast requests
+
+    ## Validation
+
+    All endpoints use Zod schemas for request and response validation:
+    - Request bodies are validated before processing
+    - Response bodies are serialized according to schemas
+    - Invalid requests return 400 with detailed error messages
+
+  version: 1.0.0
+  contact:
+    name: Magik Backend Socket
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+
+tags:
+  - name: broadcast
+    description: Message broadcasting operations
+  - name: health
+    description: Health check and monitoring
+
+paths:
+  /api/broadcast:
+    post:
+      tags:
+        - broadcast
+      summary: Broadcast message to all Socket.IO clients
+      description: |
+        Sends a message to all connected Socket.IO clients on a specified channel.
+        The message will be emitted to all clients listening on the given channel.
+
+        Request body is validated using Zod schema:
+        - `channel`: Required string, minimum length 1
+        - `payload`: Optional, can be any valid JSON value
+      operationId: broadcastMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - channel
+              properties:
+                channel:
+                  type: string
+                  description: The Socket.IO event channel to broadcast on
+                  example: 'file:change'
+                  minLength: 1
+                payload:
+                  description: The payload to send to clients (can be any valid JSON value)
+                  oneOf:
+                    - type: object
+                    - type: array
+                    - type: string
+                    - type: number
+                    - type: boolean
+                    - type: 'null'
+                  example:
+                    type: 'update'
+                    data: 'Some data'
+            examples:
+              fileChange:
+                summary: File change notification
+                value:
+                  channel: 'file:change'
+                  payload:
+                    type: 'modified'
+                    path: '/documents/decision-123.json'
+                    timestamp: '2025-12-02T10:30:00Z'
+              genericEvent:
+                summary: Generic event
+                value:
+                  channel: 'notification'
+                  payload:
+                    message: 'System update complete'
+              arrayPayload:
+                summary: Array payload
+                value:
+                  channel: 'data:update'
+                  payload:
+                    - id: 1
+                      name: 'Item 1'
+                    - id: 2
+                      name: 'Item 2'
+              stringPayload:
+                summary: Simple string payload
+                value:
+                  channel: 'notification'
+                  payload: 'Simple string message'
+              numberPayload:
+                summary: Number payload
+                value:
+                  channel: 'metrics'
+                  payload: 42
+              nestedObjectPayload:
+                summary: Nested object payload
+                value:
+                  channel: 'data:update'
+                  payload:
+                    user:
+                      id: 123
+                      name: 'John Doe'
+                      preferences:
+                        theme: 'dark'
+                        notifications: true
+              nullPayload:
+                summary: Null payload
+                value:
+                  channel: 'clear:event'
+                  payload: null
+              noPayload:
+                summary: No payload field
+                value:
+                  channel: 'ping'
+      responses:
+        '200':
+          description: Message successfully broadcasted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - channel
+                  - clientCount
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the broadcast was successful
+                    example: true
+                  channel:
+                    type: string
+                    description: The channel the message was broadcasted on
+                    example: 'file:change'
+                  clientCount:
+                    type: integer
+                    description: Number of connected clients that received the message
+                    example: 3
+              examples:
+                successful:
+                  summary: Successful broadcast
+                  value:
+                    success: true
+                    channel: 'file:change'
+                    clientCount: 3
+                noClients:
+                  summary: Broadcast with no connected clients
+                  value:
+                    success: true
+                    channel: 'notification'
+                    clientCount: 0
+        '400':
+          description: Bad request - missing or invalid channel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingChannel:
+                  summary: Missing channel
+                  value:
+                    error: 'Channel is required'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error - broadcast failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                broadcastError:
+                  summary: Broadcast failure
+                  value:
+                    error: 'Failed to broadcast message'
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint
+      description: Returns the health status of the service and the number of connected clients
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - service
+                  - connectedClients
+                properties:
+                  status:
+                    type: string
+                    description: Health status of the service
+                    enum:
+                      - ok
+                    example: 'ok'
+                  service:
+                    type: string
+                    description: Name of the service
+                    example: 'backend-socket'
+                  connectedClients:
+                    type: integer
+                    description: Number of currently connected Socket.IO clients
+                    minimum: 0
+                    example: 5
+              examples:
+                healthy:
+                  summary: Healthy service with clients
+                  value:
+                    status: 'ok'
+                    service: 'backend-socket'
+                    connectedClients: 5
+                healthyNoClients:
+                  summary: Healthy service with no clients
+                  value:
+                    status: 'ok'
+                    service: 'backend-socket'
+                    connectedClients: 0
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: 'Channel is required'
+
+    BroadcastRequest:
+      type: object
+      required:
+        - channel
+      properties:
+        channel:
+          type: string
+          description: The Socket.IO event channel to broadcast on
+          minLength: 1
+        payload:
+          description: The payload to send to clients
+          nullable: true
+
+    BroadcastResponse:
+      type: object
+      required:
+        - success
+        - channel
+        - clientCount
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the broadcast was successful
+        channel:
+          type: string
+          description: The channel the message was broadcasted on
+        clientCount:
+          type: integer
+          description: Number of connected clients that received the message
+          minimum: 0
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - connectedClients
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        connectedClients:
+          type: integer
+          minimum: 0
+
+x-socket-io:
+  description: |
+    Socket.IO WebSocket connection details
+  connection:
+    url: ws://localhost:3001
+    transports:
+      - websocket
+      - polling
+    cors:
+      origin: '*'
+      methods:
+        - GET
+        - POST
+
+  events:
+    client-to-server:
+      - name: disconnect
+        description: Emitted when a client disconnects from the server
+
+    server-to-client:
+      - name: '[dynamic]'
+        description: |
+          Dynamic event channels based on the 'channel' parameter in broadcast requests.
+          Clients should listen to specific channels they're interested in.
+        payload:
+          description: The payload structure depends on what was sent via /api/broadcast
+          type: any

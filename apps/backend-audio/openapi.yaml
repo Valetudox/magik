@@ -1,0 +1,138 @@
+openapi: 3.0.0
+info:
+  title: Backend Audio API
+  version: 1.0.0
+  description: API for managing audio recordings and transcripts
+
+servers:
+  - url: http://localhost:3002
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                  - status
+
+  /api/recordings:
+    get:
+      summary: List all recordings
+      operationId: listRecordings
+      responses:
+        '200':
+          description: List of recordings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recordings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recording'
+                  total:
+                    type: integer
+                required:
+                  - recordings
+                  - total
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/recordings/{id}:
+    get:
+      summary: Get a specific recording
+      operationId: getRecording
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recording details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recording'
+        '404':
+          description: Recording not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Recording:
+      type: object
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        format:
+          type: string
+          enum: [wav, mp3]
+        size:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        modifiedAt:
+          type: string
+          format: date-time
+        hasTranscript:
+          type: boolean
+        transcriptMetadata:
+          type: object
+          properties:
+            duration:
+              type: number
+            language:
+              type: string
+            diarization:
+              type: string
+            jobId:
+              type: string
+            transcriptCreatedAt:
+              type: string
+              format: date-time
+      required:
+        - id
+        - filename
+        - format
+        - size
+        - createdAt
+        - modifiedAt
+        - hasTranscript
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

@@ -1,0 +1,15 @@
+{
+  "name": "@magik/obsidian",
+  "version": "1.0.0",
+  "description": "Obsidian vault integration scripts",
+  "type": "module",
+  "scripts": {
+    "create-note": "bash scripts/createMeetingNote.sh"
+  },
+  "keywords": [
+    "obsidian",
+    "notes",
+    "meeting"
+  ],
+  "license": "MIT"
+}

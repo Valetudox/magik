@@ -1,0 +1,1513 @@
+openapi: 3.0.3
+info:
+  title: Backend Decision API
+  description: |
+    API for managing decision documents including drivers, options, evaluations, components, and use cases.
+
+    This service provides:
+    - CRUD operations for decision documents
+    - Management of decision drivers, options, evaluations, components, and use cases
+    - File watching and change notifications via Socket.IO
+    - AI agent integration for decision document generation
+    - Confluence integration for publishing decisions
+
+    ## File Watching
+
+    The service watches the decisions directory for changes and broadcasts updates to the Socket.IO server.
+
+  version: 1.0.0
+  contact:
+    name: Magik Backend Decision
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+
+tags:
+  - name: decisions
+    description: Decision document operations
+  - name: evaluations
+    description: Evaluation operations
+  - name: options
+    description: Option operations
+  - name: drivers
+    description: Driver operations
+  - name: components
+    description: Component operations
+  - name: use-cases
+    description: Use case operations
+  - name: agent
+    description: AI agent operations
+
+paths:
+  /api/decisions:
+    get:
+      tags:
+        - decisions
+      summary: List all decisions
+      description: Returns a list of all decision documents with summary information
+      operationId: listDecisions
+      responses:
+        '200':
+          description: List of decision summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - decisions
+                properties:
+                  decisions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DecisionSummary'
+        '500':
+          description: Failed to read decisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - decisions
+      summary: Create a new decision
+      description: Creates a new decision document with the given filename
+      operationId: createDecision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+              properties:
+                filename:
+                  type: string
+                  description: The filename for the new decision (without extension)
+                  example: 'choose-database-technology'
+            examples:
+              simple:
+                summary: Create a decision
+                value:
+                  filename: 'choose-database-technology'
+      responses:
+        '200':
+          description: Decision created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - id
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  id:
+                    type: string
+                    description: The ID of the created decision
+                    example: 'choose-database-technology'
+        '409':
+          description: Decision with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}:
+    get:
+      tags:
+        - decisions
+      summary: Get a specific decision
+      description: Returns the details of a specific decision document
+      operationId: getDecision
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+          example: 'choose-database-technology'
+      responses:
+        '200':
+          description: Decision details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Decision'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to read decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - decisions
+      summary: Delete a decision
+      description: Deletes a specific decision document
+      operationId: deleteDecision
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      responses:
+        '200':
+          description: Decision deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          description: Failed to delete decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - decisions
+      summary: Update a decision
+      description: Updates the details of a specific decision document
+      operationId: updateDecision
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                problemDefinition:
+                  type: string
+                  description: The problem definition
+                proposal:
+                  $ref: '#/components/schemas/Proposal'
+                confluenceLink:
+                  type: string
+                  format: uri
+                  description: Confluence page URL
+      responses:
+        '200':
+          description: Decision updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/push-to-confluence:
+    post:
+      tags:
+        - decisions
+      summary: Push decision to Confluence
+      description: Publishes the decision document to Confluence
+      operationId: pushToConfluence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - confluenceUrl
+              properties:
+                confluenceUrl:
+                  type: string
+                  format: uri
+                  description: The Confluence page URL to push to
+      responses:
+        '200':
+          description: Decision pushed to Confluence successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                  - output
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    description: Success message
+                  output:
+                    type: string
+                    description: Output from the push operation
+        '400':
+          description: Bad request - confluenceUrl is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to push to Confluence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/decisions/{id}/evaluations:
+    patch:
+      tags:
+        - evaluations
+      summary: Update evaluation rating
+      description: Updates the rating for a specific option and driver evaluation
+      operationId: updateEvaluation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - optionId
+                - driverId
+                - rating
+              properties:
+                optionId:
+                  type: string
+                  description: The option ID
+                driverId:
+                  type: string
+                  description: The driver ID
+                rating:
+                  type: string
+                  enum: [high, medium, low]
+                  description: The evaluation rating
+      responses:
+        '200':
+          description: Evaluation rating updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - evaluation
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  evaluation:
+                    $ref: '#/components/schemas/Evaluation'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/evaluations/details:
+    patch:
+      tags:
+        - evaluations
+      summary: Update evaluation details
+      description: Updates the detailed explanations for an evaluation
+      operationId: updateEvaluationDetails
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - optionId
+                - driverId
+                - evaluationDetails
+              properties:
+                optionId:
+                  type: string
+                  description: The option ID
+                driverId:
+                  type: string
+                  description: The driver ID
+                evaluationDetails:
+                  type: array
+                  items:
+                    type: string
+                  description: List of detailed explanations for the evaluation
+      responses:
+        '200':
+          description: Evaluation details updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - evaluation
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  evaluation:
+                    $ref: '#/components/schemas/Evaluation'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update evaluation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/selected-option:
+    patch:
+      tags:
+        - evaluations
+      summary: Update selected option
+      description: Sets the selected option for the decision
+      operationId: updateSelectedOption
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - optionId
+              properties:
+                optionId:
+                  type: string
+                  description: The ID of the selected option
+                  nullable: true
+      responses:
+        '200':
+          description: Selected option updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  selectedOption:
+                    type: string
+                    nullable: true
+                    description: The ID of the selected option
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update selected option
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/options:
+    post:
+      tags:
+        - options
+      summary: Create an option
+      description: Adds a new option to the decision
+      operationId: createOption
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The option name
+                description:
+                  type: string
+                  description: The option description
+                moreLink:
+                  type: string
+                  format: uri
+                  description: Optional URL link to more information
+      responses:
+        '200':
+          description: Option created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - option
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  option:
+                    $ref: '#/components/schemas/Option'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to create option
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/options/{optionId}:
+    patch:
+      tags:
+        - options
+      summary: Update an option
+      description: Updates an existing option
+      operationId: updateOption
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: optionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The option ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The option name
+                description:
+                  type: string
+                  description: The option description
+                moreLink:
+                  type: string
+                  format: uri
+                  description: Optional URL link to more information
+      responses:
+        '200':
+          description: Option updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - option
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  option:
+                    $ref: '#/components/schemas/Option'
+        '404':
+          description: Decision or option not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update option
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - options
+      summary: Delete an option
+      description: Removes an option from the decision
+      operationId: deleteOption
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: optionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The option ID
+      responses:
+        '200':
+          description: Option deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete option
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/drivers:
+    post:
+      tags:
+        - drivers
+      summary: Create a driver
+      description: Adds a new driver to the decision
+      operationId: createDriver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The driver name
+                description:
+                  type: string
+                  description: The driver description
+      responses:
+        '200':
+          description: Driver created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - driver
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  driver:
+                    $ref: '#/components/schemas/Driver'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to create driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/drivers/{driverId}:
+    patch:
+      tags:
+        - drivers
+      summary: Update a driver
+      description: Updates an existing driver
+      operationId: updateDriver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The driver ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The driver name
+                description:
+                  type: string
+                  description: The driver description
+      responses:
+        '200':
+          description: Driver updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - driver
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  driver:
+                    $ref: '#/components/schemas/Driver'
+        '404':
+          description: Decision or driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - drivers
+      summary: Delete a driver
+      description: Removes a driver from the decision
+      operationId: deleteDriver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The driver ID
+      responses:
+        '200':
+          description: Driver deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/components:
+    post:
+      tags:
+        - components
+      summary: Create a component
+      description: Adds a new component to the decision
+      operationId: createComponent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The component name
+                description:
+                  type: string
+                  description: The component description
+      responses:
+        '200':
+          description: Component created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - component
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  component:
+                    $ref: '#/components/schemas/Component'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to create component
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/components/{componentId}:
+    patch:
+      tags:
+        - components
+      summary: Update a component
+      description: Updates an existing component
+      operationId: updateComponent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: componentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The component ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The component name
+                description:
+                  type: string
+                  description: The component description
+      responses:
+        '200':
+          description: Component updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - component
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  component:
+                    $ref: '#/components/schemas/Component'
+        '404':
+          description: Decision or component not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update component
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - components
+      summary: Delete a component
+      description: Removes a component from the decision
+      operationId: deleteComponent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: componentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The component ID
+      responses:
+        '200':
+          description: Component deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete component
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/use-cases:
+    post:
+      tags:
+        - use-cases
+      summary: Create a use case
+      description: Adds a new use case to the decision
+      operationId: createUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The use case name
+                description:
+                  type: string
+                  description: The use case description
+      responses:
+        '200':
+          description: Use case created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - useCase
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  useCase:
+                    $ref: '#/components/schemas/UseCase'
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to create use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/use-cases/{useCaseId}:
+    patch:
+      tags:
+        - use-cases
+      summary: Update a use case
+      description: Updates an existing use case
+      operationId: updateUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The use case ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: The use case name
+                description:
+                  type: string
+                  description: The use case description
+      responses:
+        '200':
+          description: Use case updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - useCase
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  useCase:
+                    $ref: '#/components/schemas/UseCase'
+        '404':
+          description: Decision or use case not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - use-cases
+      summary: Delete a use case
+      description: Removes a use case from the decision
+      operationId: deleteUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The use case ID
+      responses:
+        '200':
+          description: Use case deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/decisions/{id}/agent:
+    post:
+      tags:
+        - agent
+      summary: Run AI agent
+      description: Runs the AI agent to generate or enhance decision content
+      operationId: runAgent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The decision ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: The prompt for the AI agent
+      responses:
+        '200':
+          description: Agent executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  result:
+                    type: string
+                    description: The agent's response
+        '404':
+          description: Decision not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to run agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    Decision:
+      type: object
+      required:
+        - problemDefinition
+        - components
+        - useCases
+        - decisionDrivers
+        - options
+        - evaluationMatrix
+        - proposal
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: Unique identifier (path-based), added when fetching individual decision
+        problemDefinition:
+          type: string
+          description: Description of the problem being addressed
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/Component'
+        useCases:
+          type: array
+          items:
+            $ref: '#/components/schemas/UseCase'
+        decisionDrivers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Driver'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        evaluationMatrix:
+          type: array
+          description: A complete evaluation matrix containing a score for each option/driver combination
+          items:
+            $ref: '#/components/schemas/Evaluation'
+        proposal:
+          $ref: '#/components/schemas/Proposal'
+        selectedOption:
+          type: string
+          nullable: true
+          description: Optional ID of the selected option from the options array
+        confluenceLink:
+          type: string
+          format: uri
+          nullable: true
+          description: Optional Confluence page URL where this decision is published
+        aiSessionId:
+          type: string
+          nullable: true
+          description: Optional AI agent session ID for maintaining conversation context
+
+    Driver:
+      type: object
+      required:
+        - id
+        - name
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the driver
+        name:
+          type: string
+          description: Name of the driver
+        description:
+          type: string
+          maxLength: 500
+          description: A plain text description of the decision driver. Should not contain formatting, markdown, or special characters. Maximum 500 characters.
+
+    Option:
+      type: object
+      required:
+        - id
+        - name
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the option
+        name:
+          type: string
+          description: Name of the option
+        description:
+          type: string
+          maxLength: 200
+          description: A brief, plain text description of the option. Should be concise and not contain formatting. Maximum 200 characters.
+        moreLink:
+          type: string
+          format: uri
+          nullable: true
+          description: Optional URL link to more detailed information about this option
+        architectureDiagramLink:
+          type: string
+          format: uri
+          nullable: true
+          description: Optional URL link to an architecture diagram for this option
+        architectureDiagramMermaid:
+          type: string
+          nullable: true
+          description: Optional Mermaid diagram code for architecture visualization
+
+    Evaluation:
+      type: object
+      required:
+        - optionId
+        - driverId
+        - rating
+        - evaluationDetails
+      properties:
+        optionId:
+          type: string
+          description: Reference to the option being evaluated
+        driverId:
+          type: string
+          description: Reference to the driver being considered
+        rating:
+          type: string
+          enum: [high, medium, low]
+          description: Evaluation rating
+        evaluationDetails:
+          type: array
+          items:
+            type: string
+          description: List of detailed explanations for the evaluation
+
+    Component:
+      type: object
+      required:
+        - id
+        - name
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the component
+        name:
+          type: string
+          description: Name of the component
+        description:
+          type: string
+          description: Detailed description of the component
+
+    UseCase:
+      type: object
+      required:
+        - id
+        - name
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the use case
+        name:
+          type: string
+          description: Name of the use case
+        description:
+          type: string
+          description: Detailed description of the use case
+
+    Proposal:
+      type: object
+      required:
+        - description
+        - reasoning
+      properties:
+        description:
+          type: string
+          description: Brief description of the chosen solution
+        reasoning:
+          type: array
+          items:
+            type: string
+          description: List of reasons supporting this decision
+
+    DecisionSummary:
+      type: object
+      required:
+        - id
+        - name
+        - directory
+        - problemDefinition
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the decision (path-based)
+        name:
+          type: string
+          description: Display name derived from filename
+        directory:
+          type: string
+          description: Directory path of the decision file
+        problemDefinition:
+          type: string
+          description: Brief description of the problem
+        selectedOption:
+          type: string
+          nullable: true
+          description: ID of the selected option, if any
+        confluenceLink:
+          type: string
+          format: uri
+          nullable: true
+          description: Confluence page URL, if published
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: 'Failed to read decisions'
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input provided
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

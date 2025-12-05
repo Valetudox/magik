@@ -1,0 +1,33 @@
+{
+  "name": "@magik/decisions",
+  "version": "1.0.0",
+  "description": "Decision management types and tools",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./scripts/decision.ts"
+  },
+  "scripts": {
+    "list": "bun run scripts/list.ts",
+    "validate": "bun run scripts/validate.ts",
+    "upload": "bun run scripts/uploadToConfluence.ts",
+    "convert": "bun run scripts/convertToConfluenceStorage.ts",
+    "upload-diagram": "bun run scripts/uploadMermaidDiagram.ts",
+    "lint": "eslint src --max-warnings 0",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "dependencies": {
+    "zod": "^3.24.1",
+    "commander": "^14.0.2",
+    "axios": "^1.13.2",
+    "form-data": "^4.0.5",
+    "marked": "^17.0.1",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}

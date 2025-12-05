@@ -1,0 +1,8 @@
+[project]
+name = "magik-gemini"
+version = "1.0.0"
+description = "Gemini File Search integration for meeting transcripts"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=0.3.0",
+]

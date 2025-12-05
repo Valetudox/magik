@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+**/node_modules/**
+
+# Build outputs
+dist
+build
+**/dist/**
+**/build/**
+
+# Generated code
+generated
+**/generated/**
+**/backend-audio-client/**
+**/backend-socket-client/**
+
+# Python and virtual environments
+.venv
+**/.venv/**
+python
+**/python/**
+dags
+**/dags/**
+
+# Coverage reports
+coverage
+**/coverage/**
+
+# Git
+.git
+**/.git/**
+
+# Gateway (nginx config only)
+apps/gateway/**
+
+# Lockfiles and logs
+package-lock.json
+yarn.lock
+bun.lockb
+*.log
+
+# Environment files
+.env
+.env.*

@@ -1,0 +1,12 @@
+services:
+  schemathesis:
+    image: python:3.12-slim
+    container_name: backend-audio-schemathesis-deployed
+    volumes:
+      - ./schemathesis-tests:/tests:ro
+    working_dir: /tests
+    environment:
+      - TEST_BASE_URL=${TEST_BASE_URL:-http://localhost:3002}
+    command: >
+      sh -c "pip install -q -r requirements.txt &&
+             pytest test_audio_api.py --base-url=$${TEST_BASE_URL} -v --tb=line -rA --hypothesis-show-statistics"
