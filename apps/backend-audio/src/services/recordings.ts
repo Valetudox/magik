@@ -1,5 +1,5 @@
-import { readdir, stat, readFile } from 'fs/promises'
-import { join, extname, basename } from 'path'
+import { readFile, readdir, stat } from 'node:fs/promises'
+import { basename, extname, join } from 'node:path'
 import { RECORDINGS_DIR } from '../config'
 import type { Recording, TranscriptMetadata } from '../types'
 

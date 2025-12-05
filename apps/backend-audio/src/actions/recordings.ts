@@ -1,5 +1,5 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
-import { listRecordings, getRecordingById } from '../services/recordings'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { getRecordingById, listRecordings } from '../services/recordings'
 import type { RecordingListResponse } from '../types'
 
 export async function listRecordingsHandler(request: FastifyRequest, reply: FastifyReply) {
