@@ -2,7 +2,7 @@ import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import { registerRoutes } from './routes'
 
-async function start() {
+async function start(): Promise<void> {
   const fastify = Fastify({
     logger: true,
   })
@@ -16,7 +16,7 @@ async function start() {
   registerRoutes(fastify)
 
   // Start server
-  const port = parseInt(process.env.PORT || '4002', 10)
+  const port = parseInt(process.env.PORT ?? '4002', 10)
 
   try {
     await fastify.listen({ port, host: '0.0.0.0' })
@@ -27,4 +27,4 @@ async function start() {
   }
 }
 
-start()
+void start()
