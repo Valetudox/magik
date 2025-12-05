@@ -101,28 +101,6 @@ function sanitizeError(error: string): string {
 }
 
 /**
- * Generates a commit message for any remaining uncommitted changes
- */
-function generateCommitMessage(prompt: string): string {
-  const maxSummaryLength = 72;
-  const summary =
-    prompt.length > maxSummaryLength
-      ? prompt.substring(0, maxSummaryLength - 3) + "..."
-      : prompt;
-
-  const fullPrompt =
-    prompt.length > 500 ? prompt.substring(0, 500) + "..." : prompt;
-
-  return `Claude Code: ${summary}
-
-Executed prompt: ${fullPrompt}
-
-🤖 Generated with Claude Code via E2B Sandbox
-
-Co-Authored-By: Claude <noreply@anthropic.com>`;
-}
-
-/**
  * Extracts owner and repo name from GitHub URL
  */
 function extractRepoInfo(repoUrl: string): { owner: string; repo: string } {
