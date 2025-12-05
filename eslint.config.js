@@ -38,4 +38,25 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },
+  {
+    files: ['packages/agents/**/*.{js,ts}'],
+    rules: {
+      // Ignore unresolved imports for external packages in this monorepo package
+      'import/no-unresolved': [
+        'error',
+        {
+          ignore: ['^@ai-sdk/', '^ai$', '^zod$', '^glob$', '^@magik/'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/agents/src/**/interface.types.ts'],
+    rules: {
+      // Zod schema definitions trigger false positives
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
+  },
 ]
