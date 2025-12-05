@@ -1,5 +1,5 @@
-import { readdir, stat, readFile } from 'fs/promises'
-import { join, extname, basename } from 'path'
+import { readFile, readdir, stat } from 'node:fs/promises'
+import { basename, extname, join } from 'node:path'
 import { RECORDINGS_DIR } from '../config'
 import type { Recording, TranscriptMetadata } from '../types'
 
@@ -8,22 +8,20 @@ export async function listRecordings(): Promise<Recording[]> {
     const files = await readdir(RECORDINGS_DIR)
 
     // Filter for audio files only (wav, mp3)
-    const audioFiles = files.filter((file) => {
+    function isAudioFile(file: string) {
       const ext = extname(file).toLowerCase()
       return ext === '.wav' || ext === '.mp3'
-    })
+    }
+    const audioFiles = files.filter(isAudioFile)
 
     // Process each audio file
-    const recordings = await Promise.all(
-      audioFiles.map(async (filename) => {
-        return await getRecordingInfo(filename)
-      })
-    )
+    const recordings = await Promise.all(audioFiles.map(getRecordingInfo))
 
     // Sort by modified date (newest first)
-    return recordings.sort(
-      (a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime()
-    )
+    function compareByModifiedDate(a: Recording, b: Recording) {
+      return new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime()
+    }
+    return recordings.sort(compareByModifiedDate)
   } catch (error) {
     console.error('Error listing recordings:', error)
     throw error
@@ -74,11 +72,12 @@ export async function getRecordingById(id: string): Promise<Recording | null> {
     const files = await readdir(RECORDINGS_DIR)
 
     // Find the audio file with matching ID
-    const audioFile = files.find((file) => {
+    function matchesId(file: string) {
       const ext = extname(file).toLowerCase()
       const baseName = basename(file, ext)
       return baseName === id && (ext === '.wav' || ext === '.mp3')
-    })
+    }
+    const audioFile = files.find(matchesId)
 
     if (!audioFile) {
       return null
