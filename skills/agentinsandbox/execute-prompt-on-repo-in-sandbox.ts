@@ -135,7 +135,28 @@ async function executeRepoWorkflow(
   console.log(`Sandbox created: ${sandbox.sandboxId}`);
 
   try {
-    // Step 1: Clone repository
+    // Step 1: Install GitHub CLI if not available
+    console.log(`\nChecking for GitHub CLI...`);
+    const ghCheckResult = await sandbox.commands.run('which gh');
+
+    if (ghCheckResult.exitCode !== 0) {
+      console.log('GitHub CLI not found. Installing...');
+
+      // Install GitHub CLI using the official installation script
+      await sandbox.commands.run(
+        'curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y',
+        {
+          onStdout: (line) => console.log(line),
+          onStderr: (line) => console.error(line),
+        }
+      );
+
+      console.log('✓ GitHub CLI installed successfully');
+    } else {
+      console.log('✓ GitHub CLI is already available');
+    }
+
+    // Step 2: Clone repository
     console.log(`\nCloning repository...`);
     const cloneResult = await sandbox.commands.run(
       `git clone https://\${GITHUB_TOKEN}@github.com/${owner}/${repo}.git ${workspacePath}`,
@@ -161,7 +182,7 @@ async function executeRepoWorkflow(
       }
     }
 
-    // Step 2: Configure git identity and remote URL with token
+    // Step 3: Configure git identity and remote URL with token
     console.log("\nConfiguring git identity and authentication...");
     await sandbox.commands.run(
       `cd ${workspacePath} && git config user.name "Claude Code Bot" && git config user.email "bot@claude.com" && git remote set-url origin https://\${GITHUB_TOKEN}@github.com/${owner}/${repo}.git`,
@@ -171,7 +192,7 @@ async function executeRepoWorkflow(
       }
     );
 
-    // Step 3: Check if branch exists remotely
+    // Step 4: Check if branch exists remotely
     console.log(`\nChecking if branch '${branchName}' exists remotely...`);
     const checkBranchResult = await sandbox.commands.run(
       `cd ${workspacePath} && git ls-remote --heads origin ${branchName}`,
@@ -192,7 +213,7 @@ async function executeRepoWorkflow(
 
     console.log("✓ Branch name is available");
 
-    // Step 4: Create and checkout new branch
+    // Step 5: Create and checkout new branch
     console.log(`\nCreating branch '${branchName}'...`);
     const createBranchResult = await sandbox.commands.run(
       `cd ${workspacePath} && git checkout -b ${branchName}`,
@@ -206,7 +227,7 @@ async function executeRepoWorkflow(
       throw new Error(`Failed to create branch: ${createBranchResult.stderr}`);
     }
 
-    // Step 5: Execute Claude prompt with commit instructions
+    // Step 6: Execute Claude prompt with commit instructions
     console.log("\nExecuting Claude Code CLI with prompt...");
     console.log("─".repeat(60));
 
@@ -235,7 +256,7 @@ Make multiple small commits with pushes rather than one large commit. Each commi
       throw new Error(`Claude execution failed with exit code ${executeResult.exitCode}`);
     }
 
-    // Step 6: Verify branch was pushed
+    // Step 7: Verify branch was pushed
     console.log("\nVerifying branch was pushed...");
     const verifyResult = await sandbox.commands.run(
       `cd ${workspacePath} && git ls-remote --heads origin ${branchName}`,
@@ -249,7 +270,7 @@ Make multiple small commits with pushes rather than one large commit. Each commi
       console.log(`\n✓ Successfully completed! Branch '${branchName}' is on remote`);
       console.log(`  View at: https://github.com/${owner}/${repo}/tree/${branchName}`);
 
-      // Step 7: Create pull request
+      // Step 8: Create pull request
       console.log("\nCreating pull request...");
 
       const prBody = `## Task
