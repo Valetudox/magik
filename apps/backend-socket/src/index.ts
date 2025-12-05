@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
 // Zod schemas for validation
 const BroadcastRequestSchema = z.object({
   channel: z.string().min(1, 'Channel must not be empty'),
-  payload: z.any().optional(),
+  payload: z.unknown().optional(),
 })
 
 const BroadcastResponseSchema = z.object({
@@ -73,8 +73,9 @@ fastify.post(
       },
     },
   },
-  async (request, reply) => {
-    const { channel, payload } = request.body
+  async function (request, reply) {
+    const { channel } = request.body
+    const payload = request.body.payload
 
     try {
       const clientCount = io.engine.clientsCount
@@ -89,7 +90,7 @@ fastify.post(
         channel,
         clientCount,
       }
-    } catch (error: any) {
+    } catch (error) {
       fastify.log.error('Broadcast error:', error)
       return reply.status(500).send({ error: 'Failed to broadcast message' })
     }
@@ -106,7 +107,7 @@ fastify.get(
       },
     },
   },
-  async () => {
+  function () {
     return {
       status: 'ok' as const,
       service: 'backend-socket',
@@ -116,7 +117,7 @@ fastify.get(
 )
 
 // Start server
-const start = async () => {
+async function start() {
   try {
     const port = Number(process.env.PORT) || 4001
     await fastify.listen({ port, host: '0.0.0.0' })
@@ -127,4 +128,4 @@ const start = async () => {
   }
 }
 
-start()
+void start()
