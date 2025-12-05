@@ -1,0 +1,14 @@
+{
+  "name": "@magik/agentinsandbox-skill",
+  "version": "1.0.0",
+  "description": "Execute Claude Code CLI prompts in an isolated E2B sandbox",
+  "type": "module",
+  "scripts": {
+    "execute": "bun run execute-prompt-in-sandbox.ts",
+    "execute-repo": "bun run execute-prompt-on-repo-in-sandbox.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "e2b": "^2.8.1"
+  }
+}
