@@ -1,650 +1,792 @@
 ---
 name: sandbox
-description: Execute TypeScript, Python, or Bash code directly in an isolated E2B sandbox
+description: Guide for AI agents to use E2B SDK for code execution, file operations, and sandbox management
 ---
 
-# Sandbox Skill - AI Agent Guide
+# Sandbox Skill - E2B SDK Guide for AI Agents
 
-Execute code directly in isolated E2B sandboxes. This guide explains how AI agents should write code that will be executed in the sandbox environment.
+This guide teaches AI agents how to write code using the E2B SDK to execute code in isolated sandboxes, manage files, and retrieve results.
 
 ## Requirements
 
-- `E2B_API_KEY` - E2B API key (required)
+- `E2B_API_KEY` - E2B API key (set in environment)
+- `@e2b/code-interpreter` - E2B Code Interpreter package for Python/JS/R
+- `e2b` - E2B package for bash and general sandbox operations
+
+## Documentation Links
+
+- **Filesystem operations**: https://e2b.dev/docs/filesystem/read-write
+- **Upload/Download files**: https://e2b.dev/docs/quickstart/upload-download-files
+- **JavaScript support**: https://e2b.dev/docs/code-interpreting/supported-languages/javascript
+- **Python support**: https://e2b.dev/docs/code-interpreting/supported-languages/python
+- **Bash support**: https://e2b.dev/docs/code-interpreting/supported-languages/bash
+- **Static charts**: https://e2b.dev/docs/code-interpreting/create-charts-visualizations/static-charts
+- **Commands API**: https://e2b.dev/docs/commands
 
 ---
 
-## How It Works
+## How to Use E2B SDK
 
-AI agents write code that gets piped to these scripts:
-- `execute-python-code.ts` - Executes Python code via stdin
-- `execute-node-code.ts` - Executes TypeScript/JavaScript code via stdin
-- `execute-bash-code.ts` - Executes Bash commands via stdin
+AI agents should write TypeScript/JavaScript code that uses the E2B SDK to create sandboxes, execute code, and manage files.
 
-**Key Points:**
-- Code runs in isolated E2B Code Interpreter sandboxes
-- Python and TypeScript use `@e2b/code-interpreter` with `runCode` API
-- Bash uses standard E2B sandbox with `commands.run` API
-- Working directory: `/home/user/`
-- Output is captured from stdout, stderr, and results
-- Sandboxes are ephemeral - cleaned up after execution
+### Basic Structure
 
----
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import { Sandbox } from "@e2b/code-interpreter";
 
-## Python Code Execution
+async function main() {
+  // 1. Create sandbox
+  const sandbox = await Sandbox.create();
+  console.log(`Sandbox created: ${sandbox.sandboxId}`);
 
-### Capabilities
-- Full Python 3 with top-level await support
-- Pre-installed data science libraries (numpy, pandas, matplotlib, etc.)
-- Automatic chart detection (matplotlib plots returned as base64 PNG)
-- File I/O in `/home/user/` directory
+  try {
+    // 2. Execute code
+    const execution = await sandbox.runCode(code, { language: "python" });
 
-### Writing Python Code for the Sandbox
+    // 3. Process results
+    console.log("Output:", execution.logs.stdout);
 
-**Basic Output:**
-```python
-print("Hello from Python!")
-result = 2 + 2
-print(f"Result: {result}")
-```
+    // 4. Handle files if needed
+    const fileContent = await sandbox.files.read("/home/user/output.txt");
+    console.log("File content:", fileContent);
 
-**Data Processing:**
-```python
-import pandas as pd
-import json
-
-# Create sample data
-data = {
-    'name': ['Alice', 'Bob', 'Charlie'],
-    'age': [25, 30, 35],
-    'score': [85, 90, 95]
+  } finally {
+    // 5. Cleanup
+    await sandbox.kill();
+  }
 }
 
-df = pd.DataFrame(data)
-print("DataFrame created:")
-print(df)
-
-# Calculate statistics
-print(f"\nAverage age: {df['age'].mean()}")
-print(f"Average score: {df['score'].mean()}")
-
-# Export to JSON (print to retrieve)
-print("\n=== JSON Output ===")
-print(df.to_json(orient='records', indent=2))
+main();
 ```
 
-**Creating Visualizations:**
-```python
+---
+
+## Code Execution with runCode
+
+### Python Code Execution
+
+**Basic example:**
+```typescript
+import { Sandbox } from "@e2b/code-interpreter";
+
+const sandbox = await Sandbox.create();
+
+const pythonCode = `
+import pandas as pd
+import numpy as np
+
+# Create sample data
+data = {'values': [10, 20, 30, 40, 50]}
+df = pd.DataFrame(data)
+
+print("DataFrame created:")
+print(df)
+print(f"Mean: {df['values'].mean()}")
+`;
+
+const execution = await sandbox.runCode(pythonCode, { language: "python" });
+
+// Access output
+execution.logs.stdout.forEach(line => console.log(line));
+execution.logs.stderr.forEach(line => console.error(line));
+
+if (execution.error) {
+  console.error("Error:", execution.error);
+}
+
+await sandbox.kill();
+```
+
+**With matplotlib charts:**
+```typescript
+const chartCode = `
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Generate data
 x = np.linspace(0, 10, 100)
 y = np.sin(x)
 
-# Create plot
 plt.figure(figsize=(10, 6))
-plt.plot(x, y, 'b-', linewidth=2, label='sin(x)')
-plt.grid(True, alpha=0.3)
-plt.xlabel('X axis')
-plt.ylabel('Y axis')
-plt.title('Sine Wave Visualization')
-plt.legend()
-
-# IMPORTANT: plt.show() triggers E2B to capture the chart as base64 PNG
+plt.plot(x, y, 'b-', linewidth=2)
+plt.xlabel('X')
+plt.ylabel('sin(X)')
+plt.title('Sine Wave')
+plt.grid(True)
 plt.show()
+`;
 
-print("Chart generated successfully!")
-```
+const execution = await sandbox.runCode(chartCode, { language: "python" });
 
-**File Operations:**
-```python
-import json
+// Charts are automatically captured
+if (execution.results.length > 0) {
+  const chart = execution.results[0];
+  if (chart.png) {
+    // chart.png is base64 encoded PNG
+    console.log("Chart generated (base64):", chart.png.substring(0, 50) + "...");
 
-# Write data to file
-data = {
-    "timestamp": "2025-12-05",
-    "values": [1, 2, 3, 4, 5],
-    "status": "completed"
-}
-
-with open("/home/user/output.json", "w") as f:
-    json.dump(data, f, indent=2)
-
-print("File written to /home/user/output.json")
-
-# Read it back
-with open("/home/user/output.json", "r") as f:
-    loaded_data = json.load(f)
-
-print("\n=== File Contents ===")
-print(json.dumps(loaded_data, indent=2))
-```
-
-**Installing Packages (if needed):**
-```python
-import subprocess
-import sys
-
-# Install package
-subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-
-# Now use it
-import requests
-response = requests.get("https://api.github.com/zen")
-print(f"GitHub Zen: {response.text}")
-```
-
----
-
-## TypeScript/JavaScript Code Execution
-
-### Capabilities
-- Full TypeScript support with type checking
-- Top-level await for async operations
-- ESM-style imports
-- Can install npm packages via commands
-- File I/O in `/home/user/` directory
-
-### Writing TypeScript Code for the Sandbox
-
-**Basic Output:**
-```typescript
-const message: string = "Hello from TypeScript!";
-console.log(message);
-
-const sum = (a: number, b: number): number => a + b;
-console.log(`Sum: ${sum(5, 10)}`);
-```
-
-**Working with Files:**
-```typescript
-import { writeFileSync, readFileSync, existsSync } from "fs";
-
-// Write JSON file
-const data = {
-  users: [
-    { id: 1, name: "Alice", email: "alice@example.com" },
-    { id: 2, name: "Bob", email: "bob@example.com" }
-  ]
-};
-
-writeFileSync("/home/user/users.json", JSON.stringify(data, null, 2));
-console.log("✓ File written to /home/user/users.json");
-
-// Read it back
-if (existsSync("/home/user/users.json")) {
-  const content = readFileSync("/home/user/users.json", "utf-8");
-  const parsed = JSON.parse(content);
-  console.log("\n=== File Contents ===");
-  console.log(JSON.stringify(parsed, null, 2));
-  console.log(`\nTotal users: ${parsed.users.length}`);
-}
-```
-
-**Async Operations:**
-```typescript
-// Top-level await is supported
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-console.log("Starting async operations...");
-
-await delay(100);
-console.log("✓ Delayed operation 1 complete");
-
-await delay(100);
-console.log("✓ Delayed operation 2 complete");
-
-console.log("All async operations finished!");
-```
-
-**Data Processing:**
-```typescript
-interface SalesRecord {
-  date: string;
-  amount: number;
-  product: string;
-}
-
-const sales: SalesRecord[] = [
-  { date: "2025-01-01", amount: 150, product: "Widget A" },
-  { date: "2025-01-02", amount: 200, product: "Widget B" },
-  { date: "2025-01-03", amount: 175, product: "Widget A" }
-];
-
-// Calculate total sales
-const total = sales.reduce((sum, record) => sum + record.amount, 0);
-console.log(`Total Sales: $${total}`);
-
-// Group by product
-const byProduct = sales.reduce((acc, record) => {
-  acc[record.product] = (acc[record.product] || 0) + record.amount;
-  return acc;
-}, {} as Record<string, number>);
-
-console.log("\n=== Sales by Product ===");
-console.log(JSON.stringify(byProduct, null, 2));
-```
-
-**Installing and Using NPM Packages:**
-```typescript
-// Note: To install packages, you need to run a command first
-// This is a two-step process in the sandbox
-
-// Step 1: Install package (run this via bash script or separate execution)
-// npm install axios
-
-// Step 2: Use it in your TypeScript code
-// For this example, we'll use built-in fetch instead
-const response = await fetch("https://api.github.com/zen");
-const text = await response.text();
-console.log(`GitHub Zen: ${text}`);
-```
-
----
-
-## Bash Code Execution
-
-### Capabilities
-- Full bash shell access
-- Standard Unix utilities (ls, grep, find, etc.)
-- File operations
-- Process management
-- Environment manipulation
-
-### Writing Bash Code for the Sandbox
-
-**Basic Commands:**
-```bash
-echo "Hello from Bash!"
-echo "Current directory: $(pwd)"
-echo "Current user: $(whoami)"
-echo "System info:"
-uname -a
-```
-
-**File Operations:**
-```bash
-# Create a file
-cat > /home/user/data.txt << EOF
-Line 1: Sample data
-Line 2: More data
-Line 3: Final line
-EOF
-
-echo "✓ File created"
-
-# Read and display
-echo ""
-echo "=== File Contents ==="
-cat /home/user/data.txt
-
-# File stats
-echo ""
-echo "=== File Stats ==="
-wc -l /home/user/data.txt
-ls -lh /home/user/data.txt
-```
-
-**Working with JSON:**
-```bash
-# Create JSON file
-cat > /home/user/config.json << 'EOF'
-{
-  "app": "MyApp",
-  "version": "1.0.0",
-  "settings": {
-    "debug": true,
-    "timeout": 30
+    // Save to file
+    import fs from "fs";
+    fs.writeFileSync("chart.png", chart.png, { encoding: "base64" });
   }
 }
-EOF
 
-echo "✓ JSON file created"
-
-# Pretty print with jq (if available)
-if command -v jq &> /dev/null; then
-    echo ""
-    echo "=== Formatted JSON ==="
-    cat /home/user/config.json | jq .
-else
-    echo ""
-    echo "=== JSON Contents ==="
-    cat /home/user/config.json
-fi
+await sandbox.kill();
 ```
 
-**Data Processing:**
-```bash
-# Generate sample data
-cat > /home/user/sales.csv << EOF
-date,product,amount
-2025-01-01,Widget A,150
-2025-01-02,Widget B,200
-2025-01-03,Widget A,175
-2025-01-04,Widget C,225
-EOF
+### TypeScript/JavaScript Code Execution
 
-echo "✓ CSV file created"
-echo ""
-echo "=== Sales Data ==="
-cat /home/user/sales.csv
+```typescript
+import { Sandbox } from "@e2b/code-interpreter";
 
-# Calculate total (skip header)
-echo ""
-echo "=== Total Sales ==="
-tail -n +2 /home/user/sales.csv | awk -F, '{sum += $3} END {print "$" sum}'
+const sandbox = await Sandbox.create();
 
-# Count products
-echo ""
-echo "=== Product Count ==="
-tail -n +2 /home/user/sales.csv | awk -F, '{print $2}' | sort | uniq -c
+const tsCode = `
+interface User {
+  id: number;
+  name: string;
+}
+
+const users: User[] = [
+  { id: 1, name: "Alice" },
+  { id: 2, name: "Bob" }
+];
+
+console.log("Users:", users);
+console.log("Count:", users.length);
+`;
+
+const execution = await sandbox.runCode(tsCode, { language: "ts" });
+
+execution.logs.stdout.forEach(line => console.log(line));
+
+await sandbox.kill();
 ```
 
-**Process Management:**
-```bash
-echo "=== System Information ==="
-echo "Memory usage:"
-free -h 2>/dev/null || echo "free command not available"
+### Bash Code Execution
 
-echo ""
-echo "Disk usage:"
-df -h /home/user
+For bash commands, use the standard `e2b` package and `commands.run`:
 
-echo ""
-echo "Running processes:"
-ps aux | head -10
-```
+```typescript
+import Sandbox from "e2b";
 
-**Installing Packages (if package manager available):**
-```bash
-# Check if apt is available
-if command -v apt-get &> /dev/null; then
-    echo "apt-get is available"
-    # apt-get update && apt-get install -y curl
-fi
+const sandbox = await Sandbox.create();
 
-# Check if apk is available (Alpine)
-if command -v apk &> /dev/null; then
-    echo "apk is available"
-    # apk add --no-cache curl
-fi
+const result = await sandbox.commands.run(`
+echo "Hello from Bash!"
+echo "Current directory: $(pwd)"
+ls -la /home/user
+`);
 
-# Use built-in tools
-echo ""
-echo "Available tools:"
-for cmd in curl wget git python3 node npm; do
-    if command -v $cmd &> /dev/null; then
-        echo "✓ $cmd: $(command -v $cmd)"
-    else
-        echo "✗ $cmd: not found"
-    fi
-done
+console.log("stdout:", result.stdout);
+console.log("stderr:", result.stderr);
+console.log("exit code:", result.exitCode);
+
+await sandbox.kill();
 ```
 
 ---
 
-## File Upload/Download Patterns
+## File Operations
 
-### Uploading Files to Sandbox
+### Writing Files to Sandbox
 
-**Option 1: Embed content in code (recommended)**
-```python
-# For small files, embed the content directly
-content = """
-This is the file content.
-It can be multiple lines.
-"""
+**Single file:**
+```typescript
+import { Sandbox } from "@e2b/code-interpreter";
 
-with open("/home/user/input.txt", "w") as f:
-    f.write(content)
+const sandbox = await Sandbox.create();
 
-print("File uploaded (embedded)")
+// Write text file
+await sandbox.files.write("/home/user/input.txt", "Hello, World!");
+
+// Write JSON file
+const data = { name: "test", value: 42 };
+await sandbox.files.write(
+  "/home/user/data.json",
+  JSON.stringify(data, null, 2)
+);
+
+console.log("Files written");
+
+await sandbox.kill();
 ```
 
-**Option 2: Base64 encoding for binary files**
-```python
-import base64
-
-# Base64 encoded data
-base64_data = "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IGZpbGUu"
-
-# Decode and write
-binary_data = base64.b64decode(base64_data)
-with open("/home/user/uploaded.bin", "wb") as f:
-    f.write(binary_data)
-
-print("Binary file uploaded")
+**Multiple files:**
+```typescript
+await sandbox.files.write([
+  { path: "/home/user/file1.txt", data: "Content 1" },
+  { path: "/home/user/file2.txt", data: "Content 2" },
+  { path: "/home/user/config.json", data: JSON.stringify({ setting: true }) }
+]);
 ```
 
-### Downloading Files from Sandbox
+**Binary files (base64):**
+```typescript
+import fs from "fs";
 
-**Always print file contents to retrieve them:**
+// Read local file
+const localFile = fs.readFileSync("local/image.png");
 
-```python
-# For text files
-with open("/home/user/output.txt", "r") as f:
-    print("=== FILE: output.txt ===")
-    print(f.read())
+// Write to sandbox
+await sandbox.files.write("/home/user/image.png", localFile);
 ```
 
-```python
-# For JSON files
+### Reading Files from Sandbox
+
+**Single file:**
+```typescript
+const content = await sandbox.files.read("/home/user/output.txt");
+console.log("File content:", content);
+```
+
+**Multiple files:**
+```typescript
+const file1 = await sandbox.files.read("/home/user/result1.json");
+const file2 = await sandbox.files.read("/home/user/result2.json");
+
+console.log("Result 1:", JSON.parse(file1));
+console.log("Result 2:", JSON.parse(file2));
+```
+
+**Save to local filesystem:**
+```typescript
+import fs from "fs";
+
+const remoteContent = await sandbox.files.read("/home/user/output.csv");
+fs.writeFileSync("local/output.csv", remoteContent);
+console.log("File downloaded to local/output.csv");
+```
+
+---
+
+## Complete Workflow Examples
+
+### Example 1: Data Analysis with File I/O
+
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import { Sandbox } from "@e2b/code-interpreter";
+import fs from "fs";
+
+async function analyzeData() {
+  const sandbox = await Sandbox.create();
+
+  try {
+    // 1. Upload input data
+    const inputData = {
+      sales: [
+        { date: "2025-01-01", amount: 150 },
+        { date: "2025-01-02", amount: 200 },
+        { date: "2025-01-03", amount: 175 }
+      ]
+    };
+
+    await sandbox.files.write(
+      "/home/user/input.json",
+      JSON.stringify(inputData)
+    );
+
+    // 2. Process data with Python
+    const code = `
 import json
-
-with open("/home/user/data.json", "r") as f:
-    data = json.load(f)
-    print("=== FILE: data.json ===")
-    print(json.dumps(data, indent=2))
-```
-
-```python
-# For binary files (images, etc.)
-import base64
-
-with open("/home/user/chart.png", "rb") as f:
-    encoded = base64.b64encode(f.read()).decode('utf-8')
-    print("=== FILE: chart.png (base64) ===")
-    print(encoded)
-```
-
-**For matplotlib charts (automatic):**
-```python
+import pandas as pd
 import matplotlib.pyplot as plt
 
-# Create chart
-plt.plot([1, 2, 3, 4])
-plt.ylabel('Values')
+# Load input
+with open("/home/user/input.json") as f:
+    data = json.load(f)
 
-# E2B automatically captures and returns as base64 PNG
+# Create DataFrame
+df = pd.DataFrame(data['sales'])
+df['date'] = pd.to_datetime(df['date'])
+
+# Calculate statistics
+total = df['amount'].sum()
+average = df['amount'].mean()
+
+print(f"Total sales: ${total}")
+print(f"Average: ${average:.2f}")
+
+# Create visualization
+plt.figure(figsize=(10, 6))
+plt.bar(df['date'].dt.strftime('%Y-%m-%d'), df['amount'])
+plt.xlabel('Date')
+plt.ylabel('Amount ($)')
+plt.title('Daily Sales')
+plt.xticks(rotation=45)
+plt.tight_layout()
 plt.show()
+
+# Export results
+results = {
+    "total": float(total),
+    "average": float(average),
+    "count": len(df)
+}
+
+with open("/home/user/results.json", "w") as f:
+    json.dump(results, f, indent=2)
+`;
+
+    const execution = await sandbox.runCode(code, { language: "python" });
+
+    // 3. Display output
+    execution.logs.stdout.forEach(line => console.log(line));
+
+    // 4. Download chart
+    if (execution.results.length > 0 && execution.results[0].png) {
+      fs.writeFileSync("sales_chart.png", execution.results[0].png, {
+        encoding: "base64"
+      });
+      console.log("✓ Chart saved to sales_chart.png");
+    }
+
+    // 5. Download results
+    const results = await sandbox.files.read("/home/user/results.json");
+    console.log("\nResults:", JSON.parse(results));
+
+  } finally {
+    await sandbox.kill();
+  }
+}
+
+analyzeData();
+```
+
+### Example 2: Multi-Step Processing Pipeline
+
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import { Sandbox } from "@e2b/code-interpreter";
+
+async function processPipeline() {
+  const sandbox = await Sandbox.create();
+
+  try {
+    // Step 1: Generate data with Python
+    console.log("=== Step 1: Generating Data ===");
+    await sandbox.runCode(`
+import json
+import random
+
+data = [random.randint(1, 100) for _ in range(50)]
+
+with open("/home/user/data.json", "w") as f:
+    json.dump(data, f)
+
+print(f"Generated {len(data)} random numbers")
+`, { language: "python" });
+
+    // Step 2: Process with TypeScript
+    console.log("\n=== Step 2: Processing with TypeScript ===");
+    const tsResult = await sandbox.runCode(`
+import { readFileSync, writeFileSync } from "fs";
+
+const data: number[] = JSON.parse(
+  readFileSync("/home/user/data.json", "utf-8")
+);
+
+const stats = {
+  count: data.length,
+  sum: data.reduce((a, b) => a + b, 0),
+  min: Math.min(...data),
+  max: Math.max(...data),
+  mean: data.reduce((a, b) => a + b, 0) / data.length
+};
+
+writeFileSync("/home/user/stats.json", JSON.stringify(stats, null, 2));
+
+console.log("Statistics calculated:");
+console.log(JSON.stringify(stats, null, 2));
+`, { language: "ts" });
+
+    tsResult.logs.stdout.forEach(line => console.log(line));
+
+    // Step 3: Visualize with Python
+    console.log("\n=== Step 3: Creating Visualization ===");
+    const vizResult = await sandbox.runCode(`
+import json
+import matplotlib.pyplot as plt
+
+with open("/home/user/data.json") as f:
+    data = json.load(f)
+
+plt.figure(figsize=(12, 6))
+plt.hist(data, bins=20, edgecolor='black', alpha=0.7)
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('Distribution of Random Numbers')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+print("Visualization created")
+`, { language: "python" });
+
+    // Save chart
+    if (vizResult.results[0]?.png) {
+      import fs from "fs";
+      fs.writeFileSync("distribution.png", vizResult.results[0].png, {
+        encoding: "base64"
+      });
+      console.log("✓ Chart saved to distribution.png");
+    }
+
+    // Download final stats
+    const stats = await sandbox.files.read("/home/user/stats.json");
+    console.log("\n=== Final Statistics ===");
+    console.log(stats);
+
+  } finally {
+    await sandbox.kill();
+  }
+}
+
+processPipeline();
+```
+
+### Example 3: File Processing with Bash
+
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import Sandbox from "e2b";
+
+async function processFiles() {
+  const sandbox = await Sandbox.create();
+
+  try {
+    // Upload CSV file
+    const csvData = `name,age,city
+Alice,25,NYC
+Bob,30,LA
+Charlie,35,Chicago`;
+
+    await sandbox.files.write("/home/user/data.csv", csvData);
+
+    // Process with bash
+    const result = await sandbox.commands.run(`
+echo "=== Processing CSV file ==="
+
+# Count lines
+echo "Total lines:"
+wc -l /home/user/data.csv
+
+# Extract names
+echo ""
+echo "Names:"
+tail -n +2 /home/user/data.csv | cut -d, -f1
+
+# Calculate average age
+echo ""
+echo "Average age:"
+tail -n +2 /home/user/data.csv | cut -d, -f2 | awk '{sum+=$1; count++} END {print sum/count}'
+
+# Create summary
+cat > /home/user/summary.txt << EOF
+CSV Processing Summary
+=====================
+File: data.csv
+Lines: $(wc -l < /home/user/data.csv)
+Records: $(($(wc -l < /home/user/data.csv) - 1))
+EOF
+
+cat /home/user/summary.txt
+`);
+
+    console.log(result.stdout);
+
+    // Download summary
+    const summary = await sandbox.files.read("/home/user/summary.txt");
+    console.log("\n=== Downloaded Summary ===");
+    console.log(summary);
+
+  } finally {
+    await sandbox.kill();
+  }
+}
+
+processFiles();
+```
+
+### Example 4: Installing Packages and Using APIs
+
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import { Sandbox } from "@e2b/code-interpreter";
+
+async function fetchAndAnalyze() {
+  const sandbox = await Sandbox.create();
+
+  try {
+    // Install required package
+    console.log("Installing requests...");
+    await sandbox.commands.run("pip install requests");
+
+    // Fetch data and analyze
+    const code = `
+import requests
+import json
+
+# Fetch data from API
+response = requests.get("https://api.github.com/users/github")
+user_data = response.json()
+
+print(f"User: {user_data['login']}")
+print(f"Name: {user_data['name']}")
+print(f"Public repos: {user_data['public_repos']}")
+print(f"Followers: {user_data['followers']}")
+
+# Save to file
+with open("/home/user/github_user.json", "w") as f:
+    json.dump(user_data, f, indent=2)
+
+print("\\nData saved to github_user.json")
+`;
+
+    const execution = await sandbox.runCode(code, { language: "python" });
+    execution.logs.stdout.forEach(line => console.log(line));
+
+    // Download the saved data
+    const userData = await sandbox.files.read("/home/user/github_user.json");
+    const parsed = JSON.parse(userData);
+
+    console.log("\n=== Downloaded User Data ===");
+    console.log(`Login: ${parsed.login}`);
+    console.log(`Public Repos: ${parsed.public_repos}`);
+
+  } finally {
+    await sandbox.kill();
+  }
+}
+
+fetchAndAnalyze();
 ```
 
 ---
 
 ## Best Practices for AI Agents
 
-### 1. Always Print Output
-```python
-# ✓ GOOD - Output is captured
-result = calculate_something()
-print(f"Result: {result}")
+### 1. Always Clean Up Sandboxes
 
-# ✗ BAD - No output visible
-result = calculate_something()
-```
-
-### 2. Use Clear Section Headers
-```python
-print("=== Data Processing ===")
-# ... processing code ...
-print("\n=== Results ===")
-# ... print results ...
-```
-
-### 3. Handle Errors Gracefully
-```python
-try:
-    data = process_data()
-    print(f"✓ Processing successful: {len(data)} records")
-except Exception as e:
-    print(f"✗ Error: {str(e)}")
-```
-
-### 4. Verify File Operations
-```python
-import os
-
-filepath = "/home/user/output.json"
-with open(filepath, "w") as f:
-    json.dump(data, f)
-
-if os.path.exists(filepath):
-    size = os.path.getsize(filepath)
-    print(f"✓ File created: {filepath} ({size} bytes)")
-```
-
-### 5. Structure Complex Output
 ```typescript
-interface Result {
-  success: boolean;
-  data: any;
-  message: string;
+const sandbox = await Sandbox.create();
+try {
+  // ... your code ...
+} finally {
+  await sandbox.kill(); // Always cleanup
+}
+```
+
+### 2. Handle Errors Properly
+
+```typescript
+const execution = await sandbox.runCode(code, { language: "python" });
+
+if (execution.error) {
+  console.error("Execution error:", execution.error);
+  return;
 }
 
-const result: Result = {
-  success: true,
-  data: { count: 42 },
-  message: "Operation completed"
-};
-
-console.log(JSON.stringify(result, null, 2));
+if (execution.logs.stderr.length > 0) {
+  console.warn("Warnings:", execution.logs.stderr);
+}
 ```
 
-### 6. Always Show Final Status
-```python
-print("\n" + "="*50)
-print("EXECUTION COMPLETED SUCCESSFULLY")
-print("="*50)
+### 3. Check File Existence Before Reading
+
+```typescript
+const code = `
+import os
+filepath = "/home/user/output.json"
+if os.path.exists(filepath):
+    print(f"File exists: {filepath}")
+else:
+    print(f"File not found: {filepath}")
+`;
+
+const execution = await sandbox.runCode(code, { language: "python" });
+```
+
+### 4. Use Appropriate Language for Task
+
+- **Python**: Data analysis, ML, scientific computing, visualization
+- **TypeScript**: Type-safe data processing, JSON manipulation, async operations
+- **Bash**: File operations, system tasks, text processing
+
+### 5. Structure Output for Easy Parsing
+
+```typescript
+const code = `
+import json
+
+result = {
+    "status": "success",
+    "data": {"count": 42},
+    "message": "Processing completed"
+}
+
+print(json.dumps(result))
+`;
+
+const execution = await sandbox.runCode(code, { language: "python" });
+const output = execution.logs.stdout.join("\n");
+const parsed = JSON.parse(output);
+console.log("Status:", parsed.status);
 ```
 
 ---
 
 ## Common Patterns
 
-### Pattern 1: Data Analysis Pipeline
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
+### Pattern 1: Upload → Process → Download
 
-# 1. Load/create data
-print("=== Step 1: Loading Data ===")
-data = {'values': [10, 20, 30, 40, 50]}
-df = pd.DataFrame(data)
-print(f"Loaded {len(df)} rows")
-
-# 2. Process
-print("\n=== Step 2: Processing ===")
-df['squared'] = df['values'] ** 2
-print(df)
-
-# 3. Visualize
-print("\n=== Step 3: Creating Visualization ===")
-plt.figure(figsize=(8, 6))
-plt.plot(df['values'], df['squared'], 'bo-')
-plt.xlabel('Values')
-plt.ylabel('Squared')
-plt.title('Values vs Squared')
-plt.grid(True)
-plt.show()
-
-# 4. Export
-print("\n=== Step 4: Exporting Results ===")
-with open("/home/user/results.json", "w") as f:
-    df.to_json(f, orient='records')
-print("✓ Results exported to results.json")
-```
-
-### Pattern 2: File Processing
 ```typescript
-import { readdirSync, statSync, readFileSync } from "fs";
-import { join } from "path";
+// 1. Upload
+await sandbox.files.write("/home/user/input.csv", csvData);
 
-const dir = "/home/user";
+// 2. Process
+await sandbox.runCode(processingCode, { language: "python" });
 
-console.log("=== Directory Scan ===");
-const files = readdirSync(dir);
-console.log(`Found ${files.length} items`);
-
-for (const file of files) {
-  const filepath = join(dir, file);
-  const stats = statSync(filepath);
-
-  if (stats.isFile()) {
-    console.log(`\n📄 ${file}`);
-    console.log(`   Size: ${stats.size} bytes`);
-    console.log(`   Modified: ${stats.mtime}`);
-  }
-}
+// 3. Download
+const result = await sandbox.files.read("/home/user/output.json");
 ```
 
-### Pattern 3: API Data Fetching and Processing
-```python
+### Pattern 2: Multi-Language Pipeline
+
+```typescript
+// Python for data generation
+await sandbox.runCode(generateDataCode, { language: "python" });
+
+// TypeScript for processing
+await sandbox.runCode(processCode, { language: "ts" });
+
+// Python for visualization
+await sandbox.runCode(visualizeCode, { language: "python" });
+```
+
+### Pattern 3: Iterative Processing
+
+```typescript
+for (let i = 0; i < datasets.length; i++) {
+  await sandbox.files.write(`/home/user/input_${i}.json`, datasets[i]);
+
+  const code = `
 import json
+with open("/home/user/input_${i}.json") as f:
+    data = json.load(f)
+# Process data...
+with open("/home/user/output_${i}.json", "w") as f:
+    json.dump(result, f)
+`;
 
-# Simulate API response (or use requests library)
-api_data = {
-    "users": [
-        {"id": 1, "name": "Alice", "active": True},
-        {"id": 2, "name": "Bob", "active": False},
-        {"id": 3, "name": "Charlie", "active": True}
-    ]
+  await sandbox.runCode(code, { language: "python" });
+
+  const result = await sandbox.files.read(`/home/user/output_${i}.json`);
+  console.log(`Result ${i}:`, result);
 }
-
-print("=== API Data Processing ===")
-print(f"Total users: {len(api_data['users'])}")
-
-# Filter active users
-active_users = [u for u in api_data['users'] if u['active']]
-print(f"Active users: {len(active_users)}")
-
-# Export processed data
-print("\n=== Processed Data ===")
-for user in active_users:
-    print(f"- {user['name']} (ID: {user['id']})")
 ```
 
 ---
 
-## Usage Examples
+## Key SDK Methods Reference
 
-### Execute Python Code
-```bash
-echo 'print("Hello from Python!")' | ./execute-python-code.ts
+### Sandbox Creation
+```typescript
+import { Sandbox } from "@e2b/code-interpreter";
+const sandbox = await Sandbox.create();
 ```
 
-### Execute TypeScript Code
-```bash
-echo 'console.log("Hello from TypeScript!")' | ./execute-node-code.ts
+### Code Execution
+```typescript
+const execution = await sandbox.runCode(code, {
+  language: "python" | "ts" | "js" | "bash"
+});
 ```
 
-### Execute Bash Code
-```bash
-echo 'echo "Hello from Bash!"' | ./execute-bash-code.ts
+### File Operations
+```typescript
+// Write single file
+await sandbox.files.write(path, content);
+
+// Write multiple files
+await sandbox.files.write([
+  { path: "/path/1", data: "content1" },
+  { path: "/path/2", data: "content2" }
+]);
+
+// Read file
+const content = await sandbox.files.read(path);
 ```
 
-### Multi-line Code
-```bash
-cat << 'EOF' | ./execute-python-code.ts
-import numpy as np
-import matplotlib.pyplot as plt
+### Command Execution (for bash)
+```typescript
+import Sandbox from "e2b";
+const sandbox = await Sandbox.create();
+const result = await sandbox.commands.run(command);
+```
 
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
+### Cleanup
+```typescript
+await sandbox.kill();
+```
 
-plt.plot(x, y)
-plt.title('Sine Wave')
-plt.show()
+---
 
-print("Chart generated!")
-EOF
+## Template for AI Agents
+
+When an AI agent needs to execute code in a sandbox, use this template:
+
+```typescript
+#!/usr/bin/env bun
+import "dotenv/config";
+import { Sandbox } from "@e2b/code-interpreter";
+
+async function main() {
+  const sandbox = await Sandbox.create();
+  console.log(`Sandbox created: ${sandbox.sandboxId}`);
+
+  try {
+    // Step 1: Upload any input files
+    // await sandbox.files.write("/home/user/input.txt", inputData);
+
+    // Step 2: Execute code
+    const code = \`
+# Your Python/TypeScript/Bash code here
+print("Hello from sandbox!")
+\`;
+
+    const execution = await sandbox.runCode(code, { language: "python" });
+
+    // Step 3: Handle output
+    execution.logs.stdout.forEach(line => console.log(line));
+    execution.logs.stderr.forEach(line => console.error(line));
+
+    if (execution.error) {
+      console.error("Error:", execution.error);
+    }
+
+    // Step 4: Download results if needed
+    // const output = await sandbox.files.read("/home/user/output.json");
+    // console.log("Results:", output);
+
+    // Step 5: Handle charts if created
+    // if (execution.results.length > 0 && execution.results[0].png) {
+    //   import fs from "fs";
+    //   fs.writeFileSync("chart.png", execution.results[0].png, {
+    //     encoding: "base64"
+    //   });
+    // }
+
+  } finally {
+    await sandbox.kill();
+    console.log("Sandbox cleaned up");
+  }
+}
+
+main().catch(console.error);
 ```
