@@ -50,8 +50,8 @@ async function loadRecording() {
 
   try {
     recording.value = await api.getRecording(recordingId.value)
-  } catch (e: any) {
-    error.value = e.message || 'Failed to load recording'
+  } catch (e: unknown) {
+    error.value = (e as Error).message ?? 'Failed to load recording'
   } finally {
     loading.value = false
   }
@@ -62,7 +62,7 @@ function goBack() {
 }
 
 onMounted(() => {
-  loadRecording()
+  void loadRecording()
 })
 </script>
 
@@ -179,7 +179,7 @@ onMounted(() => {
                       <v-list-item>
                         <v-list-item-title>Transcript Created</v-list-item-title>
                         <v-list-item-subtitle>
-                          {{ formatDate(recording.transcriptMetadata?.transcriptCreatedAt || '') }}
+                          {{ formatDate(recording.transcriptMetadata?.transcriptCreatedAt ?? '') }}
                         </v-list-item-subtitle>
                       </v-list-item>
                     </v-list>
