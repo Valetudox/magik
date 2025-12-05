@@ -35,13 +35,14 @@ export async function pushToConfluence(
         details: result.details,
       })
     }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message?.includes('JIRA_USERNAME') || error.message?.includes('JIRA_TOKEN')) {
-      reply.status(500).send({ error: error.message })
-    } else {
-      reply.status(500).send({ error: error.message })
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return reply.status(404).send({ error: 'Decision not found' })
     }
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    if (errorMessage.includes('JIRA_USERNAME') || errorMessage.includes('JIRA_TOKEN')) {
+      return reply.status(500).send({ error: errorMessage })
+    }
+    return reply.status(500).send({ error: errorMessage })
   }
 }

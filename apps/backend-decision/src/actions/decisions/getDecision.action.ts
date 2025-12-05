@@ -13,11 +13,10 @@ export async function getDecision(
     const { id } = request.params
     const decision = await getDecisionById(id)
     return decision
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Decision not found' })
-    } else {
-      reply.status(500).send({ error: 'Failed to read decision' })
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return reply.status(404).send({ error: 'Decision not found' })
     }
+    return reply.status(500).send({ error: 'Failed to read decision' })
   }
 }

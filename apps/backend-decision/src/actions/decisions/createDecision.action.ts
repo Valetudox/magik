@@ -18,13 +18,14 @@ export async function createDecision(
 
     const id = await createDecisionService(filename)
     return { success: true, id }
-  } catch (error: any) {
-    if (error.message === 'Invalid filename') {
-      return reply.status(400).send({ error: error.message })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    if (errorMessage === 'Invalid filename') {
+      return reply.status(400).send({ error: errorMessage })
     }
-    if (error.message === 'Decision with this name already exists') {
-      return reply.status(409).send({ error: error.message })
+    if (errorMessage === 'Decision with this name already exists') {
+      return reply.status(409).send({ error: errorMessage })
     }
-    reply.status(500).send({ error: error.message })
+    return reply.status(500).send({ error: errorMessage })
   }
 }
