@@ -64,6 +64,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@e2b/code-interpreter": "^2.3.3",
     "@speechmatics/real-time-client": "^8.2.0",
     "@types/inquirer": "^9.0.9",
     "axios": "^1.13.2",
