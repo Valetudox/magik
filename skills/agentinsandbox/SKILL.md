@@ -68,3 +68,37 @@ Clone a repo, create a branch, run a prompt, commit changes, and push.
 3. Runs Claude with your prompt
 4. Claude makes multiple commits as it works
 5. Pushes branch to GitHub
+
+---
+
+## Monitoring Sandboxes
+
+Both scripts log the sandbox ID when they start execution. You can use this ID to monitor and debug running sandboxes.
+
+### List All Sandboxes
+
+```bash
+e2b sandbox list
+```
+
+This shows all active sandboxes with their IDs, status, and creation time.
+
+### View Sandbox Logs
+
+```bash
+e2b sandbox logs <sandbox-id>
+```
+
+**Example:**
+```bash
+# From script output: "Sandbox created: imj1fqxipov73fa7t44ui"
+e2b sandbox logs imj1fqxipov73fa7t44ui
+```
+
+This displays real-time logs from the sandbox, useful for:
+- Debugging failed executions
+- Monitoring long-running operations
+- Viewing Claude Code CLI output if the script loses connection
+- Troubleshooting git operations or authentication issues
+
+**Reference:** [E2B CLI Documentation](https://e2b.dev/docs/cli/list-sandboxes)
