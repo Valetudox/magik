@@ -33,27 +33,31 @@ const formattedRequirement = computed(() => {
       result = `The ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
 
-    case 'event-driven':
-      const triggers = req.triggers?.map((t) => search(t)).join(', ') || ''
+    case 'event-driven': {
+      const triggers = req.triggers?.map((t) => search(t)).join(', ') ?? ''
       result = `When ${hl(triggers, 'highlight-trigger')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'state-driven':
-      const preConditions = req.preConditions?.map((p) => search(p)).join(' and ') || ''
+    case 'state-driven': {
+      const preConditions = req.preConditions?.map((p) => search(p)).join(' and ') ?? ''
       result = `While ${hl(preConditions, 'highlight-precondition')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'optional-feature':
-      const features = req.features?.map((f) => search(f)).join(', ') || ''
+    case 'optional-feature': {
+      const features = req.features?.map((f) => search(f)).join(', ') ?? ''
       result = `Where ${hl(features, 'highlight-feature')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'unwanted-behaviour':
-      const unwantedConditions = req.unwantedConditions?.map((u) => search(u)).join(', ') || ''
+    case 'unwanted-behaviour': {
+      const unwantedConditions = req.unwantedConditions?.map((u) => search(u)).join(', ') ?? ''
       result = `If ${hl(unwantedConditions, 'highlight-unwanted')}, then the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'complex':
+    case 'complex': {
       const parts = []
       if (req.preConditions) {
         const pc = req.preConditions.map((p) => search(p)).join(' and ')
@@ -74,6 +78,7 @@ const formattedRequirement = computed(() => {
       parts.push(`the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`)
       result = parts.join(', ')
       break
+    }
 
     default:
       result = `The ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
