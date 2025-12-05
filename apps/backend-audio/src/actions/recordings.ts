@@ -11,10 +11,10 @@ export async function listRecordingsHandler(request: FastifyRequest, reply: Fast
       total: recordings.length,
     }
 
-    reply.send(response)
+    return reply.send(response)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    reply.status(500).send({
+    return reply.status(500).send({
       error: 'Failed to list recordings',
       message,
     })
@@ -30,17 +30,16 @@ export async function getRecordingHandler(
     const recording = await getRecordingById(id)
 
     if (!recording) {
-      reply.status(404).send({
+      return reply.status(404).send({
         error: 'Recording not found',
         message: `No recording found with id: ${id}`,
       })
-      return
     }
 
-    reply.send(recording)
+    return reply.send(recording)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    reply.status(500).send({
+    return reply.status(500).send({
       error: 'Failed to get recording',
       message,
     })
