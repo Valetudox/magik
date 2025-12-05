@@ -4,7 +4,7 @@ import { homedir } from 'os'
 import { join } from 'path'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
-import { SCRIPTS_DIR, LANGUAGES } from '../utils/index.js'
+import { LANGUAGES } from '../utils/index.js'
 
 const JSONL_DIR = join(homedir(), 'Documents', 'live-transcriptions')
 const MARKDOWN_DIR = join(homedir(), 'Obsidian', 'magic', 'LiveTranscriptions')
@@ -15,7 +15,7 @@ export const recordLiveCommand = new Command('record-live')
   .description('Record audio with real-time transcription')
   .action(async () => {
     // Interactive prompts
-    const answers = await inquirer.prompt([
+    const answers = await inquirer.prompt<{ name: string; language: string }>([
       {
         type: 'input',
         name: 'name',
