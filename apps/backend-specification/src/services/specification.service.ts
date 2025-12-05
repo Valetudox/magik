@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from 'fs/promises'
+import { readdir, readFile } from 'fs/promises'
 import { join, relative } from 'path'
 import { SPECIFICATIONS_DIR } from '../config'
 
@@ -99,9 +99,9 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
     }
 
     return summaries
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If directory doesn't exist, return empty array
-    if (error.code === 'ENOENT') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       return []
     }
     throw error
