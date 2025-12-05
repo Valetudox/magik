@@ -13,10 +13,9 @@ export const knowledgeBaseCommand = new Command('knowledge-base')
     console.log('Leave empty or press Ctrl+C to exit')
     console.log('')
 
-    const scriptPath = join(SCRIPTS_DIR, 'gemini', 'query_knowledge_base.py')
-
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
-      const answers = await inquirer.prompt([
+      const answers = await inquirer.prompt<{ question: string }>([
         {
           type: 'input',
           name: 'question',
