@@ -135,31 +135,23 @@ async function executeRepoWorkflow(
   console.log(`Sandbox created: ${sandbox.sandboxId}`);
 
   try {
-    // Step 1: Install GitHub CLI if not available
-    console.log(`\nChecking for GitHub CLI...`);
-    const ghCheckResult = await sandbox.commands.run('which gh', { timeoutMs: 5000 });
+    // Step 1: Install GitHub CLI
+    console.log(`\nInstalling GitHub CLI...`);
 
-    if (ghCheckResult.exitCode !== 0) {
-      console.log('GitHub CLI not found. Installing...');
-
-      // Install GitHub CLI using the official installation script
-      const installResult = await sandbox.commands.run(
-        'curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y',
-        {
-          timeoutMs: 120000, // 2 minutes for installation
-          onStdout: (line) => console.log(line),
-          onStderr: (line) => console.error(line),
-        }
-      );
-
-      if (installResult.exitCode !== 0) {
-        throw new Error(`Failed to install GitHub CLI: ${installResult.stderr}`);
+    const installResult = await sandbox.commands.run(
+      'curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y',
+      {
+        timeoutMs: 120000, // 2 minutes for installation
+        onStdout: (line) => console.log(line),
+        onStderr: (line) => console.error(line),
       }
+    );
 
-      console.log('✓ GitHub CLI installed successfully');
-    } else {
-      console.log('✓ GitHub CLI is already available');
+    if (installResult.exitCode !== 0) {
+      throw new Error(`Failed to install GitHub CLI: ${installResult.stderr}`);
     }
+
+    console.log('✓ GitHub CLI installed successfully');
 
     // Step 2: Clone repository
     console.log(`\nCloning repository...`);
