@@ -35,7 +35,7 @@ function goBack() {
 // Filter requirements based on search query
 const filteredRequirements = computed(() => {
   if (!specification.value || !searchQuery.value.trim()) {
-    return specification.value?.requirements || []
+    return specification.value?.requirements ?? []
   }
 
   const query = searchQuery.value.toLowerCase()
@@ -53,10 +53,10 @@ const filteredRequirements = computed(() => {
         const searchableText = [
           item.systemName,
           item.systemResponse,
-          ...(item.triggers || []),
-          ...(item.preConditions || []),
-          ...(item.features || []),
-          ...(item.unwantedConditions || []),
+          ...(item.triggers ?? []),
+          ...(item.preConditions ?? []),
+          ...(item.features ?? []),
+          ...(item.unwantedConditions ?? []),
         ]
           .join(' ')
           .toLowerCase()
