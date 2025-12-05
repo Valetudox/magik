@@ -32,6 +32,7 @@ export interface SpecificationSummary {
   title: string
   description: string
   filepath: string
+  project: string
 }
 
 export interface SpecificationDetail extends Specification {

@@ -38,6 +38,7 @@ export interface SpecificationSummary {
   title: string
   description: string
   filepath: string
+  project: string
 }
 
 export interface SpecificationDetail extends Specification {
@@ -85,15 +86,21 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
         const spec = JSON.parse(content) as Specification
 
         // Extract ID from relative path without .json extension
-        // e.g., "projects/magik/specification-viewer.json" -> "projects/magik/specification-viewer"
+        // e.g., "projects/diagram-management/specification.json" -> "projects/diagram-management/specification"
         const relativePath = relative(SPECIFICATIONS_DIR, filePath)
         const id = relativePath.slice(0, -5) // Remove .json
+
+        // Extract project name from path
+        // e.g., "projects/diagram-management/specification" -> "diagram-management"
+        const pathParts = id.split('/')
+        const project = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'unknown'
 
         summaries.push({
           id,
           title: spec.title,
           description: spec.description,
           filepath: filePath,
+          project,
         })
       } catch (error) {
         // Skip invalid JSON files, continue processing

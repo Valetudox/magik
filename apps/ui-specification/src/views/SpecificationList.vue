@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, type SpecificationSummary } from '../services/api'
 
@@ -9,10 +9,42 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const search = ref('')
 
-const headers = [
-  { title: 'Title', key: 'title', sortable: true },
-  { title: 'Description', key: 'description', sortable: false },
-]
+// Group specifications by project
+const groupedSpecifications = computed(() => {
+  const groups = new Map<string, SpecificationSummary[]>()
+
+  specifications.value.forEach(spec => {
+    const project = spec.project
+    if (!groups.has(project)) {
+      groups.set(project, [])
+    }
+    groups.get(project)!.push(spec)
+  })
+
+  // Convert to array and sort by project name
+  return Array.from(groups.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([project, specs]) => ({ project, specs }))
+})
+
+// Filter specifications based on search
+const filteredGroups = computed(() => {
+  if (!search.value) {
+    return groupedSpecifications.value
+  }
+
+  const searchLower = search.value.toLowerCase()
+  return groupedSpecifications.value
+    .map(group => ({
+      project: group.project,
+      specs: group.specs.filter(spec =>
+        spec.title.toLowerCase().includes(searchLower) ||
+        spec.description.toLowerCase().includes(searchLower) ||
+        spec.project.toLowerCase().includes(searchLower)
+      )
+    }))
+    .filter(group => group.specs.length > 0)
+})
 
 onMounted(async () => {
   loading.value = true
@@ -28,12 +60,7 @@ onMounted(async () => {
   }
 })
 
-interface RowClickEvent {
-  item: SpecificationSummary
-}
-
-function goToDetail(_event: MouseEvent, { item }: RowClickEvent): void {
-  const spec: SpecificationSummary = item
+function goToDetail(spec: SpecificationSummary) {
   router.push(`/${spec.id}`)
 }
 </script>
@@ -62,7 +89,7 @@ function goToDetail(_event: MouseEvent, { item }: RowClickEvent): void {
         </v-col>
       </v-row>
 
-      <!-- Data table -->
+      <!-- Specifications grouped by project -->
       <v-row v-else>
         <v-col cols="12">
           <v-card>
@@ -77,22 +104,35 @@ function goToDetail(_event: MouseEvent, { item }: RowClickEvent): void {
                 clearable
               />
             </v-card-title>
-            <v-data-table
-              :headers="headers"
-              :items="specifications"
-              :search="search"
-              hover
-              class="clickable-rows"
-              @click:row="goToDetail"
-            >
-              <template v-slot:item.title="{ item }">
-                <strong>{{ item.title }}</strong>
-              </template>
 
-              <template #no-data>
-                <v-alert type="info" variant="text"> No specifications found </v-alert>
-              </template>
-            </v-data-table>
+            <v-card-text v-if="filteredGroups.length === 0">
+              <v-alert type="info" variant="text">
+                No specifications found
+              </v-alert>
+            </v-card-text>
+
+            <v-card-text v-else>
+              <div v-for="group in filteredGroups" :key="group.project" class="mb-6">
+                <h2 class="text-h5 mb-3 text-capitalize">
+                  {{ group.project.replace(/-/g, ' ') }}
+                </h2>
+                <v-list lines="two" class="specification-list">
+                  <v-list-item
+                    v-for="spec in group.specs"
+                    :key="spec.id"
+                    class="specification-item"
+                    @click="goToDetail(spec)"
+                  >
+                    <v-list-item-title class="text-h6 mb-1">
+                      {{ spec.title }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ spec.description }}
+                    </v-list-item-subtitle>
+                  </v-list-item>
+                </v-list>
+              </div>
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
@@ -101,11 +141,17 @@ function goToDetail(_event: MouseEvent, { item }: RowClickEvent): void {
 </template>
 
 <style scoped>
-.clickable-rows :deep(tbody tr) {
+.specification-item {
   cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 8px;
 }
 
-.clickable-rows :deep(tbody tr:hover) {
+.specification-item:hover {
   background-color: rgba(0, 0, 0, 0.04);
+}
+
+.specification-list {
+  background: transparent;
 }
 </style>
