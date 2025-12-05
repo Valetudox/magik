@@ -28,7 +28,7 @@ export function createFileSystemTools(basePath: string) {
 
           if (lines) {
             startLine = lines.start
-            endLine = lines.end || lineArray.length
+            endLine = lines.end ?? lineArray.length
             resultContent = lineArray.slice(startLine - 1, endLine).join('\n')
           }
 
@@ -39,8 +39,9 @@ export function createFileSystemTools(basePath: string) {
             startLine,
             endLine,
           }
-        } catch (error: any) {
-          throw new Error(`Error reading file: ${error.message}`)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          throw new Error(`Error reading file: ${message}`)
         }
       },
     }),
@@ -92,8 +93,9 @@ export function createFileSystemTools(basePath: string) {
             path: relative(resolvedBasePath, fullPath),
             entries,
           }
-        } catch (error: any) {
-          throw new Error(`Error listing directory: ${error.message}`)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          throw new Error(`Error listing directory: ${message}`)
         }
       },
     }),
@@ -116,8 +118,9 @@ export function createFileSystemTools(basePath: string) {
             path: file,
             relativePath: relative(resolvedBasePath, file),
           }))
-        } catch (error: any) {
-          throw new Error(`Error finding files: ${error.message}`)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          throw new Error(`Error finding files: ${message}`)
         }
       },
     }),
@@ -185,8 +188,9 @@ export function createFileSystemTools(basePath: string) {
           }
 
           return matches
-        } catch (error: any) {
-          throw new Error(`Error searching content: ${error.message}`)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
+          throw new Error(`Error searching content: ${message}`)
         }
       },
     }),
