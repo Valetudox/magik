@@ -75,7 +75,9 @@ const handleCancel = () => {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="handleCancel"> Cancel </v-btn>
+        <v-btn variant="text" @click="handleCancel">
+          Cancel
+        </v-btn>
         <v-btn color="primary" variant="flat" @click="handleSave">
           {{ saveButtonText }}
         </v-btn>
