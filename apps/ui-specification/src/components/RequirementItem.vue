@@ -21,10 +21,10 @@ const highlightSearch = (text: string, query?: string): string => {
   return text.replace(regex, '<mark>$1</mark>')
 }
 
-const formattedRequirement = computed(() => {
-  const req = props.requirement
+const formattedRequirement = computed((): string => {
+  const req: SpecificationRequirementItem = props.requirement
   const hl = highlight
-  const search = (text: string) => highlightSearch(text, props.searchQuery)
+  const search = (text: string): string => highlightSearch(text, props.searchQuery)
 
   let result = ''
 
@@ -33,47 +33,52 @@ const formattedRequirement = computed(() => {
       result = `The ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
 
-    case 'event-driven':
-      const triggers = req.triggers?.map((t) => search(t)).join(', ') || ''
+    case 'event-driven': {
+      const triggers: string = req.triggers?.map((t: string) => search(t)).join(', ') ?? ''
       result = `When ${hl(triggers, 'highlight-trigger')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'state-driven':
-      const preConditions = req.preConditions?.map((p) => search(p)).join(' and ') || ''
+    case 'state-driven': {
+      const preConditions: string = req.preConditions?.map((p: string) => search(p)).join(' and ') ?? ''
       result = `While ${hl(preConditions, 'highlight-precondition')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'optional-feature':
-      const features = req.features?.map((f) => search(f)).join(', ') || ''
+    case 'optional-feature': {
+      const features: string = req.features?.map((f: string) => search(f)).join(', ') ?? ''
       result = `Where ${hl(features, 'highlight-feature')}, the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'unwanted-behaviour':
-      const unwantedConditions = req.unwantedConditions?.map((u) => search(u)).join(', ') || ''
+    case 'unwanted-behaviour': {
+      const unwantedConditions: string = req.unwantedConditions?.map((u: string) => search(u)).join(', ') ?? ''
       result = `If ${hl(unwantedConditions, 'highlight-unwanted')}, then the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
       break
+    }
 
-    case 'complex':
-      const parts = []
+    case 'complex': {
+      const parts: string[] = []
       if (req.preConditions) {
-        const pc = req.preConditions.map((p) => search(p)).join(' and ')
+        const pc: string = req.preConditions.map((p: string) => search(p)).join(' and ')
         parts.push(`While ${hl(pc, 'highlight-precondition')}`)
       }
       if (req.triggers) {
-        const tr = req.triggers.map((t) => search(t)).join(', ')
+        const tr: string = req.triggers.map((t: string) => search(t)).join(', ')
         parts.push(`when ${hl(tr, 'highlight-trigger')}`)
       }
       if (req.features) {
-        const ft = req.features.map((f) => search(f)).join(', ')
+        const ft: string = req.features.map((f: string) => search(f)).join(', ')
         parts.push(`where ${hl(ft, 'highlight-feature')}`)
       }
       if (req.unwantedConditions) {
-        const uc = req.unwantedConditions.map((u) => search(u)).join(', ')
+        const uc: string = req.unwantedConditions.map((u: string) => search(u)).join(', ')
         parts.push(`if ${hl(uc, 'highlight-unwanted')}`)
       }
       parts.push(`the ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`)
       result = parts.join(', ')
       break
+    }
 
     default:
       result = `The ${hl(search(req.systemName))} shall ${hl(search(req.systemResponse))}`
