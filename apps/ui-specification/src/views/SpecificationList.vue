@@ -18,17 +18,22 @@ onMounted(async () => {
   loading.value = true
   try {
     specifications.value = await api.getSpecifications()
-  } catch (e) {
+  } catch (e: unknown) {
     error.value =
       'Failed to load specifications. Make sure the backend is running on http://localhost:4002'
+    // eslint-disable-next-line no-console
     console.error(e)
   } finally {
     loading.value = false
   }
 })
 
-function goToDetail(event: any, { item }: any) {
-  const spec = item as SpecificationSummary
+interface RowClickEvent {
+  item: SpecificationSummary
+}
+
+function goToDetail(_event: MouseEvent, { item }: RowClickEvent): void {
+  const spec: SpecificationSummary = item
   router.push(`/${spec.id}`)
 }
 </script>
@@ -80,7 +85,7 @@ function goToDetail(event: any, { item }: any) {
               class="clickable-rows"
               @click:row="goToDetail"
             >
-              <template #item.title="{ item }">
+              <template v-slot:item.title="{ item }">
                 <strong>{{ item.title }}</strong>
               </template>
 
