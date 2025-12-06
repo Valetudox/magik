@@ -56,7 +56,7 @@ async function executeSandbox(prompt: string): Promise<void> {
 
   try {
     await sandbox.commands.run(
-      `echo '${escapePrompt(prompt)}' | claude -p --dangerously-skip-permissions`,
+      `echo '${escapePrompt(prompt)}' | claude -p --dangerously-skip-permissions --output-format stream-json --verbose`,
       {
         timeoutMs: 0, // No timeout
         onStdout: (line) => console.log(line),
