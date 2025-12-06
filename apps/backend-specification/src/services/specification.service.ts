@@ -1,6 +1,10 @@
-import { readdir, readFile, stat } from 'fs/promises'
+import { readdir, readFile } from 'fs/promises'
 import { join, relative } from 'path'
 import { SPECIFICATIONS_DIR } from '../config'
+
+interface NodeError extends Error {
+  code?: string
+}
 
 export interface SpecificationRequirementItem {
   type:
@@ -99,9 +103,10 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
     }
 
     return summaries
-  } catch (error: any) {
+  } catch (error) {
     // If directory doesn't exist, return empty array
-    if (error.code === 'ENOENT') {
+    const nodeError = error as NodeError
+    if (nodeError.code === 'ENOENT') {
       return []
     }
     throw error
