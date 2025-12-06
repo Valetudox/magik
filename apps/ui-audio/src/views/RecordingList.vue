@@ -28,7 +28,7 @@ const filteredRecordings = computed(() => {
     (r) =>
       r.filename.toLowerCase().includes(searchLower) ||
       r.id.toLowerCase().includes(searchLower) ||
-      (r.transcriptMetadata?.language || '').toLowerCase().includes(searchLower)
+      (r.transcriptMetadata?.language ?? '').toLowerCase().includes(searchLower)
   )
 })
 
@@ -38,8 +38,8 @@ async function loadRecordings() {
 
   try {
     recordings.value = await api.getRecordings()
-  } catch (e: any) {
-    error.value = e.message || 'Failed to load recordings'
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to load recordings'
   } finally {
     loading.value = false
   }
@@ -75,7 +75,7 @@ function viewRecording(recording: Recording) {
 }
 
 onMounted(() => {
-  loadRecordings()
+  void loadRecordings()
 })
 </script>
 
@@ -88,7 +88,12 @@ onMounted(() => {
             <v-icon icon="mdi-music-box-multiple" class="mr-2" />
             Audio Recordings
             <v-spacer />
-            <v-btn icon="mdi-refresh" :loading="loading" variant="text" @click="loadRecordings" />
+            <v-btn
+              icon="mdi-refresh"
+              :loading="loading"
+              variant="text"
+              @click="loadRecordings"
+            />
           </v-card-title>
 
           <v-card-text>
@@ -115,36 +120,36 @@ onMounted(() => {
               hover
               @click:row="(event, { item }) => viewRecording(item)"
             >
-              <template #item.format="{ item }">
+              <template v-slot:[`item.format`]="{ item }">
                 <v-chip size="small" :color="item.format === 'mp3' ? 'primary' : 'secondary'">
                   {{ item.format.toUpperCase() }}
                 </v-chip>
               </template>
 
-              <template #item.size="{ item }">
+              <template v-slot:[`item.size`]="{ item }">
                 {{ formatSize(item.size) }}
               </template>
 
-              <template #item.duration="{ item }">
+              <template v-slot:[`item.duration`]="{ item }">
                 {{ formatDuration(item.transcriptMetadata?.duration) }}
               </template>
 
-              <template #item.language="{ item }">
-                {{ item.transcriptMetadata?.language || '-' }}
+              <template v-slot:[`item.language`]="{ item }">
+                {{ item.transcriptMetadata?.language ?? '-' }}
               </template>
 
-              <template #item.hasTranscript="{ item }">
+              <template v-slot:[`item.hasTranscript`]="{ item }">
                 <v-icon
                   :icon="item.hasTranscript ? 'mdi-check-circle' : 'mdi-close-circle'"
                   :color="item.hasTranscript ? 'success' : 'error'"
                 />
               </template>
 
-              <template #item.modifiedAt="{ item }">
+              <template v-slot:[`item.modifiedAt`]="{ item }">
                 {{ formatDate(item.modifiedAt) }}
               </template>
 
-              <template #item.actions="{ item }">
+              <template v-slot:[`item.actions`]="{ item }">
                 <v-btn
                   icon="mdi-eye"
                   size="small"
@@ -154,7 +159,9 @@ onMounted(() => {
               </template>
 
               <template #no-data>
-                <v-alert type="info" class="ma-4"> No recordings found </v-alert>
+                <v-alert type="info" class="ma-4">
+                  No recordings found
+                </v-alert>
               </template>
             </v-data-table>
           </v-card-text>
