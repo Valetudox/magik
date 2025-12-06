@@ -5,6 +5,10 @@ interface GetSpecificationParams {
   id: string
 }
 
+interface NodeError extends Error {
+  code?: string
+}
+
 export async function getSpecification(
   request: FastifyRequest<{ Params: GetSpecificationParams }>,
   reply: FastifyReply
@@ -14,7 +18,8 @@ export async function getSpecification(
     const specification = await getSpecificationById(id)
     return specification
   } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+    const nodeError = error as NodeError
+    if (nodeError.code === 'ENOENT') {
       reply.status(404).send({ error: 'Specification not found' })
     } else if (error instanceof SyntaxError) {
       reply.status(500).send({ error: 'Failed to parse specification file' })
