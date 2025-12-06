@@ -99,9 +99,9 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
     }
 
     return summaries
-  } catch (error: any) {
+  } catch (error) {
     // If directory doesn't exist, return empty array
-    if (error.code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return []
     }
     throw error

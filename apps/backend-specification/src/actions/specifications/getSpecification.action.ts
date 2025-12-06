@@ -13,8 +13,8 @@ export async function getSpecification(
     const { id } = request.params
     const specification = await getSpecificationById(id)
     return specification
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Specification not found' })
     } else if (error instanceof SyntaxError) {
       reply.status(500).send({ error: 'Failed to parse specification file' })
