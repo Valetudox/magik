@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import "dotenv/config";
 import Sandbox from "e2b";
+import fs from "fs/promises";
 
 /**
  * Escapes a prompt string for safe shell execution
@@ -34,6 +35,71 @@ async function readStdin(): Promise<string> {
 }
 
 /**
+ * Backs up sandbox data (Claude project folder) to local machine
+ */
+async function backupSandboxData(
+  sandbox: Sandbox,
+  sandboxId: string,
+  backupDir: string
+): Promise<void> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupPath = `${backupDir}/${timestamp}_${sandboxId}`;
+
+  console.log(`\nBacking up sandbox data to ${backupPath}...`);
+
+  try {
+    // Create backup directory
+    await fs.mkdir(backupPath, { recursive: true });
+
+    // Step 1: Create tar.gz archive in sandbox
+    console.log("Creating archive in sandbox...");
+    const compressResult = await sandbox.commands.run(
+      `cd /home/user && if [ -d .claude ]; then tar -czf claude-backup.tar.gz .claude && echo "✓ Created archive: $(du -h claude-backup.tar.gz | cut -f1)"; else echo "⚠ No .claude directory found" && touch claude-backup.tar.gz; fi`,
+      {
+        onStdout: (line) => console.log(line),
+        onStderr: (line) => console.error(line),
+      }
+    );
+
+    if (compressResult.exitCode !== 0) {
+      console.error("⚠ Warning: Failed to create archive in sandbox");
+      return;
+    }
+
+    // Step 2: Download the archive using E2B SDK
+    console.log("Downloading archive...");
+    const archiveExists = await sandbox.files.exists("/home/user/claude-backup.tar.gz");
+
+    if (archiveExists) {
+      const archiveData = await sandbox.files.read("/home/user/claude-backup.tar.gz", {
+        format: "bytes",
+      });
+
+      await fs.writeFile(`${backupPath}/claude-backup.tar.gz`, archiveData);
+      console.log("✓ Downloaded Claude project archive");
+    } else {
+      console.log("⚠ Archive file not found in sandbox");
+    }
+
+    // Step 3: Save metadata
+    const metadata = {
+      sandboxId,
+      timestamp,
+      backupPath,
+    };
+
+    await fs.writeFile(
+      `${backupPath}/metadata.json`,
+      JSON.stringify(metadata, null, 2)
+    );
+
+    console.log(`✓ Backup completed: ${backupPath}`);
+  } catch (error) {
+    console.error("✗ Failed to backup sandbox data:", error);
+  }
+}
+
+/**
  * Executes a prompt using Claude Code CLI in an E2B sandbox
  */
 async function executeSandbox(prompt: string): Promise<void> {
@@ -62,6 +128,13 @@ async function executeSandbox(prompt: string): Promise<void> {
         onStdout: (line) => console.log(line),
         onStderr: (line) => console.error(line),
       }
+    );
+
+    // Backup sandbox data
+    await backupSandboxData(
+      sandbox,
+      sandbox.sandboxId,
+      "/home/magic/claude-sandbox-backups"
     );
   } finally {
     console.log("\nCleaning up sandbox...");
