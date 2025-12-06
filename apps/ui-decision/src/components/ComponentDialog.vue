@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>()
 
-const form = ref<any>(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const name = ref('')
 const description = ref('')
 
