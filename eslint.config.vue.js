@@ -43,7 +43,7 @@ export default tseslint.config(
         },
       ],
 
-      // TypeScript in Vue
+      // TypeScript in Vue - disabled strict rules for Vue compiler macros compatibility
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -51,6 +51,13 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
 
       // Formatting (optional but recommended)
       'vue/html-indent': ['error', 2],
