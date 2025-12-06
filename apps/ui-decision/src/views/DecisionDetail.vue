@@ -89,8 +89,8 @@ onMounted(() => {
   ;(async () => {
     try {
       decision.value = await api.getDecision(id)
-    } catch (e: any) {
-      if (e.status === 404) {
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'status' in e && e.status === 404) {
         error.value = 'Decision not found'
       } else {
         error.value =
@@ -171,10 +171,10 @@ const pushToConfluence = async () => {
       message: 'Successfully pushed to Confluence!',
       type: 'success',
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     pushNotification.value = {
       show: true,
-      message: err.message || 'Failed to push to Confluence',
+      message: err instanceof Error ? err.message : 'Failed to push to Confluence',
       type: 'error',
     }
   } finally {
@@ -201,10 +201,10 @@ const handleAgentRequest = async () => {
 
     // Clear input
     agentPrompt.value = ''
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to process request',
+      message: err instanceof Error ? err.message : 'Failed to process request',
       type: 'error',
     }
   } finally {
@@ -261,10 +261,10 @@ const handleRatingSave = async (newRating: 'high' | 'medium' | 'low') => {
       ratingDialogData.value.driverId,
       newRating
     )
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update rating',
+      message: err instanceof Error ? err.message : 'Failed to update rating',
       type: 'error',
     }
   }
@@ -298,10 +298,10 @@ const handleSaveOption = async (option: {
     } else {
       await api.createOption(decisionId, option)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save option',
+      message: err instanceof Error ? err.message : 'Failed to save option',
       type: 'error',
     }
   }
@@ -315,10 +315,10 @@ const confirmDeleteOption = (option: { id: string; name: string }) => {
       try {
         const decisionId = route.params.id as string
         await api.deleteOption(decisionId, option.id)
-      } catch (err: any) {
+      } catch (err: unknown) {
         agentNotification.value = {
           show: true,
-          message: err.message || 'Failed to delete option',
+          message: err instanceof Error ? err.message : 'Failed to delete option',
           type: 'error',
         }
       }
@@ -331,10 +331,10 @@ const handleSetSelectedOption = async (optionId: string | null) => {
   try {
     const decisionId = route.params.id as string
     await api.setSelectedOption(decisionId, optionId)
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update selection',
+      message: err instanceof Error ? err.message : 'Failed to update selection',
       type: 'error',
     }
   }
@@ -359,10 +359,10 @@ const handleSaveDriver = async (driver: { name: string; description: string }) =
     } else {
       await api.createDriver(decisionId, driver)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save driver',
+      message: err instanceof Error ? err.message : 'Failed to save driver',
       type: 'error',
     }
   }
@@ -376,10 +376,10 @@ const confirmDeleteDriver = (driver: { id: string; name: string }) => {
       try {
         const decisionId = route.params.id as string
         await api.deleteDriver(decisionId, driver.id)
-      } catch (err: any) {
+      } catch (err: unknown) {
         agentNotification.value = {
           show: true,
-          message: err.message || 'Failed to delete driver',
+          message: err instanceof Error ? err.message : 'Failed to delete driver',
           type: 'error',
         }
       }
@@ -413,10 +413,10 @@ const handleSaveComponent = async (component: { name: string; description: strin
     } else {
       await api.createComponent(decisionId, component)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save component',
+      message: err instanceof Error ? err.message : 'Failed to save component',
       type: 'error',
     }
   }
@@ -430,10 +430,10 @@ const confirmDeleteComponent = (component: { id: string; name: string }) => {
       try {
         const decisionId = route.params.id as string
         await api.deleteComponent(decisionId, component.id)
-      } catch (err: any) {
+      } catch (err: unknown) {
         agentNotification.value = {
           show: true,
-          message: err.message || 'Failed to delete component',
+          message: err instanceof Error ? err.message : 'Failed to delete component',
           type: 'error',
         }
       }
@@ -461,10 +461,10 @@ const handleSaveUseCase = async (useCase: { name: string; description: string })
     } else {
       await api.createUseCase(decisionId, useCase)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save use case',
+      message: err instanceof Error ? err.message : 'Failed to save use case',
       type: 'error',
     }
   }
@@ -478,10 +478,10 @@ const confirmDeleteUseCase = (useCase: { id: string; name: string }) => {
       try {
         const decisionId = route.params.id as string
         await api.deleteUseCase(decisionId, useCase.id)
-      } catch (err: any) {
+      } catch (err: unknown) {
         agentNotification.value = {
           show: true,
-          message: err.message || 'Failed to delete use case',
+          message: err instanceof Error ? err.message : 'Failed to delete use case',
           type: 'error',
         }
       }
@@ -530,10 +530,10 @@ const handleSaveDescription = async (newDescription: string) => {
       description: newDescription,
       moreLink: option.moreLink,
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update description',
+      message: err instanceof Error ? err.message : 'Failed to update description',
       type: 'error',
     }
   }
@@ -567,10 +567,10 @@ const handleSaveEvaluationDetail = async (newDetails: string[]) => {
   try {
     const decisionId = route.params.id as string
     await api.updateEvaluationDetails(decisionId, optionId, driverId, newDetails)
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update evaluation details',
+      message: err instanceof Error ? err.message : 'Failed to update evaluation details',
       type: 'error',
     }
   }
@@ -608,10 +608,10 @@ const handleSaveProblemDefinition = async () => {
       problemDefinition: editedProblemDefinition.value.trim(),
     })
     showEditProblemDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update problem definition',
+      message: err instanceof Error ? err.message : 'Failed to update problem definition',
       type: 'error',
     }
   }
@@ -632,10 +632,10 @@ const handleSaveProposalDesc = async () => {
       },
     })
     showEditProposalDescDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update proposal',
+      message: err instanceof Error ? err.message : 'Failed to update proposal',
       type: 'error',
     }
   }
@@ -656,10 +656,10 @@ const handleSaveProposalReasoning = async (newReasoning: string[]) => {
       },
     })
     showEditProposalReasoningDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update reasoning',
+      message: err instanceof Error ? err.message : 'Failed to update reasoning',
       type: 'error',
     }
   }
@@ -704,10 +704,10 @@ const handleSaveConfluenceUrl = async () => {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, { confluenceLink: editedConfluenceUrl.value.trim() })
     showEditConfluenceUrlDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update Confluence URL',
+      message: err instanceof Error ? err.message : 'Failed to update Confluence URL',
       type: 'error',
     }
   }

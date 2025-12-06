@@ -201,12 +201,12 @@ const bulkPushToConfluence = async () => {
         name: decision.name,
         success: true,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.push({
         id: decisionId,
         name: decision.name,
         success: false,
-        error: error.message || 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
       })
     }
   }
@@ -264,8 +264,8 @@ const handleDeleteDecision = async () => {
       decisions.value.splice(index, 1)
     }
     showDeleteDialog.value = false
-  } catch (err: any) {
-    alert(err.message || 'Failed to delete decision')
+  } catch (err: unknown) {
+    alert(err instanceof Error ? err.message : 'Failed to delete decision')
   } finally {
     deleting.value = false
   }
@@ -332,8 +332,8 @@ const handleCreateDecision = async () => {
     showCreateDialog.value = false
     // Navigate to the new decision
     router.push(`/${result.id}`)
-  } catch (err: any) {
-    createError.value = err.message || 'Failed to create decision'
+  } catch (err: unknown) {
+    createError.value = err instanceof Error ? err.message : 'Failed to create decision'
   } finally {
     creating.value = false
   }
