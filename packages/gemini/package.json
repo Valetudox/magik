@@ -6,7 +6,8 @@
   "scripts": {
     "upload": "python3 scripts/upload_transcript.py",
     "query": "python3 scripts/query_knowledge_base.py",
-    "delete": "python3 scripts/delete_transcript.py"
+    "delete": "python3 scripts/delete_transcript.py",
+    "lint": "eslint src --max-warnings 0"
   },
   "keywords": [
     "gemini",

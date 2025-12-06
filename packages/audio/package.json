@@ -6,7 +6,8 @@
   "scripts": {
     "record": "bash scripts/recordAudio.sh",
     "record-live": "bash scripts/recordLive.sh",
-    "convert-mp3": "bash scripts/convertToMp3.sh"
+    "convert-mp3": "bash scripts/convertToMp3.sh",
+    "lint": "eslint src --max-warnings 0"
   },
   "keywords": [
     "audio",

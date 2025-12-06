@@ -239,7 +239,7 @@ IMPORTANT: After completing each logical unit of work:
 Make multiple small commits with pushes rather than one large commit. Each commit should be pushed immediately after creation.`;
 
     const executeResult = await sandbox.commands.run(
-      `cd ${workspacePath} && echo '${escapeShellArg(fullPrompt)}' | claude -p --dangerously-skip-permissions`,
+      `cd ${workspacePath} && echo '${escapeShellArg(fullPrompt)}' | ANTHROPIC_LOG=debug claude -p --dangerously-skip-permissions`,
       {
         timeoutMs: 0, // No timeout
         onStdout: (line) => console.log(line),

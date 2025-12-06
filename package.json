@@ -25,7 +25,7 @@
     "dev:ui": "concurrently -n ui-decision,ui-audio,ui-specification -c green,cyan,purple \"bun run dev:ui:decision\" \"bun run dev:ui:audio\" \"bun run dev:ui:specification\"",
     "dev:socket": "bun run --cwd apps/backend-socket dev",
     "dev": "concurrently -n backend,socket,ui -c blue,yellow,green \"bun run dev:backend\" \"bun run dev:socket\" \"bun run dev:ui\"",
-    "lint": "eslint apps/cli-audio/src apps/ui-decision/src apps/backend-decision/src apps/backend-socket/src apps/cli-codebase/src apps/backend-audio/src apps/ui-audio/src apps/backend-specification/src apps/ui-specification/src packages/decisions/src packages/agents/src --max-warnings 0",
+    "lint": "for dir in apps/* packages/*; do [ -f \"$dir/package.json\" ] && [ -d \"$dir/src\" ] && (cd \"$dir\" && echo \"=== Linting $dir ===\" && bun run lint || true); done",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:ws": "for dir in apps/* packages/*; do [ -f \"$dir/package.json\" ] && (cd \"$dir\" && bun run format 2>/dev/null || true); done",

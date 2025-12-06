@@ -20,12 +20,12 @@
     "format:check": "prettier --check src"
   },
   "dependencies": {
-    "zod": "^3.24.1",
-    "commander": "^14.0.2",
     "axios": "^1.13.2",
+    "commander": "^14.0.2",
     "form-data": "^4.0.5",
+    "glob": "^11.0.0",
     "marked": "^17.0.1",
-    "glob": "^11.0.0"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"

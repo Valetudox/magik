@@ -4,8 +4,7 @@
   "description": "Data visualization and chart generation",
   "type": "module",
   "scripts": {
-    "segmentation-incidents": "uv run scripts/segmentation-incidents.py"
-  },
-  "dependencies": {},
-  "devDependencies": {}
+    "segmentation-incidents": "uv run scripts/segmentation-incidents.py",
+    "lint": "eslint src --max-warnings 0"
+  }
 }

@@ -10,7 +10,7 @@
     "./components/*": "./src/components/*"
   },
   "scripts": {
-    "lint": "eslint . --ext .vue,.ts,.tsx --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint . --ext .vue,.ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

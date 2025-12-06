@@ -4,7 +4,8 @@
   "description": "Obsidian vault integration scripts",
   "type": "module",
   "scripts": {
-    "create-note": "bash scripts/createMeetingNote.sh"
+    "create-note": "bash scripts/createMeetingNote.sh",
+    "lint": "eslint src --max-warnings 0"
   },
   "keywords": [
     "obsidian",

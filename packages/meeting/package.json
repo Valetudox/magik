@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "rename": "bash scripts/renameMeeting.sh",
-    "delete": "bash scripts/deleteMeeting.sh"
+    "delete": "bash scripts/deleteMeeting.sh",
+    "lint": "eslint src --max-warnings 0"
   },
   "keywords": [
     "meeting",
