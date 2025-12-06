@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { api, type SpecificationDetail, type SpecificationRequirementItem } from '../services/api'
+import { api, type SpecificationDetail, type SpecificationRequirementItem, type SpecificationSection } from '../services/api'
 import RequirementItem from '../components/RequirementItem.vue'
 
 const route = useRoute()
@@ -14,14 +14,15 @@ const searchQuery = ref('')
 onMounted(async () => {
   loading.value = true
   try {
-    const id = route.params.id as string
+    const id: string = route.params.id as string
     specification.value = await api.getSpecification(id)
-  } catch (e: any) {
-    if (e.message === 'Specification not found') {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === 'Specification not found') {
       error.value = 'Specification not found'
     } else {
       error.value = 'Failed to load specification'
     }
+    // eslint-disable-next-line no-console
     console.error(e)
   } finally {
     loading.value = false
@@ -33,30 +34,30 @@ function goBack() {
 }
 
 // Filter requirements based on search query
-const filteredRequirements = computed(() => {
+const filteredRequirements = computed((): SpecificationSection[] => {
   if (!specification.value || !searchQuery.value.trim()) {
-    return specification.value?.requirements || []
+    return specification.value?.requirements ?? []
   }
 
-  const query = searchQuery.value.toLowerCase()
+  const query: string = searchQuery.value.toLowerCase()
 
   return specification.value.requirements
-    .map((section) => {
+    .map((section: SpecificationSection): SpecificationSection => {
       // Filter items in this section
-      const matchingItems = section.items.filter((item) => {
+      const matchingItems: SpecificationRequirementItem[] = section.items.filter((item: SpecificationRequirementItem): boolean => {
         // Check if section name matches
         if (section.sectionName.toLowerCase().includes(query)) {
           return true
         }
 
         // Check requirement fields
-        const searchableText = [
+        const searchableText: string = [
           item.systemName,
           item.systemResponse,
-          ...(item.triggers || []),
-          ...(item.preConditions || []),
-          ...(item.features || []),
-          ...(item.unwantedConditions || []),
+          ...(item.triggers ?? []),
+          ...(item.preConditions ?? []),
+          ...(item.features ?? []),
+          ...(item.unwantedConditions ?? []),
         ]
           .join(' ')
           .toLowerCase()
@@ -69,10 +70,10 @@ const filteredRequirements = computed(() => {
         items: matchingItems,
       }
     })
-    .filter((section) => section.items.length > 0)
+    .filter((section: SpecificationSection): boolean => section.items.length > 0)
 })
 
-const hasSearchResults = computed(() => {
+const hasSearchResults = computed((): boolean => {
   return searchQuery.value.trim() === '' || filteredRequirements.value.length > 0
 })
 </script>
