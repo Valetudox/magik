@@ -6,7 +6,9 @@ import { AppHeader } from '@magik/ui-shared'
   <v-app>
     <AppHeader app-title="Magik - Audio Recordings">
       <template #title>
-        <div id="header-title-slot">Magik - Audio Recordings</div>
+        <div id="header-title-slot">
+          Magik - Audio Recordings
+        </div>
       </template>
     </AppHeader>
     <v-main>
