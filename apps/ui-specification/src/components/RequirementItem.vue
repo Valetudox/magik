@@ -131,6 +131,7 @@ const getTypeLabel = (type: string): string => {
         <v-icon :icon="getTypeIcon(requirement.type)" start size="small" />
         {{ getTypeLabel(requirement.type) }}
       </v-chip>
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <div class="flex-grow-1 requirement-text" v-html="formattedRequirement" />
     </v-card-text>
   </v-card>

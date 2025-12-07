@@ -38,7 +38,9 @@ const filteredGroups = computed(() => {
     .map(group => ({
       project: group.project,
       specs: group.specs.filter(spec =>
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         spec.title.toLowerCase().includes(searchLower) ||
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         spec.description.toLowerCase().includes(searchLower) ||
         spec.project.toLowerCase().includes(searchLower)
       )
@@ -53,7 +55,6 @@ onMounted(async () => {
   } catch (e: unknown) {
     error.value =
       'Failed to load specifications. Make sure the backend is running on http://localhost:4002'
-    // eslint-disable-next-line no-console
     console.error(e)
   } finally {
     loading.value = false
@@ -73,10 +74,17 @@ function goToDetail(spec: SpecificationSummary) {
 
     <v-container fluid>
       <!-- Loading state -->
-      <v-row v-if="loading" class="fill-height" align="center" justify="center">
+      <v-row
+        v-if="loading"
+        class="fill-height"
+        align="center"
+        justify="center"
+      >
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="mt-4">Loading specifications...</p>
+          <p class="mt-4">
+            Loading specifications...
+          </p>
         </v-col>
       </v-row>
 

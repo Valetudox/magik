@@ -22,7 +22,6 @@ onMounted(async () => {
     } else {
       error.value = 'Failed to load specification'
     }
-    // eslint-disable-next-line no-console
     console.error(e)
   } finally {
     loading.value = false
@@ -90,10 +89,17 @@ const hasSearchResults = computed((): boolean => {
 
     <v-container fluid>
       <!-- Loading state -->
-      <v-row v-if="loading" class="fill-height" align="center" justify="center">
+      <v-row
+        v-if="loading"
+        class="fill-height"
+        align="center"
+        justify="center"
+      >
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="mt-4">Loading specification...</p>
+          <p class="mt-4">
+            Loading specification...
+          </p>
         </v-col>
       </v-row>
 
@@ -142,7 +148,12 @@ const hasSearchResults = computed((): boolean => {
           </v-card>
 
           <!-- No results message -->
-          <v-alert v-if="!hasSearchResults" type="info" variant="tonal" class="mb-4">
+          <v-alert
+            v-if="!hasSearchResults"
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
             No matching requirements found for "{{ searchQuery }}"
           </v-alert>
 
