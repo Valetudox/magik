@@ -50,8 +50,8 @@ async function loadRecording() {
 
   try {
     recording.value = await api.getRecording(recordingId.value)
-  } catch (e: any) {
-    error.value = e.message || 'Failed to load recording'
+  } catch (e: unknown) {
+    error.value = (e instanceof Error ? e.message : String(e)) ?? 'Failed to load recording'
   } finally {
     loading.value = false
   }
@@ -62,7 +62,7 @@ function goBack() {
 }
 
 onMounted(() => {
-  loadRecording()
+  void loadRecording()
 })
 </script>
 
@@ -117,27 +117,27 @@ onMounted(() => {
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Format</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          recording.format.toUpperCase()
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ recording.format.toUpperCase() }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Size</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatSize(recording.size)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatSize(recording.size) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Created At</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatDate(recording.createdAt)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatDate(recording.createdAt) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Modified At</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatDate(recording.modifiedAt)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatDate(recording.modifiedAt) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                     </v-list>
                   </v-card-text>
