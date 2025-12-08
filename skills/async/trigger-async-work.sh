@@ -53,11 +53,21 @@ fi
 # Save current branch to return to it later
 ORIGINAL_BRANCH=$(git branch --show-current)
 
+# Fetch latest changes from remote
+echo "Fetching latest changes from remote..." >&2
+git fetch origin >&2
+
+# Switch to main and pull latest changes
+echo "Updating main branch..." >&2
+git checkout main >&2
+git pull origin main >&2
+
 # Create branch name with timestamp
 TIMESTAMP=$(date +%s)
 BRANCH_NAME="async/${NAME}-${TIMESTAMP}"
 
-# Create and push branch
+# Create and push branch from updated main
+echo "Creating branch: $BRANCH_NAME" >&2
 git checkout -b "$BRANCH_NAME" >&2
 git push -u origin "$BRANCH_NAME" >&2
 

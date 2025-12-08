@@ -13,15 +13,16 @@ This skill enables you to offload work to GitHub Actions by creating a pull requ
 
 ## How It Works
 
-1. **Create a new branch** with a descriptive name
-2. **Make an empty commit** to trigger the workflow
-3. **Push the branch** to the remote repository
-4. **Create a pull request** with detailed task description
-5. **Capture the PR number** from the creation output
-6. **GitHub Actions triggers** the Claude Code workflow automatically
-7. **Claude Code executes** the task described in the PR
-8. **Monitor workflow status** using GitHub CLI to check action progress
-9. **Results are committed** back to the PR branch
+1. **Fetch latest changes** from the remote repository
+2. **Update main branch** to ensure branch is based on latest code
+3. **Create a new branch** with a descriptive name from updated main
+4. **Push the branch** to the remote repository
+5. **Create a pull request** with detailed task description
+6. **Capture the PR number** from the creation output
+7. **GitHub Actions triggers** the Claude Code workflow automatically
+8. **Claude Code executes** the task described in the PR
+9. **Monitor workflow status** using GitHub CLI to check action progress
+10. **Results are committed** back to the PR branch
 
 ## Workflow Configuration
 
@@ -92,31 +93,38 @@ gh pr checks $PR_NUMBER --watch
 ```
 
 The script automatically:
-1. Creates a timestamped branch (`async/<name>-<timestamp>`)
-2. Pushes the branch to remote
-3. Creates a pull request with your description
-4. Returns the PR number for monitoring
-5. Returns you to your original branch
+1. Fetches latest changes from remote
+2. Updates main branch to latest
+3. Creates a timestamped branch from updated main (`async/<name>-<timestamp>`)
+4. Pushes the branch to remote
+5. Creates a pull request with your description
+6. Returns the PR number for monitoring
+7. Returns you to your original branch
 
 ### Manual Workflow
 
 If you prefer to do it manually:
 
 ```bash
-# 1. Create a new branch
+# 1. Fetch and update main
+git fetch origin
+git checkout main
+git pull origin main
+
+# 2. Create a new branch from updated main
 git checkout -b async/task-description-$(date +%s)
 
-# 2. Push to remote (triggers workflow)
+# 3. Push to remote (triggers workflow)
 git push -u origin <branch-name>
 
-# 3. Create pull request and capture PR number
+# 4. Create pull request and capture PR number
 PR_URL=$(gh pr create --title "Task Title" --body "Detailed task description...")
 PR_NUMBER=$(echo $PR_URL | grep -oP '/pull/\K\d+')
 
-# 4. Return to original branch
+# 5. Return to original branch
 git checkout main
 
-# 5. Monitor workflow status
+# 6. Monitor workflow status
 gh pr checks $PR_NUMBER --watch
 ```
 
