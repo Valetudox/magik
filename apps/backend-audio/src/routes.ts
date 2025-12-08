@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getRecordingHandler, listRecordingsHandler } from './actions/recordings.action'
+import { getRecordingHandler, listRecordingsHandler } from './actions/recordings'
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check endpoint
