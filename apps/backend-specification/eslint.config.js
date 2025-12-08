@@ -1,3 +1,3 @@
-import baseConfig from '../../eslint.config.base.js'
+import backendConfig from '../../eslint.config.backend.js'
 
-export default baseConfig
+export default backendConfig
