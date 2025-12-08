@@ -65,11 +65,11 @@ export async function listAllDecisions(): Promise<DecisionSummary[]> {
 export async function getDecisionById(id: string): Promise<decision & { id: string }> {
   const filePath = join(DECISIONS_DIR, `${id}.json`)
   const content = await readFile(filePath, 'utf-8')
-  const decision = JSON.parse(content) as decision
+  const decisionData = JSON.parse(content) as decision
 
   return {
     id,
-    ...decision,
+    ...decisionData,
   }
 }
 

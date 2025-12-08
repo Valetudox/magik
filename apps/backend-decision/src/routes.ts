@@ -20,7 +20,7 @@ import { createUseCase, updateUseCase, deleteUseCase } from './actions/use-cases
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check endpoint
-  fastify.get('/health', async () => {
+  fastify.get('/health', () => {
     return { status: 'ok' }
   })
 

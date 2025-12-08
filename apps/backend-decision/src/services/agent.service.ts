@@ -15,7 +15,7 @@ export async function runAgent(decisionId: string, prompt: string): Promise<void
   const result = await runDecisionAgent(currentDecision, prompt, currentDecision.aiSessionId)
 
   // Update the decision with the new session ID
-  result.decision.aiSessionId = result.sessionId || currentDecision.aiSessionId
+  result.decision.aiSessionId = result.sessionId ?? currentDecision.aiSessionId
 
   // Save the updated decision back to file
   await writeFile(filePath, JSON.stringify(result.decision, null, 2), 'utf-8')

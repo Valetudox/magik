@@ -19,9 +19,6 @@ export async function updateEvaluation(
     const { id } = request.params
     const { optionId, driverId, rating } = request.body
 
-    if (!optionId || !driverId || !rating) {
-      return reply.status(400).send({ error: 'optionId, driverId, and rating are required' })
-    }
 
     const evaluation = await updateEvaluationRating(id, optionId, driverId, rating)
     return { success: true, evaluation }

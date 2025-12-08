@@ -55,7 +55,7 @@ export async function pushToConfluence(
         resolve({
           success: false,
           error: 'Failed to push to Confluence',
-          details: stderr || stdout,
+          details: stderr.length > 0 ? stderr : stdout,
         })
       }
     })
