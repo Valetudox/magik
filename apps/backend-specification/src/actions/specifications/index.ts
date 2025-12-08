@@ -1,2 +1,2 @@
-export { listSpecifications } from './listSpecifications.action'
-export { getSpecification } from './getSpecification.action'
+export { listSpecifications } from './get.action'
+export { getSpecification } from './get_id.action'
