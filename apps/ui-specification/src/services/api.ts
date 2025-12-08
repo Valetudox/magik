@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4003/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4003/api'
 
 export interface SpecificationRequirementItem {
   type:
@@ -45,7 +45,7 @@ export const api = {
     if (!response.ok) {
       throw new Error('Failed to load specifications')
     }
-    const data = await response.json()
+    const data = (await response.json()) as { specifications: SpecificationSummary[] }
     return data.specifications
   },
 
@@ -57,6 +57,6 @@ export const api = {
       }
       throw new Error('Failed to load specification')
     }
-    return response.json()
+    return (await response.json()) as SpecificationDetail
   },
 }

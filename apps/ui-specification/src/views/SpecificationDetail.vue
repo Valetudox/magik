@@ -11,26 +11,30 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const searchQuery = ref('')
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    const id: string = route.params.id as string
-    specification.value = await api.getSpecification(id)
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === 'Specification not found') {
-      error.value = 'Specification not found'
-    } else {
-      error.value = 'Failed to load specification'
+onMounted(() => {
+  void (async () => {
+    loading.value = true
+    try {
+      const id: string = route.params.id as string
+      specification.value = await api.getSpecification(id)
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message === 'Specification not found') {
+        error.value = 'Specification not found'
+      } else {
+        error.value = 'Failed to load specification'
+      }
+      // Log error to console for debugging
+      if (e instanceof Error) {
+        console.error('Failed to load specification:', e.message)
+      }
+    } finally {
+      loading.value = false
     }
-    // eslint-disable-next-line no-console
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
+  })()
 })
 
 function goBack() {
-  router.push('/')
+  void router.push('/')
 }
 
 // Filter requirements based on search query
@@ -90,10 +94,17 @@ const hasSearchResults = computed((): boolean => {
 
     <v-container fluid>
       <!-- Loading state -->
-      <v-row v-if="loading" class="fill-height" align="center" justify="center">
+      <v-row
+        v-if="loading"
+        class="fill-height"
+        align="center"
+        justify="center"
+      >
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="mt-4">Loading specification...</p>
+          <p class="mt-4">
+            Loading specification...
+          </p>
         </v-col>
       </v-row>
 
@@ -142,7 +153,12 @@ const hasSearchResults = computed((): boolean => {
           </v-card>
 
           <!-- No results message -->
-          <v-alert v-if="!hasSearchResults" type="info" variant="tonal" class="mb-4">
+          <v-alert
+            v-if="!hasSearchResults"
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
             No matching requirements found for "{{ searchQuery }}"
           </v-alert>
 
