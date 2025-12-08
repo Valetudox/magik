@@ -46,4 +46,18 @@ export default [
       ],
     },
   },
+  // Restrict process.env access to config.ts files only
+  {
+    files: ['src/**/*.ts', 'apps/backend-*/src/**/*.ts'],
+    ignores: ['src/config.ts', 'apps/backend-*/src/config.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='process'][property.name='env']",
+          message: 'Direct access to process.env is not allowed. Import configuration values from src/config.ts instead.',
+        },
+      ],
+    },
+  },
 ]

@@ -12,7 +12,7 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>()
 
-const form = ref<any>(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const editedDescription = ref('')
 
 const rules = {
@@ -58,8 +58,12 @@ const handleCancel = () => {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="handleCancel"> Cancel </v-btn>
-        <v-btn color="primary" variant="flat" @click="handleSave"> Save </v-btn>
+        <v-btn variant="text" @click="handleCancel">
+          Cancel
+        </v-btn>
+        <v-btn color="primary" variant="flat" @click="handleSave">
+          Save
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

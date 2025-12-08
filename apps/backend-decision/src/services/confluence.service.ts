@@ -1,7 +1,7 @@
 import { spawn } from 'child_process'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { DECISIONS_DIR } from '../config'
+import { DECISIONS_DIR, JIRA_USERNAME, JIRA_TOKEN } from '../config'
 
 export interface ConfluenceUploadResult {
   success: boolean
@@ -20,7 +20,7 @@ export async function pushToConfluence(
   await readFile(filePath, 'utf-8') // This will throw if file doesn't exist
 
   // Check environment variables
-  if (!process.env.JIRA_USERNAME || !process.env.JIRA_TOKEN) {
+  if (!JIRA_USERNAME || !JIRA_TOKEN) {
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
   }
 
@@ -29,7 +29,10 @@ export async function pushToConfluence(
   // Execute the upload script
   return new Promise((resolve, reject) => {
     const proc = spawn('bun', [uploadScript, '--url', confluenceUrl, filePath], {
-      env: process.env,
+      env: {
+        JIRA_USERNAME,
+        JIRA_TOKEN,
+      },
       stdio: 'pipe',
     })
 

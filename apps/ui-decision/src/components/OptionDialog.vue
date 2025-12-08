@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>()
 
-const form = ref<any>(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const name = ref('')
 const description = ref('')
 const moreLink = ref('')
@@ -39,7 +39,7 @@ watch(modelValue, (open) => {
     if (props.editOption) {
       name.value = props.editOption.name
       description.value = props.editOption.description
-      moreLink.value = props.editOption.moreLink || ''
+      moreLink.value = props.editOption.moreLink ?? ''
     } else {
       name.value = ''
       description.value = ''
@@ -103,7 +103,9 @@ const handleCancel = () => {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="handleCancel"> Cancel </v-btn>
+        <v-btn variant="text" @click="handleCancel">
+          Cancel
+        </v-btn>
         <v-btn color="primary" variant="flat" @click="handleSave">
           {{ saveButtonText }}
         </v-btn>

@@ -56,7 +56,9 @@ const handleCancel = () => {
   <v-dialog v-model="modelValue" max-width="400">
     <v-card>
       <v-card-title>Change Rating</v-card-title>
-      <v-card-subtitle class="pb-0"> {{ optionName }} / {{ driverName }} </v-card-subtitle>
+      <v-card-subtitle class="pb-0">
+        {{ optionName }} / {{ driverName }}
+      </v-card-subtitle>
       <v-card-text>
         <v-radio-group v-model="selectedRating" class="rating-options">
           <v-radio
@@ -67,7 +69,12 @@ const handleCancel = () => {
           >
             <template #label>
               <div class="rating-option">
-                <v-chip :color="option.color" size="small" variant="flat" class="mr-2">
+                <v-chip
+                  :color="option.color"
+                  size="small"
+                  variant="flat"
+                  class="mr-2"
+                >
                   {{ option.title }}
                 </v-chip>
                 <span class="rating-description">{{ option.description }}</span>
@@ -78,8 +85,12 @@ const handleCancel = () => {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="handleCancel"> Cancel </v-btn>
-        <v-btn color="primary" variant="flat" @click="handleSave"> Save </v-btn>
+        <v-btn variant="text" @click="handleCancel">
+          Cancel
+        </v-btn>
+        <v-btn color="primary" variant="flat" @click="handleSave">
+          Save
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

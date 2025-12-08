@@ -1,6 +1,6 @@
 import type { decision } from '@magik/decisions'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
 
 export interface DecisionSummary {
   id: string
@@ -20,7 +20,7 @@ export interface DecisionDetail extends decision {
 export const api = {
   async getDecisions(): Promise<DecisionSummary[]> {
     const response = await fetch(`${API_BASE_URL}/decisions`)
-    const data = await response.json()
+    const data = (await response.json()) as { decisions: DecisionSummary[] }
     return data.decisions
   },
 
@@ -31,10 +31,10 @@ export const api = {
       body: JSON.stringify({ filename }),
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create decision')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to create decision')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean; id: string }>
   },
 
   async deleteDecision(id: string): Promise<{ success: boolean }> {
@@ -42,15 +42,15 @@ export const api = {
       method: 'DELETE',
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete decision')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to delete decision')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async getDecision(id: string): Promise<DecisionDetail> {
     const response = await fetch(`${API_BASE_URL}/decisions/${encodeURIComponent(id)}`)
-    return response.json()
+    return response.json() as Promise<DecisionDetail>
   },
 
   async updateDecision(
@@ -63,10 +63,10 @@ export const api = {
       body: JSON.stringify(updates),
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update decision')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update decision')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async pushToConfluence(
@@ -85,11 +85,11 @@ export const api = {
     )
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || error.details || 'Failed to push to Confluence')
+      const error = (await response.json()) as { error?: string; details?: string }
+      throw new Error(error.error ?? error.details ?? 'Failed to push to Confluence')
     }
 
-    return response.json()
+    return response.json() as Promise<{ success: boolean; message: string; error?: string }>
   },
 
   async askAgent(id: string, prompt: string): Promise<{ success: boolean; message: string }> {
@@ -102,11 +102,11 @@ export const api = {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to process with agent')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to process with agent')
     }
 
-    return response.json()
+    return response.json() as Promise<{ success: boolean; message: string }>
   },
 
   async updateEvaluationRating(
@@ -124,10 +124,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update rating')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update rating')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async createOption(
@@ -143,10 +143,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create option')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to create option')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async createDriver(
@@ -162,10 +162,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create driver')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to create driver')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async updateOption(
@@ -182,10 +182,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update option')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update option')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async deleteOption(decisionId: string, optionId: string): Promise<{ success: boolean }> {
@@ -196,10 +196,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete option')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to delete option')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async updateDriver(
@@ -216,10 +216,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update driver')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update driver')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async deleteDriver(decisionId: string, driverId: string): Promise<{ success: boolean }> {
@@ -230,10 +230,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete driver')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to delete driver')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async updateEvaluationDetails(
@@ -251,10 +251,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update evaluation details')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update evaluation details')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async setSelectedOption(
@@ -270,10 +270,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update selected option')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update selected option')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async createComponent(
@@ -289,10 +289,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create component')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to create component')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async updateComponent(
@@ -309,10 +309,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update component')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update component')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async deleteComponent(decisionId: string, componentId: string): Promise<{ success: boolean }> {
@@ -323,10 +323,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete component')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to delete component')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async createUseCase(
@@ -342,10 +342,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create use case')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to create use case')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async updateUseCase(
@@ -362,10 +362,10 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update use case')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to update use case')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 
   async deleteUseCase(decisionId: string, useCaseId: string): Promise<{ success: boolean }> {
@@ -376,9 +376,9 @@ export const api = {
       }
     )
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete use case')
+      const error = (await response.json()) as { error?: string }
+      throw new Error(error.error ?? 'Failed to delete use case')
     }
-    return response.json()
+    return response.json() as Promise<{ success: boolean }>
   },
 }

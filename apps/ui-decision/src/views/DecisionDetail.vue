@@ -86,11 +86,11 @@ onMounted(() => {
   })
 
   // Load decision data asynchronously (don't await in onMounted)
-  ;(async () => {
+  void (async () => {
     try {
       decision.value = await api.getDecision(id)
-    } catch (e: any) {
-      if (e.status === 404) {
+    } catch (e: unknown) {
+      if ((e as { status?: number }).status === 404) {
         error.value = 'Decision not found'
       } else {
         error.value =
@@ -111,7 +111,7 @@ onUnmounted(() => {
 })
 
 const goBack = () => {
-  router.push('/')
+  void router.push('/')
 }
 
 const getEvaluation = (optionId: string, driverId: string) => {
@@ -120,7 +120,7 @@ const getEvaluation = (optionId: string, driverId: string) => {
   )
 }
 
-const getRatingColor = (rating?: 'high' | 'medium' | 'low') => {
+const _getRatingColor = (rating?: 'high' | 'medium' | 'low') => {
   switch (rating) {
     case 'high':
       return 'success'
@@ -171,10 +171,10 @@ const pushToConfluence = async () => {
       message: 'Successfully pushed to Confluence!',
       type: 'success',
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     pushNotification.value = {
       show: true,
-      message: err.message || 'Failed to push to Confluence',
+      message: (err as Error).message ?? 'Failed to push to Confluence',
       type: 'error',
     }
   } finally {
@@ -201,10 +201,10 @@ const handleAgentRequest = async () => {
 
     // Clear input
     agentPrompt.value = ''
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to process request',
+      message: (err as Error).message ?? 'Failed to process request',
       type: 'error',
     }
   } finally {
@@ -214,17 +214,17 @@ const handleAgentRequest = async () => {
 
 const hasAnyDiagram = computed(() => {
   return decision.value?.options.some(
-    (option) => option.architectureDiagramMermaid || option.architectureDiagramLink
+    (option) => option.architectureDiagramMermaid ?? option.architectureDiagramLink
   )
 })
 
 const selectedOptionName = computed(() => {
   if (!decision.value?.selectedOption) return null
   const option = decision.value.options.find((opt) => opt.id === decision.value.selectedOption)
-  return option?.name || decision.value.selectedOption
+  return option?.name ?? decision.value.selectedOption
 })
 
-const firstColumnWidthPercent = computed(() => {
+const _firstColumnWidthPercent = computed(() => {
   if (!decision.value?.options.length) return '15%'
   // First column: 15%, rest divided equally
   // With pure percentages: first gets 15%, rest split the 85%
@@ -261,10 +261,10 @@ const handleRatingSave = async (newRating: 'high' | 'medium' | 'low') => {
       ratingDialogData.value.driverId,
       newRating
     )
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update rating',
+      message: (err as Error).message ?? 'Failed to update rating',
       type: 'error',
     }
   }
@@ -298,10 +298,10 @@ const handleSaveOption = async (option: {
     } else {
       await api.createOption(decisionId, option)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save option',
+      message: (err as Error).message ?? 'Failed to save option',
       type: 'error',
     }
   }
@@ -311,17 +311,19 @@ const confirmDeleteOption = (option: { id: string; name: string }) => {
   confirmDialogData.value = {
     title: 'Delete Option',
     message: `Are you sure you want to delete "${option.name}"? This will also remove all evaluations for this option.`,
-    onConfirm: async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.deleteOption(decisionId, option.id)
-      } catch (err: any) {
-        agentNotification.value = {
-          show: true,
-          message: err.message || 'Failed to delete option',
-          type: 'error',
-        }
-      }
+    onConfirm: () => {
+      void (async () => {
+        try {
+          const decisionId = route.params.id as string
+          await api.deleteOption(decisionId, option.id)
+        } catch (err: unknown) {
+            agentNotification.value = {
+              show: true,
+              message: (err as Error).message ?? 'Failed to delete option',
+              type: 'error',
+            }
+          }
+      })()
     },
   }
   showConfirmDialog.value = true
@@ -331,10 +333,10 @@ const handleSetSelectedOption = async (optionId: string | null) => {
   try {
     const decisionId = route.params.id as string
     await api.setSelectedOption(decisionId, optionId)
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update selection',
+      message: (err as Error).message ?? 'Failed to update selection',
       type: 'error',
     }
   }
@@ -359,10 +361,10 @@ const handleSaveDriver = async (driver: { name: string; description: string }) =
     } else {
       await api.createDriver(decisionId, driver)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save driver',
+      message: (err as Error).message ?? 'Failed to save driver',
       type: 'error',
     }
   }
@@ -372,17 +374,19 @@ const confirmDeleteDriver = (driver: { id: string; name: string }) => {
   confirmDialogData.value = {
     title: 'Delete Driver',
     message: `Are you sure you want to delete "${driver.name}"? This will also remove all evaluations for this driver.`,
-    onConfirm: async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.deleteDriver(decisionId, driver.id)
-      } catch (err: any) {
-        agentNotification.value = {
-          show: true,
-          message: err.message || 'Failed to delete driver',
-          type: 'error',
+    onConfirm: () => {
+      void (async () => {
+        try {
+          const decisionId = route.params.id as string
+          await api.deleteDriver(decisionId, driver.id)
+        } catch (err: unknown) {
+          agentNotification.value = {
+            show: true,
+            message: (err as Error).message ?? 'Failed to delete driver',
+            type: 'error',
+          }
         }
-      }
+      })()
     },
   }
   showConfirmDialog.value = true
@@ -413,10 +417,10 @@ const handleSaveComponent = async (component: { name: string; description: strin
     } else {
       await api.createComponent(decisionId, component)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save component',
+      message: (err as Error).message ?? 'Failed to save component',
       type: 'error',
     }
   }
@@ -426,17 +430,19 @@ const confirmDeleteComponent = (component: { id: string; name: string }) => {
   confirmDialogData.value = {
     title: 'Delete Component',
     message: `Are you sure you want to delete "${component.name}"?`,
-    onConfirm: async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.deleteComponent(decisionId, component.id)
-      } catch (err: any) {
-        agentNotification.value = {
-          show: true,
-          message: err.message || 'Failed to delete component',
-          type: 'error',
+    onConfirm: () => {
+      void (async () => {
+        try {
+          const decisionId = route.params.id as string
+          await api.deleteComponent(decisionId, component.id)
+        } catch (err: unknown) {
+          agentNotification.value = {
+            show: true,
+            message: (err as Error).message ?? 'Failed to delete component',
+            type: 'error',
+          }
         }
-      }
+      })()
     },
   }
   showConfirmDialog.value = true
@@ -461,10 +467,10 @@ const handleSaveUseCase = async (useCase: { name: string; description: string })
     } else {
       await api.createUseCase(decisionId, useCase)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to save use case',
+      message: (err as Error).message ?? 'Failed to save use case',
       type: 'error',
     }
   }
@@ -474,17 +480,19 @@ const confirmDeleteUseCase = (useCase: { id: string; name: string }) => {
   confirmDialogData.value = {
     title: 'Delete Use Case',
     message: `Are you sure you want to delete "${useCase.name}"?`,
-    onConfirm: async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.deleteUseCase(decisionId, useCase.id)
-      } catch (err: any) {
-        agentNotification.value = {
-          show: true,
-          message: err.message || 'Failed to delete use case',
-          type: 'error',
+    onConfirm: () => {
+      void (async () => {
+        try {
+          const decisionId = route.params.id as string
+          await api.deleteUseCase(decisionId, useCase.id)
+        } catch (err: unknown) {
+          agentNotification.value = {
+            show: true,
+            message: (err as Error).message ?? 'Failed to delete use case',
+            type: 'error',
+          }
         }
-      }
+      })()
     },
   }
   showConfirmDialog.value = true
@@ -530,10 +538,10 @@ const handleSaveDescription = async (newDescription: string) => {
       description: newDescription,
       moreLink: option.moreLink,
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update description',
+      message: (err as Error).message ?? 'Failed to update description',
       type: 'error',
     }
   }
@@ -567,10 +575,10 @@ const handleSaveEvaluationDetail = async (newDetails: string[]) => {
   try {
     const decisionId = route.params.id as string
     await api.updateEvaluationDetails(decisionId, optionId, driverId, newDetails)
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update evaluation details',
+      message: (err as Error).message ?? 'Failed to update evaluation details',
       type: 'error',
     }
   }
@@ -597,7 +605,7 @@ const showEditProposalReasoningDialog = ref(false)
 const editedProposalReasoning = ref<string[]>([])
 
 const openEditProblemDialog = () => {
-  editedProblemDefinition.value = decision.value?.problemDefinition || ''
+  editedProblemDefinition.value = decision.value?.problemDefinition ?? ''
   showEditProblemDialog.value = true
 }
 
@@ -608,17 +616,17 @@ const handleSaveProblemDefinition = async () => {
       problemDefinition: editedProblemDefinition.value.trim(),
     })
     showEditProblemDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update problem definition',
+      message: (err as Error).message ?? 'Failed to update problem definition',
       type: 'error',
     }
   }
 }
 
 const openEditProposalDescDialog = () => {
-  editedProposalDescription.value = decision.value?.proposal.description || ''
+  editedProposalDescription.value = decision.value?.proposal.description ?? ''
   showEditProposalDescDialog.value = true
 }
 
@@ -628,21 +636,21 @@ const handleSaveProposalDesc = async () => {
     await api.updateDecision(decisionId, {
       proposal: {
         description: editedProposalDescription.value.trim(),
-        reasoning: decision.value?.proposal.reasoning || [],
+        reasoning: decision.value?.proposal.reasoning ?? [],
       },
     })
     showEditProposalDescDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update proposal',
+      message: (err as Error).message ?? 'Failed to update proposal',
       type: 'error',
     }
   }
 }
 
 const openEditProposalReasoningDialog = () => {
-  editedProposalReasoning.value = [...(decision.value?.proposal.reasoning || [])]
+  editedProposalReasoning.value = [...(decision.value?.proposal.reasoning ?? [])]
   showEditProposalReasoningDialog.value = true
 }
 
@@ -651,15 +659,15 @@ const handleSaveProposalReasoning = async (newReasoning: string[]) => {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, {
       proposal: {
-        description: decision.value?.proposal.description || '',
+        description: decision.value?.proposal.description ?? '',
         reasoning: newReasoning,
       },
     })
     showEditProposalReasoningDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update reasoning',
+      message: (err as Error).message ?? 'Failed to update reasoning',
       type: 'error',
     }
   }
@@ -695,7 +703,7 @@ const showEditConfluenceUrlDialog = ref(false)
 const editedConfluenceUrl = ref('')
 
 const openEditConfluenceUrlDialog = () => {
-  editedConfluenceUrl.value = decision.value?.confluenceLink || ''
+  editedConfluenceUrl.value = decision.value?.confluenceLink ?? ''
   showEditConfluenceUrlDialog.value = true
 }
 
@@ -704,10 +712,10 @@ const handleSaveConfluenceUrl = async () => {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, { confluenceLink: editedConfluenceUrl.value.trim() })
     showEditConfluenceUrlDialog.value = false
-  } catch (err: any) {
+  } catch (err: unknown) {
     agentNotification.value = {
       show: true,
-      message: err.message || 'Failed to update Confluence URL',
+      message: (err as Error).message ?? 'Failed to update Confluence URL',
       type: 'error',
     }
   }
@@ -768,7 +776,9 @@ const handleSaveConfluenceUrl = async () => {
       <v-row v-if="loading">
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" />
-          <p class="mt-4">Loading decision...</p>
+          <p class="mt-4">
+            Loading decision...
+          </p>
         </v-col>
       </v-row>
 
@@ -792,8 +802,7 @@ const handleSaveConfluenceUrl = async () => {
                     v-bind="props"
                     class="clickable-header"
                     @dblclick.stop="openEditProblemDialog"
-                    >Problem Definition</span
-                  >
+                  >Problem Definition</span>
                 </template>
                 <v-list density="compact">
                   <v-list-item
@@ -844,8 +853,7 @@ const handleSaveConfluenceUrl = async () => {
                           v-bind="props"
                           class="clickable-header"
                           @dblclick.stop="openEditComponentDialog(component)"
-                          >{{ component.name }}</span
-                        >
+                        >{{ component.name }}</span>
                       </template>
                       <v-list density="compact">
                         <v-list-item
@@ -903,8 +911,7 @@ const handleSaveConfluenceUrl = async () => {
                           v-bind="props"
                           class="clickable-header"
                           @dblclick.stop="openEditUseCaseDialog(useCase)"
-                          >{{ useCase.name }}</span
-                        >
+                        >{{ useCase.name }}</span>
                       </template>
                       <v-list density="compact">
                         <v-list-item
@@ -943,8 +950,7 @@ const handleSaveConfluenceUrl = async () => {
                     v-bind="props"
                     class="clickable-header"
                     @dblclick.stop="openEditProposalDescDialog"
-                    >Proposal</span
-                  >
+                  >Proposal</span>
                 </template>
                 <v-list density="compact">
                   <v-list-item
@@ -995,12 +1001,21 @@ const handleSaveConfluenceUrl = async () => {
                   {{ reason }}
                 </li>
               </ul>
-              <p v-else class="empty-placeholder">Click Reasoning to add...</p>
+              <p v-else class="empty-placeholder">
+                Click Reasoning to add...
+              </p>
 
               <v-divider class="my-4" />
 
-              <v-chip v-if="decision.selectedOption" color="success" variant="tonal" class="mt-2">
-                <v-icon start> mdi-check-circle </v-icon>
+              <v-chip
+                v-if="decision.selectedOption"
+                color="success"
+                variant="tonal"
+                class="mt-2"
+              >
+                <v-icon start>
+                  mdi-check-circle
+                </v-icon>
                 Selected: {{ selectedOptionName }}
               </v-chip>
             </v-card-text>
@@ -1087,7 +1102,9 @@ const handleSaveConfluenceUrl = async () => {
                         variant="tonal"
                         class="ml-2"
                       >
-                        <v-icon start> mdi-check-circle </v-icon>
+                        <v-icon start>
+                          mdi-check-circle
+                        </v-icon>
                         Selected
                       </v-chip>
                     </th>
@@ -1096,7 +1113,9 @@ const handleSaveConfluenceUrl = async () => {
                 <tbody>
                   <!-- Description Row -->
                   <tr>
-                    <th class="font-weight-bold">Description</th>
+                    <th class="font-weight-bold">
+                      Description
+                    </th>
                     <td
                       v-for="option in decision.options"
                       :key="option.id"
@@ -1131,7 +1150,9 @@ const handleSaveConfluenceUrl = async () => {
 
                   <!-- Architecture Diagram Row -->
                   <tr v-if="hasAnyDiagram">
-                    <th class="font-weight-bold">Architecture Diagram</th>
+                    <th class="font-weight-bold">
+                      Architecture Diagram
+                    </th>
                     <td
                       v-for="option in decision.options"
                       :key="`diagram-${option.id}`"
@@ -1226,9 +1247,10 @@ const handleSaveConfluenceUrl = async () => {
                                   {{ detail }}
                                 </li>
                               </ul>
-                              <span v-else class="empty-placeholder"
-                                >Click to add evaluation...</span
-                              >
+                              <span
+                                v-else
+                                class="empty-placeholder"
+                              >Click to add evaluation...</span>
                             </div>
                           </template>
                           <v-list density="compact">
@@ -1261,22 +1283,16 @@ const handleSaveConfluenceUrl = async () => {
               <div class="rating-legend mt-4">
                 <div class="legend-item">
                   <span class="legend-dot success" />
-                  <span class="legend-text"
-                    >Green - Meets requirements well / Good fit / Low risk</span
-                  >
+                  <span class="legend-text">Green - Meets requirements well / Good fit / Low risk</span>
                 </div>
                 <div class="legend-item">
                   <span class="legend-dot warning" />
-                  <span class="legend-text"
-                    >Yellow - Partially meets requirements / Acceptable with trade-offs / Medium
-                    risk</span
-                  >
+                  <span class="legend-text">Yellow - Partially meets requirements / Acceptable with trade-offs / Medium
+                    risk</span>
                 </div>
                 <div class="legend-item">
                   <span class="legend-dot error" />
-                  <span class="legend-text"
-                    >Red - Does not meet requirements / Significant concerns / High risk</span
-                  >
+                  <span class="legend-text">Red - Does not meet requirements / Significant concerns / High risk</span>
                 </div>
               </div>
             </v-card-text>
@@ -1312,8 +1328,15 @@ const handleSaveConfluenceUrl = async () => {
     </div>
 
     <!-- Real-time update notification -->
-    <v-snackbar v-model="showNotification" :timeout="3000" color="success" location="top">
-      <v-icon start> mdi-refresh </v-icon>
+    <v-snackbar
+      v-model="showNotification"
+      :timeout="3000"
+      color="success"
+      location="top"
+    >
+      <v-icon start>
+        mdi-refresh
+      </v-icon>
       Decision updated in real-time
     </v-snackbar>
 
@@ -1424,8 +1447,12 @@ const handleSaveConfluenceUrl = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showEditProblemDialog = false"> Cancel </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveProblemDefinition"> Save </v-btn>
+          <v-btn variant="text" @click="showEditProblemDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="handleSaveProblemDefinition">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -1445,8 +1472,12 @@ const handleSaveConfluenceUrl = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showEditProposalDescDialog = false"> Cancel </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveProposalDesc"> Save </v-btn>
+          <v-btn variant="text" @click="showEditProposalDescDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="handleSaveProposalDesc">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -1476,8 +1507,12 @@ const handleSaveConfluenceUrl = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showEditConfluenceUrlDialog = false"> Cancel </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveConfluenceUrl"> Save </v-btn>
+          <v-btn variant="text" @click="showEditConfluenceUrlDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="handleSaveConfluenceUrl">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
