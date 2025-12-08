@@ -46,22 +46,26 @@ const filteredGroups = computed(() => {
     .filter(group => group.specs.length > 0)
 })
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    specifications.value = await api.getSpecifications()
-  } catch (e: unknown) {
-    error.value =
-      'Failed to load specifications. Make sure the backend is running on http://localhost:4002'
-    // eslint-disable-next-line no-console
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
+onMounted(() => {
+  void (async () => {
+    loading.value = true
+    try {
+      specifications.value = await api.getSpecifications()
+    } catch (e: unknown) {
+      error.value =
+        'Failed to load specifications. Make sure the backend is running on http://localhost:4002'
+      // Log error to console for debugging
+      if (e instanceof Error) {
+        console.error('Failed to load specifications:', e.message)
+      }
+    } finally {
+      loading.value = false
+    }
+  })()
 })
 
 function goToDetail(spec: SpecificationSummary) {
-  router.push(`/${spec.id}`)
+  void router.push(`/${spec.id}`)
 }
 </script>
 
@@ -73,10 +77,17 @@ function goToDetail(spec: SpecificationSummary) {
 
     <v-container fluid>
       <!-- Loading state -->
-      <v-row v-if="loading" class="fill-height" align="center" justify="center">
+      <v-row
+        v-if="loading"
+        class="fill-height"
+        align="center"
+        justify="center"
+      >
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="mt-4">Loading specifications...</p>
+          <p class="mt-4">
+            Loading specifications...
+          </p>
         </v-col>
       </v-row>
 

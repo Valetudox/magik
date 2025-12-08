@@ -26,6 +26,7 @@ export default tseslint.config(
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',
+        console: 'readonly',
       },
     },
 
