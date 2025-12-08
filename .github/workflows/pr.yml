@@ -1,0 +1,62 @@
+name: Claude Code - PR Created
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  claude-implement:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run Claude Code PR Implementation
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Please implement the following pull request:
+
+            **PR Details:**
+            - Title: ${{ github.event.pull_request.title }}
+            - PR #${{ github.event.pull_request.number }}
+            - Description: ${{ github.event.pull_request.body }}
+
+            **Your Task:**
+            This PR was created from an approved issue. 
+
+            - Use `gh issue view` to read the issue for detailed implementation plans and requirements. 
+            - Create a todo list and start the implementation.
+            - Implement the requested functionality following the todo list.
+            - After each logical step commit and push
+
+          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(npx nx:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh issue comment:*)"'
+
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git push origin ${{ github.event.pull_request.head.ref }}
