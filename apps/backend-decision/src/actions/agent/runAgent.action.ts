@@ -32,12 +32,13 @@ export async function runAgent(
       success: true,
       message: 'Decision updated successfully',
     }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
     } else {
-      request.log.error(`Agent error: ${error.message}`)
-      reply.status(500).send({ error: error.message || 'Failed to process with agent' })
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process with agent'
+      request.log.error(`Agent error: ${errorMessage}`)
+      reply.status(500).send({ error: errorMessage })
     }
   }
 }

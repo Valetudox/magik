@@ -24,13 +24,13 @@ export async function createUseCase(
 
     const useCase = await createUseCaseService(id, name, description)
     return { success: true, useCase }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Use case with this name already exists') {
+    } else if (error instanceof Error && error.message === 'Use case with this name already exists') {
       reply.status(400).send({ error: error.message })
     } else {
-      reply.status(500).send({ error: error.message })
+      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 }

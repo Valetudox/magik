@@ -24,13 +24,14 @@ export async function createComponent(
 
     const component = await createComponentService(id, name, description)
     return { success: true, component }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Component with this name already exists') {
+    } else if (error instanceof Error && error.message === 'Component with this name already exists') {
       reply.status(400).send({ error: error.message })
     } else {
-      reply.status(500).send({ error: error.message })
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error'
+      reply.status(500).send({ error: errorMessage })
     }
   }
 }

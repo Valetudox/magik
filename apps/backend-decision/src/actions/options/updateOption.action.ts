@@ -26,13 +26,13 @@ export async function updateOption(
 
     const option = await updateOptionService(id, optionId, name, description, moreLink)
     return { success: true, option }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Option not found') {
+    } else if (error instanceof Error && error.message === 'Option not found') {
       reply.status(404).send({ error: error.message })
     } else {
-      reply.status(500).send({ error: error.message })
+      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 }
