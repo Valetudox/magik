@@ -55,6 +55,19 @@ else
   validation_failed=1
 fi
 
+# Step 3: Run route-action alignment validation
+echo -e "${YELLOW}Step 3: Running route-action alignment validation...${NC}"
+echo ""
+
+if "$SCRIPT_DIR/backend/validate-route-actions.sh"; then
+  echo ""
+  echo -e "${GREEN}✓ Route-action alignment passed${NC}"
+else
+  echo ""
+  echo -e "${RED}✗ Route-action alignment failed${NC}"
+  validation_failed=1
+fi
+
 # Final summary
 echo ""
 echo -e "${BLUE}========================================${NC}"
@@ -69,7 +82,7 @@ else
     echo -e "${RED}✗ ESLint checks failed${NC}"
   fi
   if [[ $validation_failed -ne 0 ]]; then
-    echo -e "${RED}✗ Structure validation failed${NC}"
+    echo -e "${RED}✗ Validation checks failed${NC}"
   fi
   exit 1
 fi
