@@ -62,6 +62,10 @@ echo "Updating main branch..." >&2
 git checkout main >&2
 git pull origin main >&2
 
+# Push main to ensure remote is up to date
+echo "Pushing main to remote..." >&2
+git push origin main >&2
+
 # Create branch name with timestamp
 TIMESTAMP=$(date +%s)
 BRANCH_NAME="async/${NAME}-${TIMESTAMP}"
