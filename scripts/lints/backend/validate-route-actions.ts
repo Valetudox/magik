@@ -9,11 +9,7 @@ interface RouteInfo {
   method: string
   path: string
   handler: string
-}
-
-interface ImportInfo {
-  handlers: string[]
-  folder: string
+  expectedFile: string // Expected .action.ts file path
 }
 
 interface ActionFolder {
@@ -42,9 +38,68 @@ const YELLOW = '\x1b[1;33m'
 const NC = '\x1b[0m' // No Color
 
 /**
- * Extract import statements from routes.ts to determine action folders
+ * Transform route to expected action file path
+ * Examples:
+ * - GET /api/decisions → actions/decisions/get.action.ts
+ * - GET /api/decisions/:id → actions/decisions/get_id.action.ts
+ * - POST /api/decisions/:id/push-to-confluence → actions/decisions/post_push-to-confluence.action.ts
+ * - DELETE /api/decisions/:id/drivers/:driverId → actions/decisions/drivers/delete_driverId.action.ts
+ *
+ * Rules:
+ * - All static segments before ANY dynamic segment become folder path
+ * - After first dynamic segment, static segments continue as folders until the last segment
+ * - Last segment after a dynamic segment goes to filename
+ * - Dynamic segments in filename use underscore
  */
-function extractImportsFromFile(routesFilePath: string): ImportInfo[] {
+function routeToExpectedFilePath(method: string, routePath: string): string {
+  // Remove /api prefix
+  let path = routePath.replace(/^\/api\//, '')
+
+  // Split into segments
+  const segments = path.split('/').filter(seg => seg !== '')
+
+  const folderParts: string[] = []
+  const fileParts: string[] = [method.toLowerCase()]
+
+  let foundDynamic = false
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i]
+    const isLast = i === segments.length - 1
+
+    if (segment.startsWith(':')) {
+      // Dynamic segment
+      foundDynamic = true
+      fileParts.push(segment.substring(1)) // Remove the : and add to filename
+    } else {
+      // Static segment
+      if (!foundDynamic) {
+        // Before any dynamic segment - goes to folder
+        folderParts.push(segment)
+      } else {
+        // After dynamic segment
+        if (isLast) {
+          // Last segment after dynamic - goes to filename
+          fileParts.push(segment)
+        } else {
+          // Not last segment - still a folder
+          folderParts.push(segment)
+        }
+      }
+    }
+  }
+
+  // Build the final path
+  const folderPath = folderParts.join('/')
+  const fileName = fileParts.join('_') + '.action.ts'
+
+  return folderPath ? `${folderPath}/${fileName}` : fileName
+}
+
+/**
+ * Extract route definitions from routes.ts file
+ */
+function extractRoutesFromFile(routesFilePath: string): RouteInfo[] {
   const content = readFileSync(routesFilePath, 'utf-8')
   const ast = parse(content, {
     ecmaVersion: 'latest',
@@ -52,27 +107,37 @@ function extractImportsFromFile(routesFilePath: string): ImportInfo[] {
     loc: true,
   })
 
-  const imports: ImportInfo[] = []
+  const routes: RouteInfo[] = []
 
-  // Traverse AST to find import statements from ./actions
+  // Traverse AST to find fastify method calls
   function traverse(node: any) {
     if (!node) return
 
-    if (node.type === 'ImportDeclaration') {
-      const source = node.source?.value
-      if (typeof source === 'string' && source.startsWith('./actions/')) {
-        const folder = source.replace('./actions/', '')
-        const handlers: string[] = []
+    // Look for fastify.get/post/patch/delete/put calls
+    if (
+      node.type === 'CallExpression' &&
+      node.callee?.type === 'MemberExpression' &&
+      node.callee.object?.name === 'fastify' &&
+      node.callee.property?.name &&
+      ['get', 'post', 'patch', 'delete', 'put'].includes(
+        node.callee.property.name,
+      )
+    ) {
+      const routePath = (node as CallExpression).arguments[0]
+      const handler = (node as CallExpression).arguments[1]
+      const method = node.callee.property.name
 
-        // Extract imported handler names
-        for (const specifier of node.specifiers || []) {
-          if (specifier.type === 'ImportSpecifier' && specifier.imported?.name) {
-            handlers.push(specifier.imported.name)
-          }
-        }
+      if (routePath && routePath.type === 'Literal') {
+        const path = (routePath as Literal).value as string
 
-        if (handlers.length > 0) {
-          imports.push({ handlers, folder })
+        // Skip health check endpoints
+        if (path !== '/health') {
+          routes.push({
+            method,
+            path,
+            handler: handler?.type === 'Identifier' ? handler.name : 'inline',
+            expectedFile: routeToExpectedFilePath(method, path),
+          })
         }
       }
     }
@@ -90,32 +155,43 @@ function extractImportsFromFile(routesFilePath: string): ImportInfo[] {
   }
 
   traverse(ast)
-  return imports
+  return routes
 }
 
 /**
- * Count .action.ts files in a directory (excluding index.ts)
+ * Check if a file exists
  */
-function countActionFiles(dirPath: string): { count: number; files: string[] } {
+function fileExists(filePath: string): boolean {
   try {
-    const files = readdirSync(dirPath)
-    const actionFiles = files.filter(
-      (file) => file.endsWith('.action.ts') && file !== 'index.ts',
-    )
-    return { count: actionFiles.length, files: actionFiles }
+    return statSync(filePath).isFile()
   } catch {
-    return { count: 0, files: [] }
+    return false
   }
 }
 
 /**
- * Check if a directory exists
+ * Recursively get all .action.ts files in a directory
  */
-function directoryExists(dirPath: string): boolean {
+function getAllActionFiles(dirPath: string, basePath: string = ''): string[] {
   try {
-    return statSync(dirPath).isDirectory()
+    const entries = readdirSync(dirPath, { withFileTypes: true })
+    let files: string[] = []
+
+    for (const entry of entries) {
+      const fullPath = join(dirPath, entry.name)
+      const relativePath = basePath ? `${basePath}/${entry.name}` : entry.name
+
+      if (entry.isDirectory()) {
+        // Recursively scan subdirectories
+        files = files.concat(getAllActionFiles(fullPath, relativePath))
+      } else if (entry.isFile() && entry.name.endsWith('.action.ts')) {
+        files.push(relativePath)
+      }
+    }
+
+    return files
   } catch {
-    return false
+    return []
   }
 }
 
@@ -130,57 +206,52 @@ function validateService(
   const routesFile = join(serviceDir, 'src', 'routes.ts')
   const actionsDir = join(serviceDir, 'src', 'actions')
 
-  // Extract imports to get the expected folder structure
-  const imports = extractImportsFromFile(routesFile)
+  // Extract routes from routes.ts
+  const routes = extractRoutesFromFile(routesFile)
 
-  // Validate each imported action folder
-  for (const importInfo of imports) {
-    // Handle imports from .action.ts files - they should be folders instead
-    let folderPath = importInfo.folder
-    if (folderPath.endsWith('.action')) {
-      folderPath = folderPath.replace(/\.action$/, '')
+  // Get all actual action files
+  const actualFiles = getAllActionFiles(actionsDir)
+  const actualFileSet = new Set(actualFiles)
+
+  // Build set of expected files
+  const expectedFiles = new Set(routes.map((r) => r.expectedFile))
+
+  // Find missing files (expected but not present)
+  const missingFiles: RouteInfo[] = []
+  for (const route of routes) {
+    if (!actualFileSet.has(route.expectedFile)) {
+      missingFiles.push(route)
     }
+  }
 
-    const fullActionPath = join(actionsDir, folderPath)
-    const expectedHandlerCount = importInfo.handlers.length
-
-    // Check if folder exists
-    if (!directoryExists(fullActionPath)) {
-      errors.push({
-        service: serviceName,
-        actionFolder: `actions/${folderPath}`,
-        errorType: 'missing-folder',
-        routes: [`Import: ${importInfo.handlers.join(', ')} (from ${importInfo.folder})`],
-      })
-      continue
+  // Find extra files (present but not expected)
+  const extraFiles: string[] = []
+  for (const actualFile of actualFiles) {
+    if (!expectedFiles.has(actualFile)) {
+      extraFiles.push(actualFile)
     }
+  }
 
-    // Count action files
-    const { count: actionFileCount, files: actionFiles } =
-      countActionFiles(fullActionPath)
-
-    // Check if counts match
-    if (actionFileCount > expectedHandlerCount) {
+  // Report errors
+  if (missingFiles.length > 0) {
+    for (const route of missingFiles) {
       errors.push({
         service: serviceName,
-        actionFolder: `actions/${folderPath}`,
-        errorType: 'extra-action-files',
-        expectedCount: expectedHandlerCount,
-        actualCount: actionFileCount,
-        extraFiles: actionFiles.slice(expectedHandlerCount),
-        routes: [`Handlers: ${importInfo.handlers.join(', ')}`],
-      })
-    } else if (actionFileCount < expectedHandlerCount) {
-      errors.push({
-        service: serviceName,
-        actionFolder: `actions/${folderPath}`,
+        actionFolder: `actions/${route.expectedFile}`,
         errorType: 'missing-action-files',
-        expectedCount: expectedHandlerCount,
-        actualCount: actionFileCount,
-        missingCount: expectedHandlerCount - actionFileCount,
-        routes: [`Handlers: ${importInfo.handlers.join(', ')}`],
+        routes: [`${route.method.toUpperCase()} ${route.path}`],
       })
     }
+  }
+
+  if (extraFiles.length > 0) {
+    errors.push({
+      service: serviceName,
+      actionFolder: 'actions/',
+      errorType: 'extra-action-files',
+      extraFiles,
+      routes: ['Unexpected files in actions directory'],
+    })
   }
 
   return errors
@@ -239,42 +310,26 @@ function main() {
     for (const [service, errors] of errorsByService.entries()) {
       console.log(`  ${service}:`)
 
-      for (const error of errors) {
-        switch (error.errorType) {
-          case 'missing-folder':
-            console.log(`    - Missing action folder: ${error.actionFolder}`)
-            console.log(
-              `      Routes expecting this folder: ${error.routes?.join(', ')}`,
-            )
-            break
+      // Group missing files by type
+      const missingFiles = errors.filter((e) => e.errorType === 'missing-action-files')
+      const extraFilesErrors = errors.filter((e) => e.errorType === 'extra-action-files')
 
-          case 'extra-action-files':
-            console.log(
-              `    - Extra action files in ${error.actionFolder}:`,
-            )
-            console.log(
-              `      Expected: ${error.expectedCount} file(s) (${error.routes?.length} route(s))`,
-            )
-            console.log(`      Actual: ${error.actualCount} file(s)`)
-            if (error.extraFiles && error.extraFiles.length > 0) {
-              console.log(
-                `      Extra files: ${error.extraFiles.join(', ')}`,
-              )
+      if (missingFiles.length > 0) {
+        console.log(`    Missing action files:`)
+        for (const error of missingFiles) {
+          console.log(`      - ${error.actionFolder}`)
+          console.log(`        Route: ${error.routes?.[0]}`)
+        }
+      }
+
+      if (extraFilesErrors.length > 0) {
+        console.log(`    Extra action files:`)
+        for (const error of extraFilesErrors) {
+          if (error.extraFiles) {
+            for (const file of error.extraFiles) {
+              console.log(`      - actions/${file}`)
             }
-            break
-
-          case 'missing-action-files':
-            console.log(
-              `    - Missing action files in ${error.actionFolder}:`,
-            )
-            console.log(
-              `      Expected: ${error.expectedCount} file(s) (${error.routes?.length} route(s))`,
-            )
-            console.log(`      Actual: ${error.actualCount} file(s)`)
-            console.log(
-              `      Missing: ${error.missingCount} action file(s)`,
-            )
-            break
+          }
         }
       }
 
