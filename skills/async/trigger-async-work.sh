@@ -73,6 +73,12 @@ BRANCH_NAME="async/${NAME}-${TIMESTAMP}"
 # Create and push branch from updated main
 echo "Creating branch: $BRANCH_NAME" >&2
 git checkout -b "$BRANCH_NAME" >&2
+
+# Create an empty commit to allow PR creation
+echo "Creating initial commit..." >&2
+git commit --allow-empty -m "Start async work: $NAME" >&2
+
+# Push branch with initial commit
 git push -u origin "$BRANCH_NAME" >&2
 
 # Create pull request and capture URL
