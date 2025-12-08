@@ -17,6 +17,7 @@ REQUIRED_SRC_FILES=(
   "config.ts"
   "index.ts"
   "routes.ts"
+  "types.ts"
 )
 
 # Colors for output
