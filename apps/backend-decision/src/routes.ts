@@ -1,6 +1,4 @@
 import type { FastifyInstance } from 'fastify'
-import { runAgent } from './actions/agent'
-import { createComponent, updateComponent, deleteComponent } from './actions/components'
 import {
   listDecisions,
   createDecision,
@@ -8,15 +6,23 @@ import {
   deleteDecision,
   updateDecision,
   pushToConfluence,
-} from './actions/decisions'
-import { createDriver, updateDriver, deleteDriver } from './actions/drivers'
-import {
   updateEvaluation,
   updateEvaluationDetails,
   updateSelectedOption,
-} from './actions/evaluations'
-import { createOption, updateOption, deleteOption } from './actions/options'
-import { createUseCase, updateUseCase, deleteUseCase } from './actions/use-cases'
+  createOption,
+  updateOption,
+  deleteOption,
+  createDriver,
+  updateDriver,
+  deleteDriver,
+  createComponent,
+  updateComponent,
+  deleteComponent,
+  createUseCase,
+  updateUseCase,
+  deleteUseCase,
+  runAgent,
+} from './actions/decisions'
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check endpoint
