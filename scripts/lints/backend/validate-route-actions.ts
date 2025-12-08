@@ -244,13 +244,30 @@ function validateService(
  */
 function main() {
   const appsDir = 'apps'
+  const targetService = process.argv[2] // Optional: specific service to validate
   const backendServices: string[] = []
 
-  // Find all backend-* directories
-  const dirs = readdirSync(appsDir)
-  for (const dir of dirs) {
-    if (dir.startsWith('backend-') && statSync(join(appsDir, dir)).isDirectory()) {
-      backendServices.push(dir)
+  if (targetService) {
+    // Validate specific service
+    const servicePath = join(appsDir, targetService)
+    try {
+      if (statSync(servicePath).isDirectory()) {
+        backendServices.push(targetService)
+      } else {
+        console.error(`Error: Service '${targetService}' is not a directory`)
+        process.exit(1)
+      }
+    } catch {
+      console.error(`Error: Service '${targetService}' not found`)
+      process.exit(1)
+    }
+  } else {
+    // Find all backend-* directories
+    const dirs = readdirSync(appsDir)
+    for (const dir of dirs) {
+      if (dir.startsWith('backend-') && statSync(join(appsDir, dir)).isDirectory()) {
+        backendServices.push(dir)
+      }
     }
   }
 

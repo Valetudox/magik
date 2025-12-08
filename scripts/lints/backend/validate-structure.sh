@@ -101,19 +101,31 @@ validate_backend_service() {
 
 main() {
   local apps_dir="apps"
+  local target_service="$1"  # Optional: specific service to validate
 
   if [[ ! -d "$apps_dir" ]]; then
     echo "Error: apps directory not found"
     exit 1
   fi
 
-  # Find all backend-* directories
+  # Find all backend-* directories (or just the specified one)
   local backend_services=()
-  for dir in "$apps_dir"/backend-*; do
-    if [[ -d "$dir" ]]; then
-      backend_services+=("$(basename "$dir")")
+  if [[ -n "$target_service" ]]; then
+    # Validate specific service
+    if [[ -d "$apps_dir/$target_service" ]]; then
+      backend_services+=("$target_service")
+    else
+      echo "Error: Service '$target_service' not found"
+      exit 1
     fi
-  done
+  else
+    # Validate all services
+    for dir in "$apps_dir"/backend-*; do
+      if [[ -d "$dir" ]]; then
+        backend_services+=("$(basename "$dir")")
+      fi
+    done
+  fi
 
   if [[ ${#backend_services[@]} -eq 0 ]]; then
     echo "No backend services found"
@@ -162,4 +174,4 @@ main() {
   fi
 }
 
-main
+main "$@"
