@@ -52,33 +52,55 @@ Use this approach when:
 
 ## Usage Pattern
 
-### Basic Workflow
+### Quick Start with Helper Script
+
+The easiest way to trigger async work is using the helper script:
+
+```bash
+# Trigger async work and capture PR number
+PR_NUMBER=$(./skills/async/trigger-async-work.sh \
+  --name "Fix lint issues in backend-decision" \
+  --description "$(cat <<'EOF'
+## Task
+Fix all lint issues in the apps/backend-decision/ directory.
+
+## Acceptance Criteria
+- [ ] All ESLint errors resolved
+- [ ] TypeScript compilation passes
+EOF
+)")
+
+# Monitor the workflow
+gh pr checks $PR_NUMBER --watch
+```
+
+The script automatically:
+1. Creates a timestamped branch (`async/<name>-<timestamp>`)
+2. Pushes the branch to remote
+3. Creates a pull request with your description
+4. Returns the PR number for monitoring
+5. Returns you to your original branch
+
+### Manual Workflow
+
+If you prefer to do it manually:
 
 ```bash
 # 1. Create a new branch
-git checkout -b task-description-$(date +%Y%m%d-%H%M%S)
+git checkout -b async/task-description-$(date +%s)
 
-# 2. Create empty commit to trigger automation
-git commit --allow-empty -m "chore: trigger async task"
-
-# 3. Push to remote
+# 2. Push to remote (triggers workflow)
 git push -u origin <branch-name>
 
-# 4. Create pull request with task description and capture PR URL
+# 3. Create pull request and capture PR number
 PR_URL=$(gh pr create --title "Task Title" --body "Detailed task description...")
-echo "Pull Request created: $PR_URL"
-
-# 5. Extract PR number from URL
 PR_NUMBER=$(echo $PR_URL | grep -oP '/pull/\K\d+')
 
-# 6. Monitor workflow status
-gh pr checks $PR_NUMBER --watch
-# Or check status without watching:
-gh pr checks $PR_NUMBER
+# 4. Return to original branch
+git checkout main
 
-# 7. View workflow run details
-gh run list --workflow=pr.yml --limit 1
-gh run view <run-id> --log
+# 5. Monitor workflow status
+gh pr checks $PR_NUMBER --watch
 ```
 
 ### Pull Request Description Format
