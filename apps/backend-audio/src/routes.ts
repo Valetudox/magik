@@ -1,9 +1,9 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getRecordingHandler, listRecordingsHandler } from './actions/recordings.action'
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check endpoint
-  function healthHandler(_request, _reply) {
+  function healthHandler(_request: FastifyRequest, _reply: FastifyReply) {
     return { status: 'ok' }
   }
   fastify.get('/health', healthHandler)
