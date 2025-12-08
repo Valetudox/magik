@@ -36,11 +36,11 @@ export async function pushToConfluence(
     let stdout = ''
     let stderr = ''
 
-    proc.stdout.on('data', (data) => {
+    proc.stdout.on('data', (data: Buffer) => {
       stdout += data.toString()
     })
 
-    proc.stderr.on('data', (data) => {
+    proc.stderr.on('data', (data: Buffer) => {
       stderr += data.toString()
     })
 

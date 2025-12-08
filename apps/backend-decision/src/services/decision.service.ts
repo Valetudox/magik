@@ -98,8 +98,8 @@ export async function createDecision(pathId: string): Promise<string> {
   try {
     await stat(filePath)
     throw new Error('Decision with this name already exists')
-  } catch (e: any) {
-    if (e.code !== 'ENOENT') {
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e
     }
     // File doesn't exist, continue
