@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client'
 import type { DecisionDetail } from './api'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4001'
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:4001'
 
 let socket: Socket | null = null
 
@@ -39,7 +39,7 @@ export function getSocket(): Socket | null {
 export function onDecisionUpdated(
   callback: (data: { id: string; decision: DecisionDetail }) => void
 ): () => void {
-  const sock = socket || initSocket()
+  const sock = socket ?? initSocket()
 
   sock.on('decision:updated', callback)
 
@@ -51,7 +51,7 @@ export function onDecisionUpdated(
 export function onDecisionAdded(
   callback: (data: { id: string; decision: DecisionDetail }) => void
 ): () => void {
-  const sock = socket || initSocket()
+  const sock = socket ?? initSocket()
 
   sock.on('decision:added', callback)
 
@@ -61,7 +61,7 @@ export function onDecisionAdded(
 }
 
 export function onDecisionDeleted(callback: (data: { id: string }) => void): () => void {
-  const sock = socket || initSocket()
+  const sock = socket ?? initSocket()
 
   sock.on('decision:deleted', callback)
 

@@ -7,7 +7,6 @@ import {
   onDecisionUpdated,
   onDecisionAdded,
   onDecisionDeleted,
-  disconnectSocket,
 } from '../services/socket'
 
 const router = useRouter()
@@ -121,7 +120,7 @@ onMounted(() => {
   })
 
   // Load decisions asynchronously (don't await in onMounted)
-  ;(async () => {
+  void (async () => {
     try {
       decisions.value = await api.getDecisions()
     } catch (e) {
@@ -201,12 +200,12 @@ const bulkPushToConfluence = async () => {
         name: decision.name,
         success: true,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       results.push({
         id: decisionId,
         name: decision.name,
         success: false,
-        error: error.message || 'Unknown error',
+        error: (error as Error).message ?? 'Unknown error',
       })
     }
   }
@@ -227,7 +226,7 @@ const bulkPushToConfluence = async () => {
 }
 
 const goToDetail = (id: string) => {
-  router.push(`/${id}`)
+  void router.push(`/${id}`)
 }
 
 const copyConfluenceUrl = async (decision: DecisionSummary) => {
@@ -264,8 +263,8 @@ const handleDeleteDecision = async () => {
       decisions.value.splice(index, 1)
     }
     showDeleteDialog.value = false
-  } catch (err: any) {
-    alert(err.message || 'Failed to delete decision')
+  } catch (err: unknown) {
+    alert((err as Error).message ?? 'Failed to delete decision')
   } finally {
     deleting.value = false
   }
@@ -298,7 +297,7 @@ const handleBulkDelete = async () => {
         decisions.value.splice(index, 1)
       }
       successCount++
-    } catch (err) {
+    } catch {
       failCount++
     }
   }
@@ -331,9 +330,9 @@ const handleCreateDecision = async () => {
     const result = await api.createDecision(newDecisionName.value.trim())
     showCreateDialog.value = false
     // Navigate to the new decision
-    router.push(`/${result.id}`)
-  } catch (err: any) {
-    createError.value = err.message || 'Failed to create decision'
+    void router.push(`/${result.id}`)
+  } catch (err: unknown) {
+    createError.value = (err as Error).message ?? 'Failed to create decision'
   } finally {
     creating.value = false
   }
@@ -358,7 +357,9 @@ const handleCreateDecision = async () => {
       <v-row v-if="loading">
         <v-col cols="12" class="text-center">
           <v-progress-circular indeterminate color="primary" />
-          <p class="mt-4">Loading decisions...</p>
+          <p class="mt-4">
+            Loading decisions...
+          </p>
         </v-col>
       </v-row>
 
@@ -398,26 +399,33 @@ const handleCreateDecision = async () => {
               show-select
               select-strategy="page"
             >
-              <template #item.name="{ item }">
+              <template #[`item.name`]="{ item }">
                 <span class="font-weight-medium">{{ item.name }}</span>
               </template>
-              <template #item.directory="{ item }">
-                <span class="text-grey">{{ item.directory || '(root)' }}</span>
+              <template #[`item.directory`]="{ item }">
+                <span class="text-grey">{{ item.directory ?? '(root)' }}</span>
               </template>
-              <template #item.selectedOption="{ item }">
-                <v-chip v-if="item.selectedOption" color="success" variant="tonal" size="small">
-                  <v-icon start size="small"> mdi-check-circle </v-icon>
+              <template #[`item.selectedOption`]="{ item }">
+                <v-chip
+                  v-if="item.selectedOption"
+                  color="success"
+                  variant="tonal"
+                  size="small"
+                >
+                  <v-icon start size="small">
+                    mdi-check-circle
+                  </v-icon>
                   Decided
                 </v-chip>
                 <span v-else class="text-grey">Pending</span>
               </template>
-              <template #item.createdAt="{ item }">
+              <template #[`item.createdAt`]="{ item }">
                 <span class="text-body-2">{{ formatDate(item.createdAt) }}</span>
               </template>
-              <template #item.updatedAt="{ item }">
+              <template #[`item.updatedAt`]="{ item }">
                 <span class="text-body-2">{{ formatDate(item.updatedAt) }}</span>
               </template>
-              <template #item.actions="{ item }">
+              <template #[`item.actions`]="{ item }">
                 <div class="action-buttons">
                   <v-btn
                     icon="mdi-pencil"
@@ -459,7 +467,9 @@ const handleCreateDecision = async () => {
 
       <v-row v-if="!loading && !error && decisions.length === 0">
         <v-col cols="12">
-          <v-alert type="info" variant="tonal"> No decisions found </v-alert>
+          <v-alert type="info" variant="tonal">
+            No decisions found
+          </v-alert>
         </v-col>
       </v-row>
     </v-container>
@@ -520,8 +530,12 @@ const handleCreateDecision = async () => {
           >
             {{ bulkPushProgress }}%
           </v-progress-circular>
-          <p class="mt-4 text-h6">Pushing to Confluence...</p>
-          <p class="text-body-2">{{ bulkPushCurrentIndex }} of {{ selectedDecisions.length }}</p>
+          <p class="mt-4 text-h6">
+            Pushing to Confluence...
+          </p>
+          <p class="text-body-2">
+            {{ bulkPushCurrentIndex }} of {{ selectedDecisions.length }}
+          </p>
         </v-card-text>
       </v-card>
     </v-overlay>
@@ -538,8 +552,12 @@ const handleCreateDecision = async () => {
           >
             {{ bulkDeleteProgress }}%
           </v-progress-circular>
-          <p class="mt-4 text-h6">Deleting decisions...</p>
-          <p class="text-body-2">{{ bulkDeleteCurrentIndex }} of {{ selectedDecisions.length }}</p>
+          <p class="mt-4 text-h6">
+            Deleting decisions...
+          </p>
+          <p class="text-body-2">
+            {{ bulkDeleteCurrentIndex }} of {{ selectedDecisions.length }}
+          </p>
         </v-card-text>
       </v-card>
     </v-overlay>
@@ -582,7 +600,9 @@ const handleCreateDecision = async () => {
 
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="bulkPushResults.show = false"> Close </v-btn>
+          <v-btn @click="bulkPushResults.show = false">
+            Close
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -591,13 +611,14 @@ const handleCreateDecision = async () => {
     <v-dialog v-model="showDeleteDialog" max-width="500" persistent>
       <v-card>
         <v-card-title class="d-flex align-center">
-          <v-icon color="error" class="mr-2"> mdi-alert </v-icon>
+          <v-icon color="error" class="mr-2">
+            mdi-alert
+          </v-icon>
           Confirm Delete
         </v-card-title>
         <v-card-text>
           <template v-if="deleteTarget">
-            Are you sure you want to delete "<strong>{{ deleteTarget.name }}</strong
-            >"? This action cannot be undone.
+            Are you sure you want to delete "<strong>{{ deleteTarget.name }}</strong>"? This action cannot be undone.
           </template>
           <template v-else>
             Are you sure you want to delete
@@ -649,7 +670,12 @@ const handleCreateDecision = async () => {
           <v-btn variant="text" :disabled="creating" @click="showCreateDialog = false">
             Cancel
           </v-btn>
-          <v-btn color="primary" variant="flat" :loading="creating" @click="handleCreateDecision">
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="creating"
+            @click="handleCreateDecision"
+          >
             Create
           </v-btn>
         </v-card-actions>
