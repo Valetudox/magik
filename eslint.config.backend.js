@@ -12,8 +12,8 @@ export default [
       'check-file/filename-naming-convention': [
         'error',
         {
-          // Files in src/actions must end with .action.ts or be index.ts
-          '**/src/actions/**/*.ts': '+(*.action|index)',
+          // Files in src/actions must end with .action.ts (index.ts NOT allowed)
+          '**/src/actions/**/*.ts': '*.action',
 
           // Files in src/services must end with .service.ts or be index.ts
           '**/src/services/**/*.ts': '+(*.service|index)',

@@ -11,6 +11,7 @@ This directory contains the standardized patterns and conventions for backend se
 - [Code Patterns](./code-patterns.md) - Standard code patterns for index.ts, config.ts, routes.ts, actions, and types
 - [OpenAPI](./openapi.md) - OpenAPI specification requirements
 - [Health Checks](./health-checks.md) - HTTP and Docker health check patterns
+- [Validation Tools](./validation-tools.md) - ESLint, structure validator, and route-action alignment validator
 - [Checklist](./checklist.md) - Checklist for creating a new backend service
 
 ## Quick Start
@@ -22,5 +23,5 @@ All backend services MUST:
 - Use Fastify as the web framework
 - Implement a `/health` endpoint
 - Use centralized port configuration via `getPort('BACKEND_{SERVICE}')`
-- Organize actions in `src/actions/{resource}/` with `.action.ts` postfix
+- Organize actions using folder-based routing with `[param]` folders (Next.js-style)
 - **Access `process.env` ONLY in `config.ts`** - all other files must import from config.ts

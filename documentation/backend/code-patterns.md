@@ -88,50 +88,162 @@ export function registerRoutes(fastify: FastifyInstance) {
 
 ## Action File Pattern
 
+### Simple Resource Action (Collection)
+
 ```typescript
+// File: src/actions/decisions/get.action.ts
+// Route: GET /api/decisions
+
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { serviceFunction } from '../services/{resource}.service'
+import { listDecisions as listDecisionsService } from '../../services/decision.service'
 
-interface RequestBody {
-  field: string
-}
-
-interface RequestParams {
-  id: string
-}
-
-export async function actionName(
-  request: FastifyRequest<{ Body: RequestBody; Params: RequestParams }>,
+export async function listDecisions(
+  request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    const { field } = request.body
+    const decisions = await listDecisionsService()
+    return { items: decisions, total: decisions.length }
+  } catch (error: any) {
+    reply.status(500).send({ error: error.message })
+  }
+}
+```
+
+### Action with Path Parameter
+
+```typescript
+// File: src/actions/decisions/[id]/get.action.ts
+// Route: GET /api/decisions/:id
+
+import type { FastifyRequest, FastifyReply } from 'fastify'
+import { getDecisionById } from '../../../services/decision.service'
+
+interface DecisionParams {
+  id: string
+}
+
+export async function getDecision(
+  request: FastifyRequest<{ Params: DecisionParams }>,
+  reply: FastifyReply
+) {
+  try {
     const { id } = request.params
+    const decision = await getDecisionById(id)
+
+    if (!decision) {
+      return reply.status(404).send({ error: 'Decision not found' })
+    }
+
+    return decision
+  } catch (error: any) {
+    reply.status(500).send({ error: error.message })
+  }
+}
+```
+
+### Action with Body and Parameter
+
+```typescript
+// File: src/actions/decisions/[id]/patch.action.ts
+// Route: PATCH /api/decisions/:id
+
+import type { FastifyRequest, FastifyReply } from 'fastify'
+import { updateDecision as updateDecisionService } from '../../../services/decision.service'
+
+interface UpdateDecisionBody {
+  title?: string
+  description?: string
+  status?: string
+}
+
+interface DecisionParams {
+  id: string
+}
+
+export async function updateDecision(
+  request: FastifyRequest<{ Body: UpdateDecisionBody; Params: DecisionParams }>,
+  reply: FastifyReply
+) {
+  try {
+    const { id } = request.params
+    const updates = request.body
 
     // Validation
-    if (!field || typeof field !== 'string') {
-      return reply.status(400).send({ error: 'field is required' })
+    if (Object.keys(updates).length === 0) {
+      return reply.status(400).send({ error: 'No updates provided' })
     }
 
     // Call service
-    const result = await serviceFunction(id, field)
+    const result = await updateDecisionService(id, updates)
     return { success: true, result }
   } catch (error: any) {
-    // Handle specific errors
-    if (error.message === 'Specific error') {
-      return reply.status(400).send({ error: error.message })
+    if (error.message === 'Decision not found') {
+      return reply.status(404).send({ error: error.message })
     }
     reply.status(500).send({ error: error.message })
   }
 }
 ```
 
+### Nested Resource Action
+
+```typescript
+// File: src/actions/decisions/[id]/options/[optionId]/patch.action.ts
+// Route: PATCH /api/decisions/:id/options/:optionId
+
+import type { FastifyRequest, FastifyReply } from 'fastify'
+import { updateOption as updateOptionService } from '../../../../../services/option.service'
+
+interface UpdateOptionBody {
+  title?: string
+  description?: string
+  pros?: string[]
+  cons?: string[]
+}
+
+interface OptionParams {
+  id: string
+  optionId: string
+}
+
+export async function updateOption(
+  request: FastifyRequest<{ Body: UpdateOptionBody; Params: OptionParams }>,
+  reply: FastifyReply
+) {
+  try {
+    const { id, optionId } = request.params
+    const updates = request.body
+
+    const result = await updateOptionService(id, optionId, updates)
+    return { success: true, result }
+  } catch (error: any) {
+    if (error.message === 'Option not found') {
+      return reply.status(404).send({ error: error.message })
+    }
+    reply.status(500).send({ error: error.message })
+  }
+}
+```
+
+### Import Path Guidelines
+
+**Important:** Import paths change based on folder nesting depth:
+
+| File Location | Service Import Path |
+|---------------|---------------------|
+| `actions/decisions/get.action.ts` | `../../services/decision.service` |
+| `actions/decisions/[id]/get.action.ts` | `../../../services/decision.service` |
+| `actions/decisions/[id]/options/post.action.ts` | `../../../../services/option.service` |
+| `actions/decisions/[id]/options/[optionId]/patch.action.ts` | `../../../../../services/option.service` |
+
 ### Requirements
 - MUST export async function with typed parameters
 - MUST use `FastifyRequest` and `FastifyReply` types
-- SHOULD define interfaces for request body/params
-- SHOULD validate input and return appropriate HTTP status codes
-- SHOULD handle errors and return proper error responses
+- MUST define interfaces for request body/params/query
+- MUST validate input and return appropriate HTTP status codes
+- MUST handle errors and return proper error responses
+- MUST adjust import paths based on file nesting depth
 
 ## types.ts Pattern
 

@@ -1,28 +1,26 @@
 import type { FastifyInstance } from 'fastify'
-import {
-  listDecisions,
-  createDecision,
-  getDecision,
-  deleteDecision,
-  updateDecision,
-  pushToConfluence,
-  updateEvaluation,
-  updateEvaluationDetails,
-  updateSelectedOption,
-  createOption,
-  updateOption,
-  deleteOption,
-  createDriver,
-  updateDriver,
-  deleteDriver,
-  createComponent,
-  updateComponent,
-  deleteComponent,
-  createUseCase,
-  updateUseCase,
-  deleteUseCase,
-  runAgent,
-} from './actions/decisions'
+import { runAgent } from './actions/decisions/[id]/agent/post.action'
+import { deleteComponent } from './actions/decisions/[id]/components/[componentId]/delete.action'
+import { updateComponent } from './actions/decisions/[id]/components/[componentId]/patch.action'
+import { createComponent } from './actions/decisions/[id]/components/post.action'
+import { deleteDecision } from './actions/decisions/[id]/delete.action'
+import { deleteDriver } from './actions/decisions/[id]/drivers/[driverId]/delete.action'
+import { updateDriver } from './actions/decisions/[id]/drivers/[driverId]/patch.action'
+import { createDriver } from './actions/decisions/[id]/drivers/post.action'
+import { updateEvaluationDetails } from './actions/decisions/[id]/evaluations/details/patch.action'
+import { updateEvaluation } from './actions/decisions/[id]/evaluations/patch.action'
+import { getDecision } from './actions/decisions/[id]/get.action'
+import { deleteOption } from './actions/decisions/[id]/options/[optionId]/delete.action'
+import { updateOption } from './actions/decisions/[id]/options/[optionId]/patch.action'
+import { createOption } from './actions/decisions/[id]/options/post.action'
+import { updateDecision } from './actions/decisions/[id]/patch.action'
+import { pushToConfluence } from './actions/decisions/[id]/push-to-confluence/post.action'
+import { updateSelectedOption } from './actions/decisions/[id]/selected-option/patch.action'
+import { deleteUseCase } from './actions/decisions/[id]/use-cases/[useCaseId]/delete.action'
+import { updateUseCase } from './actions/decisions/[id]/use-cases/[useCaseId]/patch.action'
+import { createUseCase } from './actions/decisions/[id]/use-cases/post.action'
+import { listDecisions } from './actions/decisions/get.action'
+import { createDecision } from './actions/decisions/post.action'
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check endpoint

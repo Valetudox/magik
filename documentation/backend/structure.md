@@ -67,40 +67,89 @@ Service files SHOULD use the `.service.ts` postfix:
 
 ## Actions Directory Structure
 
-Actions MUST be organized in a grouped structure by resource:
+Actions MUST be organized using **folder-based routing** (Next.js-style conventions):
+
+### Routing Convention Rules
+
+1. **Static segments** → Regular folders (kebab-case)
+   - `/api/decisions` → `actions/decisions/`
+   - `/api/decisions/:id/push-to-confluence` → `actions/decisions/[id]/push-to-confluence/`
+
+2. **Dynamic segments** → Folders with brackets
+   - `:id` → `[id]/`
+   - `:optionId` → `[optionId]/`
+   - `:driverId` → `[driverId]/`
+
+3. **Action files** → Named by HTTP method only
+   - `GET` → `get.action.ts`
+   - `POST` → `post.action.ts`
+   - `PATCH` → `patch.action.ts`
+   - `DELETE` → `delete.action.ts`
+
+### Simple Example
 
 ```
 src/
 └── actions/
-    └── {resource-name}/
-        ├── create{Resource}.action.ts
-        ├── delete{Resource}.action.ts
-        ├── get{Resource}.action.ts
-        ├── index.ts
-        ├── list{Resources}.action.ts
-        └── update{Resource}.action.ts
+    └── specifications/
+        ├── get.action.ts              (GET /api/specifications)
+        ├── post.action.ts             (POST /api/specifications)
+        └── [id]/
+            └── get.action.ts          (GET /api/specifications/:id)
 ```
 
-Example:
+### Complex Example (Nested Resources)
 
 ```
 src/
 └── actions/
     └── decisions/
-        ├── createDecision.action.ts
-        ├── deleteDecision.action.ts
-        ├── getDecision.action.ts
-        ├── index.ts
-        ├── listDecisions.action.ts
-        └── updateDecision.action.ts
+        ├── get.action.ts                              (GET /api/decisions)
+        ├── post.action.ts                             (POST /api/decisions)
+        └── [id]/
+            ├── get.action.ts                          (GET /api/decisions/:id)
+            ├── patch.action.ts                        (PATCH /api/decisions/:id)
+            ├── delete.action.ts                       (DELETE /api/decisions/:id)
+            ├── push-to-confluence/
+            │   └── post.action.ts                     (POST /api/decisions/:id/push-to-confluence)
+            ├── evaluations/
+            │   ├── patch.action.ts                    (PATCH /api/decisions/:id/evaluations)
+            │   └── details/
+            │       └── patch.action.ts                (PATCH /api/decisions/:id/evaluations/details)
+            └── options/
+                ├── post.action.ts                     (POST /api/decisions/:id/options)
+                └── [optionId]/
+                    ├── patch.action.ts                (PATCH /api/decisions/:id/options/:optionId)
+                    └── delete.action.ts               (DELETE /api/decisions/:id/options/:optionId)
 ```
 
-The `index.ts` file MUST export all actions from the resource directory:
+### Route to File Path Mapping
+
+| Route | File Path |
+|-------|-----------|
+| `GET /api/decisions` | `actions/decisions/get.action.ts` |
+| `GET /api/decisions/:id` | `actions/decisions/[id]/get.action.ts` |
+| `PATCH /api/decisions/:id` | `actions/decisions/[id]/patch.action.ts` |
+| `POST /api/decisions/:id/options` | `actions/decisions/[id]/options/post.action.ts` |
+| `PATCH /api/decisions/:id/options/:optionId` | `actions/decisions/[id]/options/[optionId]/patch.action.ts` |
+
+### Import Pattern in routes.ts
+
+Actions are imported directly from their file paths (no index.ts):
 
 ```typescript
-export { createDecision } from './createDecision.action'
-export { deleteDecision } from './deleteDecision.action'
-export { getDecision } from './getDecision.action'
-export { listDecisions } from './listDecisions.action'
-export { updateDecision } from './updateDecision.action'
+import { listDecisions } from './actions/decisions/get.action'
+import { createDecision } from './actions/decisions/post.action'
+import { getDecision } from './actions/decisions/[id]/get.action'
+import { updateDecision } from './actions/decisions/[id]/patch.action'
+import { deleteDecision } from './actions/decisions/[id]/delete.action'
 ```
+
+**Note:** `index.ts` files are NOT allowed in action folders. Import directly from action files.
+
+### Benefits of Folder-Based Routing
+
+✅ **Industry standard**: Matches Next.js/Nuxt conventions
+✅ **Visual hierarchy**: Folder structure shows route nesting
+✅ **Cleaner filenames**: Just HTTP method instead of `get_id_optionId`
+✅ **Easier navigation**: Clear separation of static vs dynamic segments

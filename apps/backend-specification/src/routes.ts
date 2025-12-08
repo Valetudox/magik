@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
-import { listSpecifications, getSpecification } from './actions/specifications'
+import { getSpecification } from './actions/specifications/[id]/get.action'
+import { listSpecifications } from './actions/specifications/get.action'
 
 export function registerRoutes(fastify: FastifyInstance) {
   // Health check

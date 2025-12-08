@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import type { Server } from 'socket.io'
 import { z } from 'zod'
-import { broadcastHandler } from './actions/broadcast'
+import { broadcastHandler } from './actions/broadcast/post.action'
 
 const BroadcastRequestSchema = z.object({
   channel: z.string().min(1, 'Channel must not be empty'),

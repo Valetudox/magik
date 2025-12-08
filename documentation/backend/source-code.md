@@ -21,13 +21,12 @@ Every backend service MUST have the following files in the `src/` directory:
 
 ### Action Files
 
-All action files MUST use the `.action.ts` postfix:
+All action files MUST use the `.action.ts` postfix and be named by HTTP method:
 
-- `createDecision.action.ts`
-- `deleteDecision.action.ts`
-- `getDecision.action.ts`
-- `listDecisions.action.ts`
-- `updateDecision.action.ts`
+- `get.action.ts` - For GET requests (list or single resource)
+- `post.action.ts` - For POST requests (create)
+- `patch.action.ts` - For PATCH requests (update)
+- `delete.action.ts` - For DELETE requests (delete)
 
 ### Service Files
 
@@ -38,40 +37,30 @@ Service files SHOULD use the `.service.ts` postfix:
 
 ## Actions Directory Structure
 
-Actions MUST be organized in a grouped structure by resource:
+Actions MUST be organized using **folder-based routing** where:
+- Static route segments → Regular folders (kebab-case)
+- Dynamic route segments → Folders with brackets: `[id]`, `[optionId]`, etc.
+- Action files → Named by HTTP method: `get.action.ts`, `post.action.ts`, etc.
 
-```
-src/
-└── actions/
-    └── {resource-name}/
-        ├── create{Resource}.action.ts
-        ├── delete{Resource}.action.ts
-        ├── get{Resource}.action.ts
-        ├── index.ts
-        ├── list{Resources}.action.ts
-        └── update{Resource}.action.ts
-```
+See [structure.md](./structure.md) for detailed examples and routing rules.
 
-Example:
+### Quick Example
 
 ```
 src/
 └── actions/
     └── decisions/
-        ├── createDecision.action.ts
-        ├── deleteDecision.action.ts
-        ├── getDecision.action.ts
-        ├── index.ts
-        ├── listDecisions.action.ts
-        └── updateDecision.action.ts
+        ├── get.action.ts              (GET /api/decisions)
+        ├── post.action.ts             (POST /api/decisions)
+        └── [id]/
+            ├── get.action.ts          (GET /api/decisions/:id)
+            ├── patch.action.ts        (PATCH /api/decisions/:id)
+            └── delete.action.ts       (DELETE /api/decisions/:id)
 ```
 
-The `index.ts` file MUST export all actions from the resource directory:
+**Important:** `index.ts` files are NOT allowed in action folders. Actions are imported directly from their file paths in `routes.ts`:
 
 ```typescript
-export { createDecision } from './createDecision.action'
-export { deleteDecision } from './deleteDecision.action'
-export { getDecision } from './getDecision.action'
-export { listDecisions } from './listDecisions.action'
-export { updateDecision } from './updateDecision.action'
+import { listDecisions } from './actions/decisions/get.action'
+import { getDecision } from './actions/decisions/[id]/get.action'
 ```
