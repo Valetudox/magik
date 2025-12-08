@@ -1,16 +1,12 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyInstance } from 'fastify'
 import type { Server } from 'socket.io'
 import { z } from 'zod'
+import { broadcastHandler } from './actions/broadcast'
 
 const BroadcastRequestSchema = z.object({
   channel: z.string().min(1, 'Channel must not be empty'),
   payload: z.unknown().optional(),
 })
-
-interface BroadcastBody {
-  channel: string
-  payload?: unknown
-}
 
 const BroadcastResponseSchema = z.object({
   success: z.boolean(),
@@ -61,28 +57,6 @@ export function registerRoutes(fastify: FastifyInstance, io: Server) {
         },
       },
     },
-    async function (request: FastifyRequest<{ Body: BroadcastBody }>, reply: FastifyReply) {
-      const { channel } = request.body
-      const payload: unknown = request.body.payload
-
-      try {
-        const clientCount = io.engine.clientsCount
-
-        // Broadcast to all connected clients
-        io.emit(channel, payload)
-
-        fastify.log.info(`Broadcasted to ${clientCount} client(s) on channel: ${channel}`)
-
-        return {
-          success: true,
-          channel,
-          clientCount,
-        }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        fastify.log.error('Broadcast error:', errorMessage)
-        return reply.status(500).send({ error: 'Failed to broadcast message' })
-      }
-    }
+    broadcastHandler(io)
   )
 }
