@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { deleteOption as deleteOptionService } from '../../services/option.service'
+import { deleteOption as deleteOptionService } from '../../../services/option.service'
 
 interface DeleteOptionParams {
   id: string

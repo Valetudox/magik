@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { updateEvaluationDetails as updateEvaluationDetailsService } from '../../services/evaluation.service'
+import { updateEvaluationDetails as updateEvaluationDetailsService } from '../../../services/evaluation.service'
 
 interface UpdateEvaluationDetailsParams {
   id: string

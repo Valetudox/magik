@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { deleteDriver as deleteDriverService } from '../../services/driver.service'
+import { deleteDriver as deleteDriverService } from '../../../services/driver.service'
 
 interface DeleteDriverParams {
   id: string

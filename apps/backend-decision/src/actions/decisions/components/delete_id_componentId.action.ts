@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { deleteComponent as deleteComponentService } from '../../services/component.service'
+import { deleteComponent as deleteComponentService } from '../../../services/component.service'
 
 interface DeleteComponentParams {
   id: string

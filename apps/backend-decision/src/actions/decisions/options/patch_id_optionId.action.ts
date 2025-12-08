@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { updateOption as updateOptionService } from '../../services/option.service'
+import { updateOption as updateOptionService } from '../../../services/option.service'
 
 interface UpdateOptionParams {
   id: string
