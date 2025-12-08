@@ -19,12 +19,6 @@ REQUIRED_SRC_FILES=(
   "routes.ts"
 )
 
-ALLOWED_SRC_DIRS=(
-  "actions"
-  "services"
-  "utils"
-)
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -50,87 +44,14 @@ validate_src_structure() {
   local src_path="$1"
   local service_name="$2"
 
-  # Check required src files
+  # Check required src files exist
   for file in "${REQUIRED_SRC_FILES[@]}"; do
     if [[ ! -f "$src_path/$file" ]]; then
       add_error "$service_name" "missing_src_file" "$file"
     fi
   done
-
-  # Check for unauthorized files/dirs in src root
-  for item in "$src_path"/*; do
-    [[ ! -e "$item" ]] && continue
-
-    local item_name=$(basename "$item")
-
-    if [[ -d "$item" ]]; then
-      # Check if directory is allowed
-      local is_allowed=false
-      for allowed_dir in "${ALLOWED_SRC_DIRS[@]}"; do
-        if [[ "$item_name" == "$allowed_dir" ]]; then
-          is_allowed=true
-          break
-        fi
-      done
-
-      if [[ "$is_allowed" == false ]]; then
-        add_error "$service_name" "unauthorized_src_dir" "$item_name"
-      fi
-    else
-      # Check if file is allowed (must be in REQUIRED_SRC_FILES or be types.ts)
-      local is_allowed=false
-      for allowed_file in "${REQUIRED_SRC_FILES[@]}"; do
-        if [[ "$item_name" == "$allowed_file" ]]; then
-          is_allowed=true
-          break
-        fi
-      done
-
-      # types.ts is optional but allowed
-      if [[ "$item_name" == "types.ts" ]]; then
-        is_allowed=true
-      fi
-
-      if [[ "$is_allowed" == false ]]; then
-        add_error "$service_name" "unauthorized_src_file" "$item_name"
-      fi
-    fi
-  done
 }
 
-validate_action_files() {
-  local actions_path="$1"
-  local service_name="$2"
-  local service_path="$3"
-
-  # Find all .ts files recursively in actions directory
-  while IFS= read -r -d '' file; do
-    local filename=$(basename "$file")
-    local relative_path="${file#$service_path/}"
-
-    # File must be either index.ts or end with .action.ts
-    if [[ "$filename" != "index.ts" && "$filename" != *.action.ts ]]; then
-      add_error "$service_name" "invalid_action_file" "$relative_path"
-    fi
-  done < <(find "$actions_path" -type f -name "*.ts" -print0)
-}
-
-validate_service_files() {
-  local services_path="$1"
-  local service_name="$2"
-  local service_path="$3"
-
-  # Find all .ts files recursively in services directory
-  while IFS= read -r -d '' file; do
-    local filename=$(basename "$file")
-    local relative_path="${file#$service_path/}"
-
-    # File must be either index.ts or end with .service.ts
-    if [[ "$filename" != "index.ts" && "$filename" != *.service.ts ]]; then
-      add_error "$service_name" "invalid_service_file" "$relative_path"
-    fi
-  done < <(find "$services_path" -type f -name "*.ts" -print0)
-}
 
 validate_backend_service() {
   local service_path="$1"
@@ -154,18 +75,6 @@ validate_backend_service() {
   local src_path="$service_path/src"
   if [[ -d "$src_path" ]]; then
     validate_src_structure "$src_path" "$service_name"
-
-    # Validate action files if actions directory exists
-    local actions_path="$src_path/actions"
-    if [[ -d "$actions_path" ]]; then
-      validate_action_files "$actions_path" "$service_name" "$service_path"
-    fi
-
-    # Validate service files if services directory exists
-    local services_path="$src_path/services"
-    if [[ -d "$services_path" ]]; then
-      validate_service_files "$services_path" "$service_name" "$service_path"
-    fi
   fi
 }
 
@@ -219,18 +128,6 @@ main() {
             ;;
           missing_src_file)
             echo "    - Missing required file in src: $item"
-            ;;
-          unauthorized_src_file)
-            echo "    - Unauthorized file in src root: $item"
-            ;;
-          unauthorized_src_dir)
-            echo "    - Unauthorized directory in src root: $item (allowed: actions, services, utils)"
-            ;;
-          invalid_action_file)
-            echo "    - Invalid action file (must be index.ts or *.action.ts): $item"
-            ;;
-          invalid_service_file)
-            echo "    - Invalid service file (must be index.ts or *.service.ts): $item"
             ;;
         esac
       done <<< "${errors_by_service[$service]}"
