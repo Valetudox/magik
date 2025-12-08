@@ -90,37 +90,6 @@ Your PR description should clearly specify:
 - **Acceptance criteria** - How to verify completion
 - **Related issues** - Link to any related GitHub issues
 
-Example:
-
-```markdown
-## Task
-
-Fix all lint issues in the `@apps/backend-socket/` directory.
-
-## Context
-
-The backend-socket service may have TypeScript configuration and
-type annotation issues similar to other backend services.
-
-## Acceptance Criteria
-
-- [ ] All ESLint errors resolved
-- [ ] TypeScript compilation passes
-- [ ] Changes committed to the PR branch
-```
-
-## Authentication Requirements
-
-The workflow requires a Personal Access Token (PAT) to push changes:
-
-1. **Create PAT** on GitHub:
-   - Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Generate token with `repo` scope
-
-2. **Add as repository secret**:
-   - Repository Settings → Secrets and variables → Actions
-   - Create secret named `PERSONAL_ACCESS_TOKEN`
-   - Paste your PAT as the value
 
 ## Monitoring Execution
 
@@ -145,40 +114,3 @@ gh run view <run-id> --log
 gh run list --workflow=pr.yml --json status,conclusion --jq '.[0]'
 ```
 
-### Manual Monitoring
-
-Track the async work progress manually:
-
-- **Actions tab** - View workflow execution logs in GitHub UI
-- **PR page** - See commits as they're added to the branch
-- **PR checks** - Status indicators show workflow progress
-- **PR comments** - Claude may comment with updates or errors
-- **Notifications** - GitHub notifies on workflow completion/failure
-
-### Status Indicators
-
-- **Queued** ⏳ - Workflow waiting to start
-- **In Progress** 🔄 - Workflow currently executing
-- **Success** ✅ - Workflow completed successfully
-- **Failure** ❌ - Workflow encountered an error
-- **Cancelled** ⚠️ - Workflow was manually stopped
-
-## Best Practices
-
-1. **Descriptive branch names** - Use meaningful, timestamped names
-2. **Clear PR descriptions** - Specify exactly what needs to be done
-3. **Single responsibility** - One task per PR for easier tracking
-4. **Link to issues** - Reference related issues for context
-5. **Review automation results** - Always review automated changes before merging
-
-## Limitations
-
-- Requires `PERSONAL_ACCESS_TOKEN` secret configured
-- Limited to allowed tools specified in workflow
-- Execution time limited by GitHub Actions timeouts
-- Must manually approve and merge results
-
-## Related Files
-
-- `.github/workflows/pr.yml` - GitHub Actions workflow configuration
-- `/.claude/commands/async.md` - Slash command for easy execution

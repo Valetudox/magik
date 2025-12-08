@@ -56,7 +56,3 @@ jobs:
 
           claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh issue comment:*)"'
 
-      - name: Push changes
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: git push origin ${{ github.event.pull_request.head.ref }}
