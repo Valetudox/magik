@@ -58,7 +58,7 @@ export function registerRoutes(fastify: FastifyInstance, io: Server) {
     },
     async function (request, reply) {
       const { channel } = request.body
-      const payload = request.body.payload
+      const payload: unknown = request.body.payload
 
       try {
         const clientCount = io.engine.clientsCount
@@ -73,8 +73,9 @@ export function registerRoutes(fastify: FastifyInstance, io: Server) {
           channel,
           clientCount,
         }
-      } catch (error) {
-        fastify.log.error('Broadcast error:', error)
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        fastify.log.error('Broadcast error:', errorMessage)
         return reply.status(500).send({ error: 'Failed to broadcast message' })
       }
     }
