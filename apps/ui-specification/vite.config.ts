@@ -1,18 +1,19 @@
-// eslint-disable-next-line import/no-unresolved
 import vue from '@vitejs/plugin-vue'
-// eslint-disable-next-line import/no-unresolved
 import { defineConfig } from 'vite'
+import configData from '../../config/config.json' with { type: 'json' }
+
+const isDev = process.env.NODE_ENV !== 'production'
+const specificationPort = isDev
+  ? configData.services.BACKEND_SPECIFICATION.dev
+  : configData.services.BACKEND_SPECIFICATION.prod
 
 export default defineConfig({
   plugins: [vue()],
   base: process.env.VITE_BASE_PATH ?? '/',
   server: {
     port: 5003,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:4002',
-        changeOrigin: true,
-      },
-    },
+  },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(`http://localhost:${specificationPort}/api`),
   },
 })

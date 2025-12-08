@@ -1,8 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import configData from '../../config/config.json' with { type: 'json' }
 
-// https://vite.dev/config/
+const isDev = process.env.NODE_ENV !== 'production'
+const audioPort = isDev
+  ? configData.services.BACKEND_AUDIO.dev
+  : configData.services.BACKEND_AUDIO.prod
+
 export default defineConfig({
   plugins: [vue()],
   base: process.env.VITE_BASE_PATH || '/',
@@ -11,6 +16,9 @@ export default defineConfig({
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
     },
+  },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(`http://localhost:${audioPort}`),
   },
   resolve: {
     alias: {
