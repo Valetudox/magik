@@ -6,7 +6,8 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
 import { Server } from 'socket.io'
-import { z } from 'zod'
+import { PORT } from './config'
+import { registerRoutes } from './routes'
 
 const fastify = Fastify({
   logger: true,
@@ -38,91 +39,14 @@ io.on('connection', (socket) => {
   })
 })
 
-// Zod schemas for validation
-const BroadcastRequestSchema = z.object({
-  channel: z.string().min(1, 'Channel must not be empty'),
-  payload: z.unknown().optional(),
-})
-
-const BroadcastResponseSchema = z.object({
-  success: z.boolean(),
-  channel: z.string(),
-  clientCount: z.number(),
-})
-
-const ErrorResponseSchema = z.object({
-  error: z.string(),
-})
-
-const HealthResponseSchema = z.object({
-  status: z.literal('ok'),
-  service: z.string(),
-  connectedClients: z.number(),
-})
-
-// POST /api/broadcast - Broadcast event to all Socket.IO clients
-fastify.post(
-  '/api/broadcast',
-  {
-    schema: {
-      body: BroadcastRequestSchema,
-      response: {
-        200: BroadcastResponseSchema,
-        400: ErrorResponseSchema,
-        500: ErrorResponseSchema,
-      },
-    },
-  },
-  async function (request, reply) {
-    const { channel } = request.body
-    const payload = request.body.payload
-
-    try {
-      const clientCount = io.engine.clientsCount
-
-      // Broadcast to all connected clients
-      io.emit(channel, payload)
-
-      fastify.log.info(`Broadcasted to ${clientCount} client(s) on channel: ${channel}`)
-
-      return {
-        success: true,
-        channel,
-        clientCount,
-      }
-    } catch (error) {
-      fastify.log.error('Broadcast error:', error)
-      return reply.status(500).send({ error: 'Failed to broadcast message' })
-    }
-  }
-)
-
-// Health check endpoint
-fastify.get(
-  '/health',
-  {
-    schema: {
-      response: {
-        200: HealthResponseSchema,
-      },
-    },
-  },
-  function () {
-    return {
-      status: 'ok' as const,
-      service: 'backend-socket',
-      connectedClients: io.engine.clientsCount,
-    }
-  }
-)
+// Register routes
+registerRoutes(fastify, io)
 
 // Start server
 async function start() {
   try {
-    const { getPort } = await import('../../../config/config.js')
-    const port = getPort('BACKEND_SOCKET')
-    await fastify.listen({ port, host: '0.0.0.0' })
-    fastify.log.info(`Socket.IO server running at http://localhost:${port}`)
+    await fastify.listen({ port: PORT, host: '0.0.0.0' })
+    fastify.log.info(`Socket.IO server running at http://localhost:${PORT}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
