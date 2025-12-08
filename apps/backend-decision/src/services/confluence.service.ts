@@ -29,8 +29,10 @@ export async function pushToConfluence(
   // Execute the upload script
   return new Promise((resolve, reject) => {
     const proc = spawn('bun', [uploadScript, '--url', confluenceUrl, filePath], {
-      // eslint-disable-next-line no-restricted-syntax -- Passing full environment to child process
-      env: process.env,
+      env: {
+        JIRA_USERNAME,
+        JIRA_TOKEN,
+      },
       stdio: 'pipe',
     })
 
