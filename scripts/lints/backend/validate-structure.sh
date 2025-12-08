@@ -51,6 +51,26 @@ validate_src_structure() {
       add_error "$service_name" "missing_src_file" "$file"
     fi
   done
+
+  # Check for invalid folders in src/ (only actions, services, utils are allowed)
+  local allowed_folders=("actions" "services" "utils")
+  for dir in "$src_path"/*; do
+    if [[ -d "$dir" ]]; then
+      local folder_name="$(basename "$dir")"
+      local is_allowed=false
+
+      for allowed in "${allowed_folders[@]}"; do
+        if [[ "$folder_name" == "$allowed" ]]; then
+          is_allowed=true
+          break
+        fi
+      done
+
+      if [[ "$is_allowed" == false ]]; then
+        add_error "$service_name" "invalid_folder" "$folder_name"
+      fi
+    fi
+  done
 }
 
 
@@ -129,6 +149,9 @@ main() {
             ;;
           missing_src_file)
             echo "    - Missing required file in src: $item"
+            ;;
+          invalid_folder)
+            echo "    - Invalid folder in src/: $item (only 'actions', 'services', 'utils' are allowed)"
             ;;
         esac
       done <<< "${errors_by_service[$service]}"

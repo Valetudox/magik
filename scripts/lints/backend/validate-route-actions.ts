@@ -38,18 +38,18 @@ const YELLOW = '\x1b[1;33m'
 const NC = '\x1b[0m' // No Color
 
 /**
- * Transform route to expected action file path
+ * Transform route to expected action file path (Next.js-style with [param] folders)
  * Examples:
  * - GET /api/decisions → actions/decisions/get.action.ts
- * - GET /api/decisions/:id → actions/decisions/get_id.action.ts
- * - POST /api/decisions/:id/push-to-confluence → actions/decisions/post_push-to-confluence.action.ts
- * - DELETE /api/decisions/:id/drivers/:driverId → actions/decisions/drivers/delete_driverId.action.ts
+ * - GET /api/decisions/:id → actions/decisions/[id]/get.action.ts
+ * - POST /api/decisions/:id/push-to-confluence → actions/decisions/[id]/push-to-confluence/post.action.ts
+ * - DELETE /api/decisions/:id/drivers/:driverId → actions/decisions/[id]/drivers/[driverId]/delete.action.ts
+ * - PATCH /api/decisions/:id/options/:optionId → actions/decisions/[id]/options/[optionId]/patch.action.ts
  *
  * Rules:
- * - All static segments before ANY dynamic segment become folder path
- * - After first dynamic segment, static segments continue as folders until the last segment
- * - Last segment after a dynamic segment goes to filename
- * - Dynamic segments in filename use underscore
+ * - Static segments → Regular folders (e.g., decisions, options, drivers)
+ * - Dynamic segments → Folders with brackets (e.g., [id], [optionId], [driverId])
+ * - Action files → Named by HTTP method only (e.g., get.action.ts, patch.action.ts)
  */
 function routeToExpectedFilePath(method: string, routePath: string): string {
   // Remove /api prefix
@@ -59,39 +59,21 @@ function routeToExpectedFilePath(method: string, routePath: string): string {
   const segments = path.split('/').filter(seg => seg !== '')
 
   const folderParts: string[] = []
-  const fileParts: string[] = [method.toLowerCase()]
 
-  let foundDynamic = false
-
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i]
-    const isLast = i === segments.length - 1
-
+  // Transform each segment into folder path
+  for (const segment of segments) {
     if (segment.startsWith(':')) {
-      // Dynamic segment
-      foundDynamic = true
-      fileParts.push(segment.substring(1)) // Remove the : and add to filename
+      // Dynamic segment: :id → [id]
+      folderParts.push(`[${segment.substring(1)}]`)
     } else {
-      // Static segment
-      if (!foundDynamic) {
-        // Before any dynamic segment - goes to folder
-        folderParts.push(segment)
-      } else {
-        // After dynamic segment
-        if (isLast) {
-          // Last segment after dynamic - goes to filename
-          fileParts.push(segment)
-        } else {
-          // Not last segment - still a folder
-          folderParts.push(segment)
-        }
-      }
+      // Static segment: decisions → decisions
+      folderParts.push(segment)
     }
   }
 
-  // Build the final path
+  // Build the final path: folder/path/method.action.ts
   const folderPath = folderParts.join('/')
-  const fileName = fileParts.join('_') + '.action.ts'
+  const fileName = method.toLowerCase() + '.action.ts'
 
   return folderPath ? `${folderPath}/${fileName}` : fileName
 }

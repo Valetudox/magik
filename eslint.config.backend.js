@@ -30,8 +30,9 @@ export default [
       'check-file/folder-naming-convention': [
         'error',
         {
-          // All folders should use kebab-case
-          '**/src/**/': 'KEBAB_CASE',
+          // All folders should use kebab-case, except [param] style folders (Next.js convention)
+          // Using explicit patterns: kebab-case ([a-z-]+) OR bracket notation (\\[[a-zA-Z0-9]+\\])
+          '**/src/**/': '+([a-z-]|\\[[a-zA-Z0-9]+\\])',
         },
       ],
 
