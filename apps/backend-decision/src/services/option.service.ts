@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
-import { generateId } from '../utils/generateId'
+import { generateId } from '../utils/generate-id'
 
 export interface Option {
   id: string

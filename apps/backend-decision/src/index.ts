@@ -3,8 +3,8 @@ import Fastify from 'fastify'
 import { DECISIONS_DIR } from './config'
 import { registerRoutes } from './routes'
 import { broadcastToSocket } from './utils/broadcast'
-import { fileEventToSocketPayload } from './utils/fileEventToSocketPayload'
-import { setupFileWatcher } from './utils/fileWatcher'
+import { fileEventToSocketPayload } from './utils/file-event-to-socket-payload'
+import { setupFileWatcher } from './utils/file-watcher'
 
 const fastify = Fastify({
   logger: true,
