@@ -119,7 +119,8 @@ fastify.get(
 // Start server
 async function start() {
   try {
-    const port = Number(process.env.PORT) || 4001
+    const { getPort } = await import('../../../config/config.js')
+    const port = getPort('BACKEND_SOCKET')
     await fastify.listen({ port, host: '0.0.0.0' })
     fastify.log.info(`Socket.IO server running at http://localhost:${port}`)
   } catch (err) {

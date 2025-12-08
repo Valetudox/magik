@@ -1,0 +1,10 @@
+{
+  "name": "@magik/config",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./config.ts",
+  "exports": {
+    ".": "./config.ts",
+    "./config": "./config.ts"
+  }
+}

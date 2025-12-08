@@ -1,0 +1,28 @@
+{
+  "services": {
+    "BACKEND_DECISION": {
+      "dev": 4000,
+      "prod": 3000,
+      "apiRoute": "/api/decisions",
+      "containerName": "backend-decision"
+    },
+    "BACKEND_SOCKET": {
+      "dev": 4001,
+      "prod": 3001,
+      "apiRoute": "/socket.io/",
+      "containerName": "backend-socket"
+    },
+    "BACKEND_AUDIO": {
+      "dev": 4002,
+      "prod": 3002,
+      "apiRoute": "/api/recordings",
+      "containerName": "backend-audio"
+    },
+    "BACKEND_SPECIFICATION": {
+      "dev": 4003,
+      "prod": 3003,
+      "apiRoute": "/api/specifications",
+      "containerName": "backend-specification"
+    }
+  }
+}

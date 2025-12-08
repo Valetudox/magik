@@ -16,7 +16,8 @@ async function start() {
   registerRoutes(fastify)
 
   // Start server
-  const port = parseInt(process.env.PORT || '4002', 10)
+  const { getPort } = await import('../../../config/config.js')
+  const port = getPort('BACKEND_SPECIFICATION')
 
   try {
     await fastify.listen({ port, host: '0.0.0.0' })

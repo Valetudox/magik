@@ -21,7 +21,8 @@ registerRoutes(fastify)
 // Start server
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) || 4000
+    const { getPort } = await import('../../../config/config.js')
+    const port = getPort('BACKEND_DECISION')
     await fastify.listen({ port, host: '0.0.0.0' })
     fastify.log.info(`Backend running at http://localhost:${port}`)
 
