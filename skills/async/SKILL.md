@@ -52,6 +52,23 @@ Use this approach when:
 
 ## Usage Pattern
 
+### Important: Handling Uncommitted Changes
+
+**Before triggering async work, you MUST handle any uncommitted changes:**
+
+1. **Check for uncommitted changes:**
+   ```bash
+   git status --short
+   ```
+
+2. **If there are uncommitted changes, ask the user:**
+   - "You have uncommitted changes. Would you like to commit them or stash them?"
+   - **If commit:** Ask for a commit message, then `git add -A && git commit -m "message"`
+   - **If stash:** Run `git stash push -m "Before async work"` and note that you'll restore it later
+
+3. **After triggering the async work:**
+   - If changes were stashed, restore them: `git stash pop`
+
 ### Quick Start with Helper Script
 
 The easiest way to trigger async work is using the helper script:
