@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import type { Server } from 'socket.io'
 import { z } from 'zod'
 
@@ -6,6 +6,11 @@ const BroadcastRequestSchema = z.object({
   channel: z.string().min(1, 'Channel must not be empty'),
   payload: z.unknown().optional(),
 })
+
+interface BroadcastBody {
+  channel: string
+  payload?: unknown
+}
 
 const BroadcastResponseSchema = z.object({
   success: z.boolean(),
@@ -56,7 +61,7 @@ export function registerRoutes(fastify: FastifyInstance, io: Server) {
         },
       },
     },
-    async function (request, reply) {
+    async function (request: FastifyRequest<{ Body: BroadcastBody }>, reply: FastifyReply) {
       const { channel } = request.body
       const payload: unknown = request.body.payload
 
