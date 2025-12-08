@@ -1,0 +1,4 @@
+# Concurrent Linting Research
+
+This PR will research how to run lints concurrently per project.
+
