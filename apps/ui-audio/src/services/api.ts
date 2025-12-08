@@ -1,8 +1,9 @@
-import { healthCheck, listRecordings, getRecording } from '@magik/backend-audio-client'
+import { listRecordings, getRecording } from '@magik/backend-audio-client'
 import type { Recording } from '@magik/backend-audio-client'
 import { client } from '@magik/backend-audio-client/client.gen'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002'
+const apiUrl = import.meta.env.VITE_API_URL
+const API_BASE_URL = typeof apiUrl === 'string' ? apiUrl : 'http://localhost:4002'
 
 // Configure the client base URL
 client.setConfig({
@@ -20,7 +21,7 @@ export interface RecordingListResponse {
 export const api = {
   async getRecordings(): Promise<Recording[]> {
     const { data, error } = await listRecordings()
-    if (error || !data) {
+    if (error ?? !data) {
       throw new Error('Failed to load recordings')
     }
     return data.recordings
@@ -28,7 +29,7 @@ export const api = {
 
   async getRecording(id: string): Promise<Recording> {
     const { data, error } = await getRecording({ path: { id } })
-    if (error || !data) {
+    if (error ?? !data) {
       throw new Error('Recording not found')
     }
     return data

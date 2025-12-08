@@ -50,19 +50,19 @@ async function loadRecording() {
 
   try {
     recording.value = await api.getRecording(recordingId.value)
-  } catch (e: any) {
-    error.value = e.message || 'Failed to load recording'
+  } catch (e: unknown) {
+    error.value = (e as Error).message ?? 'Failed to load recording'
   } finally {
     loading.value = false
   }
 }
 
 function goBack() {
-  router.push('/recordings')
+  void router.push('/recordings')
 }
 
 onMounted(() => {
-  loadRecording()
+  void loadRecording()
 })
 </script>
 
@@ -70,14 +70,21 @@ onMounted(() => {
   <v-container fluid>
     <v-row>
       <v-col>
-        <v-btn prepend-icon="mdi-arrow-left" class="mb-4" variant="text" @click="goBack">
+        <v-btn
+          prepend-icon="mdi-arrow-left"
+          class="mb-4"
+          variant="text"
+          @click="goBack"
+        >
           Back to Recordings
         </v-btn>
 
         <v-card v-if="loading">
           <v-card-text class="text-center pa-8">
             <v-progress-circular indeterminate color="primary" size="64" />
-            <p class="mt-4">Loading recording...</p>
+            <p class="mt-4">
+              Loading recording...
+            </p>
           </v-card-text>
         </v-card>
 
@@ -117,27 +124,27 @@ onMounted(() => {
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Format</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          recording.format.toUpperCase()
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ recording.format.toUpperCase() }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Size</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatSize(recording.size)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatSize(recording.size) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Created At</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatDate(recording.createdAt)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatDate(recording.createdAt) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <v-list-item>
                         <v-list-item-title>Modified At</v-list-item-title>
-                        <v-list-item-subtitle>{{
-                          formatDate(recording.modifiedAt)
-                        }}</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ formatDate(recording.modifiedAt) }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                     </v-list>
                   </v-card-text>
