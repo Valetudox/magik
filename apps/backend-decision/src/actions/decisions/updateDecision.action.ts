@@ -19,11 +19,11 @@ export async function updateDecision(
     const { id } = request.params
     await updateDecisionService(id, request.body)
     return { success: true }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
     } else {
-      reply.status(500).send({ error: error.message })
+      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 }

@@ -3,8 +3,8 @@ import Fastify from 'fastify'
 import { DECISIONS_DIR } from './config'
 import { registerRoutes } from './routes'
 import { broadcastToSocket } from './utils/broadcast'
-import { fileEventToSocketPayload } from './utils/fileEventToSocketPayload'
-import { setupFileWatcher } from './utils/fileWatcher'
+import { fileEventToSocketPayload } from './utils/file-event-to-socket-payload'
+import { setupFileWatcher } from './utils/file-watcher'
 
 const fastify = Fastify({
   logger: true,
@@ -19,7 +19,7 @@ await fastify.register(cors, {
 registerRoutes(fastify)
 
 // Start server
-const start = async () => {
+async function start() {
   try {
     const { getPort } = await import('../../../config/config.js')
     const port = getPort('BACKEND_DECISION')
@@ -34,8 +34,9 @@ const start = async () => {
         const socketPayload = fileEventToSocketPayload(event)
         await broadcastToSocket(socketPayload)
         fastify.log.info(`Broadcasted ${event.type} for decision: ${event.id}`)
-      } catch (error: any) {
-        fastify.log.error(`Failed to broadcast: ${error.message}`)
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        fastify.log.error(`Failed to broadcast: ${errorMessage}`)
       }
     })
 
@@ -46,4 +47,4 @@ const start = async () => {
   }
 }
 
-start()
+void start()

@@ -25,13 +25,14 @@ export async function updateComponent(
 
     const component = await updateComponentService(id, componentId, name, description)
     return { success: true, component }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Component not found') {
+    } else if (error instanceof Error && error.message === 'Component not found') {
       reply.status(404).send({ error: error.message })
     } else {
-      reply.status(500).send({ error: error.message })
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error'
+      reply.status(500).send({ error: errorMessage })
     }
   }
 }

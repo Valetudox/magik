@@ -65,11 +65,11 @@ export async function listAllDecisions(): Promise<DecisionSummary[]> {
 export async function getDecisionById(id: string): Promise<decision & { id: string }> {
   const filePath = join(DECISIONS_DIR, `${id}.json`)
   const content = await readFile(filePath, 'utf-8')
-  const decision = JSON.parse(content) as decision
+  const decisionData = JSON.parse(content) as decision
 
   return {
     id,
-    ...decision,
+    ...decisionData,
   }
 }
 
@@ -98,8 +98,8 @@ export async function createDecision(pathId: string): Promise<string> {
   try {
     await stat(filePath)
     throw new Error('Decision with this name already exists')
-  } catch (e: any) {
-    if (e.code !== 'ENOENT') {
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e
     }
     // File doesn't exist, continue

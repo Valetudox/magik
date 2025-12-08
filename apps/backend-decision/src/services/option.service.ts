@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
-import { generateId } from '../utils/generateId'
+import { generateId } from '../utils/generate-id'
 
 export interface Option {
   id: string
@@ -65,15 +65,19 @@ export async function updateOption(
     throw new Error('Option not found')
   }
 
-  decisionData.options[optionIndex] = {
-    ...decisionData.options[optionIndex],
-    name,
-    description,
-    ...(moreLink ? { moreLink } : {}),
-  }
-
-  if (!moreLink) {
-    delete decisionData.options[optionIndex].moreLink
+  if (moreLink) {
+    decisionData.options[optionIndex] = {
+      ...decisionData.options[optionIndex],
+      name,
+      description,
+      moreLink,
+    }
+  } else {
+    decisionData.options[optionIndex] = {
+      id: decisionData.options[optionIndex].id,
+      name,
+      description,
+    }
   }
 
   await writeFile(filePath, JSON.stringify(decisionData, null, 2), 'utf-8')

@@ -35,13 +35,13 @@ export async function updateEvaluationDetails(
       evaluationDetails
     )
     return { success: true, evaluation }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       reply.status(404).send({ error: 'Decision not found' })
-    } else if (error.message === 'Evaluation not found') {
+    } else if (error instanceof Error && error.message === 'Evaluation not found') {
       reply.status(404).send({ error: error.message })
     } else {
-      reply.status(500).send({ error: error.message })
+      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 }

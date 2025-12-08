@@ -2,7 +2,7 @@ import { SOCKET_SERVER_URL } from '../config'
 
 export interface BroadcastMessage {
   channel: string
-  payload: any
+  payload: Record<string, unknown>
 }
 
 export async function broadcastToSocket(message: BroadcastMessage): Promise<void> {
@@ -20,7 +20,8 @@ export async function broadcastToSocket(message: BroadcastMessage): Promise<void
     }
 
     await response.json()
-  } catch (error: any) {
-    throw new Error(`Failed to broadcast to socket server: ${error.message}`)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    throw new Error(`Failed to broadcast to socket server: ${errorMessage}`)
   }
 }

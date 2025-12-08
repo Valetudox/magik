@@ -53,7 +53,7 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
         console.error('File watcher error:', error)
       })
 
-      const handleChange = async (filePath: string) => {
+      async function handleChange(filePath: string) {
         if (!filePath.endsWith('.json')) {
           return
         }
@@ -74,30 +74,37 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
             id,
             decision: { id, ...decisionData },
           })
-        } catch (error: any) {
-          console.error(`Error reading ${filePath}:`, error.message)
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.error(`Error reading ${filePath}:`, errorMessage)
         }
       }
 
-      watcher.on('add', handleChange)
-      watcher.on('change', handleChange)
-      watcher.on('unlink', async (filePath) => {
-        if (!filePath.endsWith('.json')) {
-          return
-        }
-        console.log('File deleted:', filePath)
-        if (!observer) {
-          return
-        }
-        const relativePath = relative(baseDir, filePath)
-        const id = relativePath.slice(0, -5)
-        await observer({ type: 'deleted', id })
+      watcher.on('add', (filePath) => {
+        void handleChange(filePath)
+      })
+      watcher.on('change', (filePath) => {
+        void handleChange(filePath)
+      })
+      watcher.on('unlink', (filePath) => {
+        void (async () => {
+          if (!filePath.endsWith('.json')) {
+            return
+          }
+          console.log('File deleted:', filePath)
+          if (!observer) {
+            return
+          }
+          const relativePath = relative(baseDir, filePath)
+          const id = relativePath.slice(0, -5)
+          await observer({ type: 'deleted', id })
+        })()
       })
     },
 
     unsubscribe() {
       if (watcher) {
-        watcher.close()
+        void watcher.close()
         watcher = null
       }
       observer = null
