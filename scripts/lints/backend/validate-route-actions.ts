@@ -272,10 +272,8 @@ function main() {
     }
   }
 
-  // Skip backend-socket (uses inline handlers)
-  const servicesToValidate = backendServices.filter(
-    (service) => service !== 'backend-socket',
-  )
+  // Validate all backend services
+  const servicesToValidate = backendServices
 
   let allErrors: ValidationError[] = []
 
