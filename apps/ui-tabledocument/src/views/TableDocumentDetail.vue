@@ -37,8 +37,18 @@ const useCaseForm = ref<Omit<TableRow, 'id'>>({
   notes: [],
 })
 
+// Field-specific edit dialogs
+const showEditFieldDialog = ref(false)
+const editFieldData = ref<{
+  useCaseId: string
+  fieldName: string
+  fieldLabel: string
+  fieldType: 'text' | 'textarea' | 'array'
+  value: string | string[]
+} | null>(null)
+
 // Confluence URL editor
-const editingConfluenceUrl = ref(false)
+const showEditConfluenceUrlDialog = ref(false)
 const confluenceUrlInput = ref('')
 
 // Delete confirmation
@@ -171,14 +181,19 @@ const deleteUseCase = async () => {
   }
 }
 
+const openEditConfluenceUrlDialog = () => {
+  confluenceUrlInput.value = document.value?.confluence_url || ''
+  showEditConfluenceUrlDialog.value = true
+}
+
 const saveConfluenceUrl = async () => {
   if (!document.value) return
 
   try {
     await api.updateTableDocument(document.value.id, {
-      confluence_url: confluenceUrlInput.value || undefined,
+      confluence_url: confluenceUrlInput.value.trim() || undefined,
     })
-    editingConfluenceUrl.value = false
+    showEditConfluenceUrlDialog.value = false
   } catch (e) {
     console.error('Failed to update Confluence URL:', e)
   }
@@ -240,6 +255,50 @@ const handleAgentRequest = async () => {
     agentProcessing.value = false
   }
 }
+
+const appendAIPromptForUseCase = (useCase: TableRow) => {
+  const prompt = `Edit the use case "${useCase.use_case}": `
+  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
+}
+
+// Field-specific editing
+const openEditFieldDialog = (
+  useCase: TableRow,
+  fieldName: keyof Omit<TableRow, 'id'>,
+  fieldLabel: string,
+  fieldType: 'text' | 'textarea' | 'array'
+) => {
+  editFieldData.value = {
+    useCaseId: useCase.id,
+    fieldName,
+    fieldLabel,
+    fieldType,
+    value: fieldType === 'array'
+      ? (useCase[fieldName] as string[] || [])
+      : (useCase[fieldName] as string || ''),
+  }
+  showEditFieldDialog.value = true
+}
+
+const saveFieldEdit = async () => {
+  if (!editFieldData.value || !document.value) return
+
+  try {
+    const updates: Partial<Omit<TableRow, 'id'>> = {
+      [editFieldData.value.fieldName]: editFieldData.value.fieldType === 'array'
+        ? (editFieldData.value.value as string[]).length > 0
+          ? editFieldData.value.value
+          : undefined
+        : (editFieldData.value.value as string).trim() || undefined,
+    }
+
+    await api.updateUseCase(document.value.id, editFieldData.value.useCaseId, updates)
+    showEditFieldDialog.value = false
+    editFieldData.value = null
+  } catch (e) {
+    console.error('Failed to update field:', e)
+  }
+}
 </script>
 
 <template>
@@ -257,21 +316,29 @@ const handleAgentRequest = async () => {
     <Teleport to="#header-actions-slot">
       <div class="d-flex">
         <v-btn
-          v-if="document?.confluence_url"
+          variant="outlined"
+          icon="mdi-pencil"
+          class="mr-2"
+          @click="openEditConfluenceUrlDialog"
+        />
+        <v-btn
           variant="outlined"
           icon="mdi-open-in-new"
           class="mr-2"
-          :href="document.confluence_url"
+          :disabled="!document?.confluence_url"
+          :href="document?.confluence_url"
           target="_blank"
         />
         <v-btn
-          v-if="document?.confluence_url"
           variant="outlined"
-          icon="mdi-cloud-upload"
+          prepend-icon="mdi-upload"
           class="mr-2"
           :loading="pushingToConfluence"
+          :disabled="!document?.confluence_url || pushingToConfluence"
           @click="pushToConfluence"
-        />
+        >
+          Push to Confluence
+        </v-btn>
       </div>
     </Teleport>
 
@@ -301,73 +368,6 @@ const handleAgentRequest = async () => {
       <v-snackbar v-model="agentNotification.show" :timeout="5000" :color="agentNotification.type">
         {{ agentNotification.message }}
       </v-snackbar>
-
-      <!-- Confluence URL Section -->
-      <v-row class="mt-4">
-        <v-col>
-          <v-card>
-            <v-card-title>Confluence Integration</v-card-title>
-            <v-card-text>
-              <v-row align="center">
-                <v-col v-if="!editingConfluenceUrl" cols="12" md="8">
-                  <div v-if="document.confluence_url">
-                    <strong>URL:</strong>
-                    <a :href="document.confluence_url" target="_blank" class="ml-2">
-                      {{ document.confluence_url }}
-                    </a>
-                  </div>
-                  <div v-else class="text-grey">No Confluence URL set</div>
-                </v-col>
-                <v-col v-else cols="12" md="8">
-                  <v-text-field
-                    v-model="confluenceUrlInput"
-                    label="Confluence URL"
-                    density="compact"
-                    hide-details
-                  />
-                </v-col>
-                <v-col cols="12" md="4" class="text-right">
-                  <v-btn
-                    v-if="!editingConfluenceUrl"
-                    prepend-icon="mdi-pencil"
-                    size="small"
-                    @click="editingConfluenceUrl = true"
-                  >
-                    Edit URL
-                  </v-btn>
-                  <template v-else>
-                    <v-btn
-                      size="small"
-                      @click="editingConfluenceUrl = false"
-                    >
-                      Cancel
-                    </v-btn>
-                    <v-btn
-                      color="primary"
-                      size="small"
-                      class="ml-2"
-                      @click="saveConfluenceUrl"
-                    >
-                      Save
-                    </v-btn>
-                  </template>
-                  <v-btn
-                    v-if="document.confluence_url && !editingConfluenceUrl"
-                    color="primary"
-                    prepend-icon="mdi-cloud-upload"
-                    size="small"
-                    class="ml-2"
-                    :loading="pushingToConfluence"
-                    @click="pushToConfluence"
-                  >
-                    Push to Confluence
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
 
       <!-- Use Cases Table -->
       <v-row class="mt-4">
@@ -401,33 +401,119 @@ const handleAgentRequest = async () => {
                 </thead>
                 <tbody>
                   <tr v-for="(useCase, index) in document.table" :key="useCase.id">
-                    <td class="text-center font-weight-bold">{{ index + 1 }}</td>
-                    <td>{{ useCase.use_case }}</td>
-                    <td>
-                      <div v-if="useCase.diagram" class="diagram-container">
-                        <VueMermaidRender :content="useCase.diagram" />
-                      </div>
-                      <span v-else class="text-grey">—</span>
+                    <td class="text-center font-weight-bold align-top">{{ index + 1 }}</td>
+                    <td class="align-top">
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <span
+                            v-bind="props"
+                            class="editable-text"
+                            @dblclick.stop="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
+                          >
+                            {{ useCase.use_case }}
+                          </span>
+                        </template>
+                        <v-list density="compact">
+                          <v-list-item
+                            prepend-icon="mdi-pencil"
+                            title="Edit"
+                            @click="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
+                          />
+                          <v-list-item
+                            prepend-icon="mdi-robot"
+                            title="Edit with AI"
+                            @click="appendAIPromptForUseCase(useCase)"
+                          />
+                        </v-list>
+                      </v-menu>
                     </td>
-                    <td>
-                      <ul v-if="useCase.required_context && useCase.required_context.length">
-                        <li v-for="(item, i) in useCase.required_context" :key="i">{{ item }}</li>
-                      </ul>
-                      <span v-else class="text-grey">—</span>
+                    <td class="align-top">
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <div
+                            v-bind="props"
+                            class="editable-text"
+                            @dblclick.stop="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
+                          >
+                            <div v-if="useCase.diagram" class="diagram-container">
+                              <VueMermaidRender :content="useCase.diagram" />
+                            </div>
+                            <span v-else class="empty-placeholder">Click to add diagram...</span>
+                          </div>
+                        </template>
+                        <v-list density="compact">
+                          <v-list-item
+                            prepend-icon="mdi-pencil"
+                            title="Edit"
+                            @click="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
+                          />
+                          <v-list-item
+                            prepend-icon="mdi-robot"
+                            title="Edit with AI"
+                            @click="appendAIPromptForUseCase(useCase)"
+                          />
+                        </v-list>
+                      </v-menu>
                     </td>
-                    <td>
-                      <ul v-if="useCase.required_tools && useCase.required_tools.length">
-                        <li v-for="(item, i) in useCase.required_tools" :key="i">{{ item }}</li>
-                      </ul>
-                      <span v-else class="text-grey">—</span>
+                    <td class="align-top">
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <div
+                            v-bind="props"
+                            class="editable-text"
+                            :class="{ 'empty-placeholder': !useCase.required_context?.length }"
+                            @dblclick.stop="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
+                          >
+                            <ul v-if="useCase.required_context && useCase.required_context.length">
+                              <li v-for="(item, i) in useCase.required_context" :key="i">{{ item }}</li>
+                            </ul>
+                            <span v-else>Click to add context...</span>
+                          </div>
+                        </template>
+                        <v-list density="compact">
+                          <v-list-item
+                            prepend-icon="mdi-pencil"
+                            title="Edit"
+                            @click="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
+                          />
+                          <v-list-item
+                            prepend-icon="mdi-robot"
+                            title="Edit with AI"
+                            @click="appendAIPromptForUseCase(useCase)"
+                          />
+                        </v-list>
+                      </v-menu>
                     </td>
-                    <td>
-                      <v-btn
-                        icon="mdi-pencil"
-                        size="small"
-                        variant="text"
-                        @click="openEditUseCaseDialog(useCase)"
-                      />
+                    <td class="align-top">
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <div
+                            v-bind="props"
+                            class="editable-text"
+                            :class="{ 'empty-placeholder': !useCase.required_tools?.length }"
+                            @dblclick.stop="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
+                          >
+                            <ul v-if="useCase.required_tools && useCase.required_tools.length">
+                              <li v-for="(item, i) in useCase.required_tools" :key="i">{{ item }}</li>
+                            </ul>
+                            <span v-else>Click to add tools...</span>
+                          </div>
+                        </template>
+                        <v-list density="compact">
+                          <v-list-item
+                            prepend-icon="mdi-pencil"
+                            title="Edit"
+                            @click="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
+                          />
+                          <v-list-item
+                            prepend-icon="mdi-robot"
+                            title="Edit with AI"
+                            @click="appendAIPromptForUseCase(useCase)"
+                          />
+                        </v-list>
+                      </v-menu>
+                    </td>
+                    <td class="align-top">
                       <v-btn
                         icon="mdi-delete"
                         size="small"
@@ -553,6 +639,74 @@ const handleAgentRequest = async () => {
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Edit Confluence URL Dialog -->
+    <v-dialog v-model="showEditConfluenceUrlDialog" max-width="600">
+      <v-card>
+        <v-card-title>Edit Confluence URL</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="confluenceUrlInput"
+            label="Confluence URL"
+            variant="outlined"
+            placeholder="https://..."
+            hint="Leave empty to remove the Confluence link"
+            persistent-hint
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showEditConfluenceUrlDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="saveConfluenceUrl">
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit Field Dialog -->
+    <v-dialog v-if="editFieldData" v-model="showEditFieldDialog" max-width="600">
+      <v-card>
+        <v-card-title>Edit {{ editFieldData.fieldLabel }}</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-if="editFieldData.fieldType === 'text'"
+            v-model="editFieldData.value"
+            :label="editFieldData.fieldLabel"
+            variant="outlined"
+          />
+          <v-textarea
+            v-else-if="editFieldData.fieldType === 'textarea'"
+            v-model="editFieldData.value"
+            :label="editFieldData.fieldLabel"
+            variant="outlined"
+            :rows="editFieldData.fieldName === 'diagram' ? 10 : 4"
+            :placeholder="editFieldData.fieldName === 'diagram' ? 'graph TD\n    A[Start] --> B[End]' : ''"
+            auto-grow
+          />
+          <v-combobox
+            v-else-if="editFieldData.fieldType === 'array'"
+            v-model="editFieldData.value"
+            :label="editFieldData.fieldLabel"
+            variant="outlined"
+            multiple
+            chips
+            closable-chips
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showEditFieldDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="saveFieldEdit">
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -577,5 +731,39 @@ const handleAgentRequest = async () => {
 
 .clickable:hover {
   opacity: 0.8;
+}
+
+.align-top {
+  vertical-align: top !important;
+  padding: 12px !important;
+}
+
+/* Editable text (clickable for menu) */
+.editable-text {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background-color 0.15s ease;
+  display: block;
+}
+
+.editable-text:hover {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.empty-placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.editable-text ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.editable-text ul li {
+  margin-bottom: 4px;
 }
 </style>
