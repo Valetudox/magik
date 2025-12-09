@@ -3,15 +3,25 @@ name: async
 description: Trigger asynchronous work for an agent
 ---
 
-# Async Work via Pull Requests
+# Async Work System
 
-A system for triggering asynchronous work through GitHub pull requests, leveraging GitHub Actions and Claude Code automation to execute tasks in the background.
+A system for triggering asynchronous work through GitHub, leveraging GitHub Actions and Claude Code automation to execute tasks in the background.
 
-## Overview
+## Three Async Workflows
 
-This skill enables you to offload work to GitHub Actions by creating a pull request that automatically triggers a Claude Code workflow. The workflow executes your requested task asynchronously and commits the results back to the PR branch.
+1. **Pull Request Workflow** - For implementation tasks
+2. **Deep Research Workflow** - For research and analysis via issues
+3. **Planning Workflow** - For creating implementation plans via issues
 
-## How It Works
+---
+
+## 1. Pull Request Workflow (Implementation)
+
+### Overview
+
+Offload implementation tasks to GitHub Actions by creating a pull request that triggers a Claude Code workflow to execute and commit changes.
+
+### How It Works
 
 1. **Fetch latest changes** from the remote repository
 2. **Update main branch** to ensure branch is based on latest code
@@ -137,8 +147,7 @@ Your PR description should clearly specify:
 - **Acceptance criteria** - How to verify completion
 - **Related issues** - Link to any related GitHub issues
 
-
-## Monitoring Execution
+### Monitoring Execution
 
 ### Programmatic Monitoring with GitHub CLI
 
@@ -160,4 +169,200 @@ gh run view <run-id> --log
 # Check if workflow is still running
 gh run list --workflow=pr.yml --json status,conclusion --jq '.[0]'
 ```
+
+---
+
+## 2. Deep Research Workflow (Issues)
+
+### Overview
+
+Trigger deep research and analysis tasks by creating a GitHub issue with the `deep-research` label. Claude Code will analyze the topic and post a comprehensive research report as an issue comment.
+
+### How It Works
+
+1. **Create GitHub issue** with `deep-research` label
+2. **GitHub Actions triggers** the deep research workflow
+3. **Claude Code analyzes** the topic thoroughly
+4. **Research report** is posted as an issue comment
+5. **Issue remains open** for discussion and follow-up
+
+### When to Use
+
+Use deep research for:
+- Technology/framework comparisons
+- Feasibility studies
+- Best practices research
+- Architecture decisions requiring research
+- API/library exploration
+
+### Quick Start with Helper Script
+
+```bash
+# Trigger deep research and capture issue number
+ISSUE_NUMBER=$(./skills/async/trigger-deep-research.sh \
+  --title "Research TypeScript code generation tools" \
+  --description "$(cat <<'EOF'
+## Research Topic
+Compare code generation tools for TypeScript backends with strict conventions.
+
+## Areas to Explore
+- Plop.js capabilities and limitations
+- Fastify autoload for file-based routing
+- Comparison with hygen, yeoman, custom scripts
+- Integration with our ESLint rules
+
+## Deliverables
+- Detailed comparison table
+- Recommendations for our use case
+- Example implementations if applicable
+EOF
+)")
+
+# Monitor the research progress
+gh issue view $ISSUE_NUMBER --comments
+```
+
+### Manual Usage
+
+```bash
+# Create issue with deep-research label
+ISSUE_URL=$(gh issue create \
+  --title "Research topic title" \
+  --body "Detailed research description" \
+  --label "deep-research")
+
+# Extract issue number
+ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oP '/issues/\K\d+')
+
+# View the issue and comments
+gh issue view $ISSUE_NUMBER --comments
+```
+
+### Monitoring
+
+```bash
+# View issue with comments
+gh issue view $ISSUE_NUMBER --comments
+
+# Watch for new comments (manual refresh)
+watch -n 30 "gh issue view $ISSUE_NUMBER --comments"
+```
+
+---
+
+## 3. Planning Workflow (Issues)
+
+### Overview
+
+Generate implementation plans for features or bugs by creating a GitHub issue with the `planning` label. Claude Code will analyze requirements and post a detailed implementation plan.
+
+### How It Works
+
+1. **Create GitHub issue** with `planning` label
+2. **GitHub Actions triggers** the planning workflow
+3. **Claude Code analyzes** the codebase and requirements
+4. **Implementation plan** is posted as an issue comment
+5. **Plan includes** tasks, risks, estimates, and approach
+
+### When to Use
+
+Use planning for:
+- Feature implementation planning
+- Bug fix strategies
+- Refactoring approaches
+- Breaking down complex tasks
+- Architecture changes
+
+### Quick Start with Helper Script
+
+```bash
+# Trigger planning and capture issue number
+ISSUE_NUMBER=$(./skills/async/trigger-planning.sh \
+  --title "Add user authentication to backend services" \
+  --description "$(cat <<'EOF'
+## Feature Request
+Implement user authentication across all backend services.
+
+## Requirements
+- JWT-based authentication
+- Role-based access control
+- Integrate with existing services
+- Follow our backend conventions
+
+## Constraints
+- Must work with folder-based routing
+- Must pass all lint validators
+- Minimal breaking changes
+EOF
+)")
+
+# Monitor the planning progress
+gh issue view $ISSUE_NUMBER --comments
+```
+
+### Manual Usage
+
+```bash
+# Create issue with planning label
+ISSUE_URL=$(gh issue create \
+  --title "Feature/Bug title" \
+  --body "Detailed description with requirements" \
+  --label "planning")
+
+# Extract issue number
+ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oP '/issues/\K\d+')
+
+# View the plan
+gh issue view $ISSUE_NUMBER --comments
+```
+
+### Expected Plan Output
+
+The planning workflow generates a comprehensive plan including:
+
+**For Bug Reports:**
+- Problem analysis and root causes
+- Investigation steps and debug approach
+- Fix strategy and code changes
+- Testing strategy
+
+**For Feature Requests:**
+- Feature overview and requirements
+- Technical analysis of affected components
+- Step-by-step implementation tasks
+- Dependencies and prerequisites
+
+**For All Types:**
+- Considerations and risks
+- Impact on existing functionality
+- Testing requirements
+- Documentation needs
+- Effort estimates and priority
+
+### Monitoring
+
+```bash
+# View issue with plan
+gh issue view $ISSUE_NUMBER --comments
+
+# Watch for plan updates (manual refresh)
+watch -n 30 "gh issue view $ISSUE_NUMBER --comments"
+```
+
+---
+
+## Workflow Configuration
+
+### Pull Request Workflow
+- **File**: `.github/workflows/pr.yml`
+- **Triggers**: PR opened, PR ready for review
+- **Tools**: Read, Write, Edit, Glob, Grep, Bash (git, bun, gh)
+
+### Issue Workflows
+- **File**: `.github/workflows/claude-issue.yml`
+- **Triggers**: Issue opened with specific labels
+- **Labels**:
+  - `deep-research` → Runs deep research job
+  - `planning` → Runs planning job
+- **Tools**: Bash (gh issue/search commands)
 
