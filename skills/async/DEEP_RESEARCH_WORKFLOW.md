@@ -96,13 +96,3 @@ watch -n 30 "gh issue view $ISSUE_NUMBER --comments"
 gh issue view $ISSUE_NUMBER --web
 ```
 
-## Expected Output
-
-The deep research workflow generates a comprehensive report including:
-
-- Analysis of the research topic
-- Comparison of different approaches/tools/frameworks
-- Pros and cons of each option
-- Recommendations based on your specific use case
-- Code examples or proof-of-concepts if applicable
-- References and sources
