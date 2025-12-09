@@ -256,8 +256,11 @@ const handleAgentRequest = async () => {
   }
 }
 
-const appendAIPromptForUseCase = (useCase: TableRow) => {
-  const prompt = `Edit the use case "${useCase.use_case}": `
+const appendAIPromptForUseCase = (useCase: TableRow, fieldName?: string) => {
+  const fieldLabel = fieldName
+    ? ` - ${fieldName.replace(/_/g, ' ')}`
+    : ''
+  const prompt = `Edit the use case "${useCase.use_case}"${fieldLabel}: `
   agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
 }
 
@@ -392,16 +395,39 @@ const saveFieldEdit = async () => {
                 <thead>
                   <tr>
                     <th style="width: 5%">#</th>
-                    <th style="width: 25%">Use Case</th>
-                    <th style="width: 20%">Diagram</th>
-                    <th style="width: 15%">Required Context</th>
-                    <th style="width: 15%">Required Tools</th>
-                    <th style="width: 10%">Actions</th>
+                    <th style="width: 28%">Use Case</th>
+                    <th style="width: 25%">Diagram</th>
+                    <th style="width: 21%">Required Context</th>
+                    <th style="width: 21%">Required Tools</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(useCase, index) in document.table" :key="useCase.id">
-                    <td class="text-center font-weight-bold align-top">{{ index + 1 }}</td>
+                    <td class="text-center font-weight-bold align-top">
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <span
+                            v-bind="props"
+                            class="index-number"
+                          >
+                            {{ index + 1 }}
+                          </span>
+                        </template>
+                        <v-list density="compact">
+                          <v-list-item
+                            prepend-icon="mdi-robot"
+                            title="Edit with AI"
+                            @click="appendAIPromptForUseCase(useCase)"
+                          />
+                          <v-list-item
+                            prepend-icon="mdi-delete"
+                            title="Remove"
+                            class="text-error"
+                            @click="confirmDelete(useCase)"
+                          />
+                        </v-list>
+                      </v-menu>
+                    </td>
                     <td class="align-top">
                       <v-menu>
                         <template #activator="{ props }">
@@ -422,7 +448,7 @@ const saveFieldEdit = async () => {
                           <v-list-item
                             prepend-icon="mdi-robot"
                             title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase)"
+                            @click="appendAIPromptForUseCase(useCase, 'use case')"
                           />
                         </v-list>
                       </v-menu>
@@ -450,7 +476,7 @@ const saveFieldEdit = async () => {
                           <v-list-item
                             prepend-icon="mdi-robot"
                             title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase)"
+                            @click="appendAIPromptForUseCase(useCase, 'diagram')"
                           />
                         </v-list>
                       </v-menu>
@@ -479,7 +505,7 @@ const saveFieldEdit = async () => {
                           <v-list-item
                             prepend-icon="mdi-robot"
                             title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase)"
+                            @click="appendAIPromptForUseCase(useCase, 'required context')"
                           />
                         </v-list>
                       </v-menu>
@@ -508,23 +534,14 @@ const saveFieldEdit = async () => {
                           <v-list-item
                             prepend-icon="mdi-robot"
                             title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase)"
+                            @click="appendAIPromptForUseCase(useCase, 'required tools')"
                           />
                         </v-list>
                       </v-menu>
                     </td>
-                    <td class="align-top">
-                      <v-btn
-                        icon="mdi-delete"
-                        size="small"
-                        variant="text"
-                        color="error"
-                        @click="confirmDelete(useCase)"
-                      />
-                    </td>
                   </tr>
                   <tr v-if="!document.table.length">
-                    <td colspan="6" class="text-center text-grey pa-4">
+                    <td colspan="5" class="text-center text-grey pa-4">
                       No use cases yet. Add your first use case!
                     </td>
                   </tr>
@@ -568,7 +585,7 @@ const saveFieldEdit = async () => {
     </v-container>
 
     <!-- Use Case Dialog -->
-    <v-dialog v-model="showUseCaseDialog" max-width="800px">
+    <v-dialog v-model="showUseCaseDialog" max-width="1200px">
       <v-card>
         <v-card-title>
           {{ editingUseCase ? 'Edit Use Case' : 'Add Use Case' }}
@@ -625,7 +642,7 @@ const saveFieldEdit = async () => {
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="showDeleteDialog" max-width="500px">
+    <v-dialog v-model="showDeleteDialog" max-width="800px">
       <v-card>
         <v-card-title>Delete Use Case?</v-card-title>
         <v-card-text>
@@ -641,7 +658,7 @@ const saveFieldEdit = async () => {
     </v-dialog>
 
     <!-- Edit Confluence URL Dialog -->
-    <v-dialog v-model="showEditConfluenceUrlDialog" max-width="600">
+    <v-dialog v-model="showEditConfluenceUrlDialog" max-width="1000">
       <v-card>
         <v-card-title>Edit Confluence URL</v-card-title>
         <v-card-text>
@@ -667,7 +684,7 @@ const saveFieldEdit = async () => {
     </v-dialog>
 
     <!-- Edit Field Dialog -->
-    <v-dialog v-if="editFieldData" v-model="showEditFieldDialog" max-width="600">
+    <v-dialog v-if="editFieldData" v-model="showEditFieldDialog" max-width="1000">
       <v-card>
         <v-card-title>Edit {{ editFieldData.fieldLabel }}</v-card-title>
         <v-card-text>
@@ -765,5 +782,17 @@ const saveFieldEdit = async () => {
 
 .editable-text ul li {
   margin-bottom: 4px;
+}
+
+.index-number {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  display: inline-block;
+}
+
+.index-number:hover {
+  background-color: rgba(var(--v-theme-primary), 0.1);
 }
 </style>
