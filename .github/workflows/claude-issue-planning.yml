@@ -2,11 +2,11 @@ name: Claude Issue Planning
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
 
 jobs:
   issue-planning:
-    if: github.event.label.name == 'planning'
+    if: contains(github.event.issue.labels.*.name, 'planning')
     runs-on: ubuntu-latest
     permissions:
       contents: read

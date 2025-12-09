@@ -2,11 +2,11 @@ name: Claude Issue Deep Research
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
 
 jobs:
   deep-research:
-    if: github.event.label.name == 'deep-research'
+    if: contains(github.event.issue.labels.*.name, 'deep-research')
     runs-on: ubuntu-latest
     permissions:
       contents: read
