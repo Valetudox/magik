@@ -20,73 +20,20 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude Code Issue Planning
-        id: claude-planning
+      - name: Run Claude Code Deep Research
+        id: claude-deep-research
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            IMPORTANT: You are in PLAN MODE ONLY. Do NOT implement any code changes. Only create a detailed plan.
+            IMPORTANT: You are in PLAN MODE ONLY. Do NOT implement any code changes. Only create a report.
 
-            Please review this issue and create a comprehensive plan to address it.
+            Please review this issue and do a deep research and create a comprehensive report to address it.
 
             **Issue Details:**
             - Title: ${{ github.event.issue.title }}
             - Description: ${{ github.event.issue.body }}
             - Issue #${{ github.event.issue.number }}
-
-            **Your Task:**
-            Analyze this issue and create a detailed plan. Adapt your approach based on the issue type:
-
-            **For Bug Reports:**
-            1. **Problem Analysis**
-               - Understand the issue and its symptoms
-               - Identify potential root causes
-               - Review related code areas
-
-            2. **Investigation Steps**
-               - How to reproduce the issue
-               - Debug approach and tools needed
-               - Areas of code to examine
-
-            3. **Fix Strategy**
-               - Proposed solution approach
-               - Code changes required
-               - Testing strategy
-
-            **For Feature Requests:**
-            1. **Feature Overview & Requirements**
-               - Clear summary of what needs to be built
-               - Functional and non-functional requirements
-
-            2. **Technical Analysis**
-               - Review existing codebase architecture
-               - Identify affected components/modules
-               - Assess complexity and challenges
-
-            3. **Implementation Steps**
-               - Break down into actionable tasks
-               - Order tasks with dependencies
-               - Prerequisites and setup needed
-
-            **For All Issue Types:**
-            4. **Considerations & Risks**
-               - Technical challenges
-               - Impact on existing functionality
-               - Testing requirements
-               - Documentation needs
-
-            5. **Estimation & Priority**
-               - Effort estimate (small/medium/large)
-               - Priority recommendations
-               - Timeline considerations
-
-            **Instructions:**
-            - Use the repository's existing code patterns and architecture
-            - Reference specific files/components when relevant (use file_path:line_number format)
-            - Be thorough but concise
-            - Use `gh issue comment` to post your plan as a comment on this issue
-            - If you need to ask clarifying questions, include them in your response
 
           claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh search:*)"'
 
