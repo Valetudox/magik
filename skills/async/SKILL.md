@@ -199,7 +199,8 @@ Use deep research for:
 
 ```bash
 # Trigger deep research and capture issue number
-ISSUE_NUMBER=$(./skills/async/trigger-deep-research.sh \
+ISSUE_NUMBER=$(./skills/async/trigger-issue.sh \
+  --label "deep-research" \
   --title "Research TypeScript code generation tools" \
   --description "$(cat <<'EOF'
 ## Research Topic
@@ -277,7 +278,8 @@ Use planning for:
 
 ```bash
 # Trigger planning and capture issue number
-ISSUE_NUMBER=$(./skills/async/trigger-planning.sh \
+ISSUE_NUMBER=$(./skills/async/trigger-issue.sh \
+  --label "planning" \
   --title "Add user authentication to backend services" \
   --description "$(cat <<'EOF'
 ## Feature Request

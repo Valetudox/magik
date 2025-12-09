@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 
-# Script to trigger deep research via GitHub issue
-# Usage: ./trigger-deep-research.sh --title "Research topic" --description "Research description"
+# Script to trigger async work via GitHub issue
+# Usage: ./trigger-issue.sh --label "deep-research" --title "Issue title" --description "Issue description"
 
 set -euo pipefail
 
 # Parse arguments
+LABEL=""
 TITLE=""
 DESCRIPTION=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --label)
+      LABEL="$2"
+      shift 2
+      ;;
     --title)
       TITLE="$2"
       shift 2
@@ -21,13 +26,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown argument: $1" >&2
-      echo "Usage: $0 --title <issue-title> --description <issue-description>" >&2
+      echo "Usage: $0 --label <label> --title <issue-title> --description <issue-description>" >&2
       exit 1
       ;;
   esac
 done
 
 # Validate required arguments
+if [[ -z "$LABEL" ]]; then
+  echo "Error: --label is required" >&2
+  echo "Valid labels: deep-research, planning" >&2
+  exit 1
+fi
+
 if [[ -z "$TITLE" ]]; then
   echo "Error: --title is required" >&2
   exit 1
@@ -38,8 +49,8 @@ if [[ -z "$DESCRIPTION" ]]; then
   exit 1
 fi
 
-# Create issue with deep-research label and capture URL
-ISSUE_URL=$(gh issue create --title "$TITLE" --body "$DESCRIPTION" --label "deep-research")
+# Create issue with label and capture URL
+ISSUE_URL=$(gh issue create --title "$TITLE" --body "$DESCRIPTION" --label "$LABEL")
 
 # Extract issue number from URL
 ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oP '/issues/\K\d+')
@@ -48,7 +59,7 @@ ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oP '/issues/\K\d+')
 echo "$ISSUE_NUMBER"
 
 # Log success to stderr so it doesn't interfere with stdout
-echo "✅ Deep research triggered successfully!" >&2
+echo "✅ Issue created successfully with '$LABEL' label!" >&2
 echo "   Issue #$ISSUE_NUMBER: $ISSUE_URL" >&2
 echo "" >&2
 echo "Monitor progress with:" >&2
