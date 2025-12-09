@@ -1,6 +1,7 @@
 // Agent functions
 export { runDecisionAgent } from './decision/decision.agent.js'
 export { runCodebaseAgent } from './codebase/codebase.agent.js'
+export { runTableDocumentAgent } from './tabledocument/tabledocument.agent.js'
 
 // Utility functions
 export { applyChanges } from './decision/applyChanges.js'
@@ -48,5 +49,16 @@ export type {
   CodeAnalysis,
 } from './codebase/interface.types.js'
 
+// Table document agent types
+export type {
+  TableDocumentChange,
+  TableDocumentChangeReport,
+  AddUseCase,
+  UpdateUseCase,
+  RemoveUseCase,
+  SetConfluenceUrl,
+} from './tabledocument/interface.type.js'
+
 // Zod schemas (for validation if needed)
 export { decisionChange, decisionChangeReport } from './decision/interface.type.js'
+export { tableDocumentChange, tableDocumentChangeReport } from './tabledocument/interface.type.js'

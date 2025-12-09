@@ -1,0 +1,54 @@
+name: Claude Issue Iteration
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-comment:
+    if: contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Issue Comment Response
+        id: claude-comment-response
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are responding to a comment on issue #${{ github.event.issue.number }}.
+
+            **Original Issue:**
+            - Title: ${{ github.event.issue.title }}
+            - Description: ${{ github.event.issue.body }}
+
+            **Latest Comment from @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}
+
+            **Your Task:**
+            First, use `gh issue view #${{ github.event.issue.number }} --comments` to read ALL comments on this issue to understand the full conversation history and any previous plans or iterations.
+
+            Then respond to the latest comment. Based on the comment and conversation history:
+
+            **CRITICAL - This workflow is READ-ONLY:**
+            - You have READ-ONLY permissions - cannot implement code
+            - DO NOT create pull requests or modify ANY files
+            - DO NOT use tools that make code changes
+            - Use `gh issue comment` to post your planning response as a comment
+
+            **Instructions:**
+            - Be thorough but focused on the specific question/request
+            - Reference specific files/components when relevant (use file_path:line_number format)
+            - Analyze code structure to inform but don't modify anything
+
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh search:*)"'

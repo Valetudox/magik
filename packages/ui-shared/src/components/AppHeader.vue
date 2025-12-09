@@ -21,11 +21,13 @@ const props = withDefaults(defineProps<Props>(), {
     const devUrls = {
       decisions: 'http://localhost:5173/',
       audio: 'http://localhost:5174/',
+      tableDocuments: 'http://localhost:5175/',
       specifications: 'http://localhost:5003/',
     }
     const prodUrls = {
       decisions: '/decisions/',
       audio: '/audio/',
+      tableDocuments: '/table-documents/',
       specifications: '/specifications/',
     }
     return [
@@ -39,6 +41,12 @@ const props = withDefaults(defineProps<Props>(), {
         title: 'Audio',
         to: isDev ? devUrls.audio : prodUrls.audio,
         icon: 'mdi-microphone',
+        external: true,
+      },
+      {
+        title: 'Table Documents',
+        to: isDev ? devUrls.tableDocuments : prodUrls.tableDocuments,
+        icon: 'mdi-table-large',
         external: true,
       },
       {

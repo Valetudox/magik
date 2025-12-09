@@ -23,6 +23,12 @@
       "prod": 3003,
       "apiRoute": "/api/specifications",
       "containerName": "backend-specification"
+    },
+    "BACKEND_TABLEDOCUMENT": {
+      "dev": 4004,
+      "prod": 3004,
+      "apiRoute": "/api/table-documents",
+      "containerName": "backend-tabledocument"
     }
   }
 }
