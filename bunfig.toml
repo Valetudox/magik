@@ -1,0 +1,4 @@
+[install]
+# Use isolated mode to prevent dependency hoisting issues
+# This fixes the ajv-errors compilation bug in workspace setups
+linker = "isolated"
