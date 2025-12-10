@@ -1,0 +1,496 @@
+openapi: 3.0.0
+info:
+  title: Backend Table Document API
+  version: 1.0.0
+  description: API for managing table documents with use cases and Confluence integration
+
+servers:
+  - url: http://localhost:4004
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                  - status
+
+  /api/table-documents:
+    get:
+      summary: List all table documents
+      operationId: listTableDocuments
+      responses:
+        '200':
+          description: List of table documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TableDocument'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new table document
+      operationId: createTableDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableDocumentRequest'
+      responses:
+        '201':
+          description: Table document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableDocument'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}:
+    get:
+      summary: Get a specific table document
+      operationId: getTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Table document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableDocument'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update a table document
+      operationId: updateTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTableDocumentRequest'
+      responses:
+        '200':
+          description: Table document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableDocument'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a table document
+      operationId: deleteTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Table document deleted
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/use-cases:
+    post:
+      summary: Create a new use case for a table document
+      operationId: createUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUseCaseRequest'
+      responses:
+        '201':
+          description: Use case created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UseCase'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/use-cases/{useCaseId}:
+    patch:
+      summary: Update a use case
+      operationId: updateUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUseCaseRequest'
+      responses:
+        '200':
+          description: Use case updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UseCase'
+        '404':
+          description: Use case not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a use case
+      operationId: deleteUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Use case deleted
+        '404':
+          description: Use case not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/agent:
+    post:
+      summary: Run agent on a table document
+      operationId: runAgent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+              required:
+                - prompt
+      responses:
+        '200':
+          description: Agent executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/push-to-confluence:
+    post:
+      summary: Push table document to Confluence
+      operationId: pushToConfluence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pageUrl:
+                  type: string
+              required:
+                - pageUrl
+      responses:
+        '200':
+          description: Successfully pushed to Confluence
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  url:
+                    type: string
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    TableDocument:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        useCases:
+          type: array
+          items:
+            $ref: '#/components/schemas/UseCase'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - useCases
+        - createdAt
+        - updatedAt
+
+    UseCase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        actors:
+          type: array
+          items:
+            type: string
+        preconditions:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            type: string
+        postconditions:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - title
+
+    CreateTableDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+      required:
+        - title
+
+    UpdateTableDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+
+    CreateUseCaseRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        actors:
+          type: array
+          items:
+            type: string
+        preconditions:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            type: string
+        postconditions:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+
+    UpdateUseCaseRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        actors:
+          type: array
+          items:
+            type: string
+        preconditions:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            type: string
+        postconditions:
+          type: array
+          items:
+            type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

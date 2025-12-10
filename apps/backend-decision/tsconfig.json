@@ -1,17 +1,10 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
+    "outDir": "./dist",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "lib": ["ES2022"],
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["bun-types"]
+    "moduleResolution": "NodeNext"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../config/config.ts"],
   "exclude": ["node_modules"]
 }
