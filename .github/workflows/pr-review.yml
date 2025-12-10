@@ -1,0 +1,140 @@
+
+name: Claude Code - PR Review
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude-review-response:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      id-token: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Fetch comprehensive PR review data
+        id: fetch-review-data
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+
+          echo "Fetching comprehensive review data for PR #${{ github.event.pull_request.number }}"
+          
+          # Fetch inline review comments
+          echo "inline-comments<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments --jq '
+            [.[] | {
+              path: .path,
+              line: .line,
+              body: .body,
+              diff_hunk: .diff_hunk,
+              created_at: .created_at,
+              updated_at: .updated_at
+            }] | if length > 0 then . else "No inline comments" end
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Fetch all reviews
+          echo "all-reviews<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews --jq '
+            [.[] | {
+              id: .id,
+              state: .state,
+              body: .body,
+              user: .user.login,
+              submitted_at: .submitted_at
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Fetch PR files changed
+          echo "files-changed<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files --jq '
+            [.[] | {
+              filename: .filename,
+              status: .status,
+              additions: .additions,
+              deletions: .deletions,
+              changes: .changes
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Fetch PR conversation comments
+          echo "conversation-comments<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments --jq '
+            [.[] | {
+              body: .body,
+              user: .user.login,
+              created_at: .created_at
+            }] | if length > 0 then . else "No conversation comments" end
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Claude Code Review Response
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            A review has been submitted for this pull request. Please address ALL the feedback comprehensively.
+
+            **PR Details:**
+            - Title: ${{ github.event.pull_request.title }}
+            - PR #${{ github.event.pull_request.number }}
+            - Original Description: ${{ github.event.pull_request.body }}
+            - Base Branch: ${{ github.event.pull_request.base.ref }}
+            - Head Branch: ${{ github.event.pull_request.head.ref }}
+
+            **Files Changed:**
+            ${{ steps.fetch-review-data.outputs.files-changed }}
+
+            **Current Review Event:**
+            - Review State: ${{ github.event.review.state }}
+            - Reviewer: ${{ github.event.review.user.login }}
+            - Review Body: ${{ github.event.review.body }}
+            - Submitted At: ${{ github.event.review.submitted_at }}
+
+            **All Reviews (Historical Context):**
+            ${{ steps.fetch-review-data.outputs.all-reviews }}
+
+            **Inline Review Comments (CRITICAL - Address ALL of these):**
+            ${{ steps.fetch-review-data.outputs.inline-comments }}
+
+            **Conversation Comments:**
+            ${{ steps.fetch-review-data.outputs.conversation-comments }}
+
+            **Your Task:**
+            1. Carefully read ALL the inline review comments above
+            2. Address EVERY piece of feedback from the inline comments
+            3. Address any feedback from the review body
+            4. Create a todo list of all the changes needed
+            5. Add 'run npm run implementation:validation' to the bottom of the todo list
+            6. Add 'Use the @agent-guidelines-compliance-reviewer to validate the changes' to the bottom of the todo list
+            7. Implement all the requested functionality following the todo list
+
+            **IMPORTANT:** Don't miss any inline comments - they contain the specific technical requirements that must be implemented.
+
+          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(nx:*),Bash(git:*),Bash(gh pr comment:*)"'
+
+      - name: Commit review changes
+        run: |
+          git add -A
+          git diff --staged --quiet || git commit -m "Address review feedback for PR #${{ github.event.pull_request.number }}
+
+          🤖 Generated with [Claude Code](https://claude.ai/code)
+
+          Co-Authored-By: Claude <noreply@anthropic.com>"
+          
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git push origin ${{ github.event.pull_request.head.ref }}
