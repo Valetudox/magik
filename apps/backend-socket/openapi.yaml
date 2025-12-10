@@ -72,13 +72,6 @@ paths:
                   minLength: 1
                 payload:
                   description: The payload to send to clients (can be any valid JSON value)
-                  oneOf:
-                    - type: object
-                    - type: array
-                    - type: string
-                    - type: number
-                    - type: boolean
-                    - type: 'null'
                   example:
                     type: 'update'
                     data: 'Some data'
@@ -267,54 +260,6 @@ components:
           type: string
           description: Error message describing what went wrong
           example: 'Channel is required'
-
-    BroadcastRequest:
-      type: object
-      required:
-        - channel
-      properties:
-        channel:
-          type: string
-          description: The Socket.IO event channel to broadcast on
-          minLength: 1
-        payload:
-          description: The payload to send to clients
-          nullable: true
-
-    BroadcastResponse:
-      type: object
-      required:
-        - success
-        - channel
-        - clientCount
-      properties:
-        success:
-          type: boolean
-          description: Indicates if the broadcast was successful
-        channel:
-          type: string
-          description: The channel the message was broadcasted on
-        clientCount:
-          type: integer
-          description: Number of connected clients that received the message
-          minimum: 0
-
-    HealthResponse:
-      type: object
-      required:
-        - status
-        - service
-        - connectedClients
-      properties:
-        status:
-          type: string
-          enum:
-            - ok
-        service:
-          type: string
-        connectedClients:
-          type: integer
-          minimum: 0
 
 x-socket-io:
   description: |

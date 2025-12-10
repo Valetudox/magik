@@ -26,6 +26,8 @@ servers:
     description: Local development server
 
 tags:
+  - name: health
+    description: Health check operations
   - name: decisions
     description: Decision document operations
   - name: evaluations
@@ -42,6 +44,27 @@ tags:
     description: AI agent operations
 
 paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint
+      description: Check if the service is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                  - status
+
   /api/decisions:
     get:
       tags:
@@ -1501,12 +1524,6 @@ components:
   responses:
     BadRequest:
       description: Bad request - invalid input provided
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    InternalServerError:
-      description: Internal server error occurred
       content:
         application/json:
           schema:
