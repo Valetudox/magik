@@ -1,0 +1,13 @@
+import type { FastifyInstance } from 'fastify'
+
+export function registerRoutes(fastify: FastifyInstance) {
+  // Health check endpoint
+  fastify.get('/health', () => {
+    return { status: 'ok' }
+  })
+
+  // Add your API routes here
+  // Example:
+  // fastify.get('/api/{{serviceName}}', list{{pascalCase serviceName}})
+  // fastify.post('/api/{{serviceName}}', create{{pascalCase serviceName}})
+}
