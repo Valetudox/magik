@@ -55,5 +55,5 @@ jobs:
             - Implement the requested functionality following the todo list.
             - After each logical step commit and push
 
-          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(./scripts/**:*),Bash(./**/*.sh:*)"'
+          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(./scripts/**:*),Bash(./**/*.sh:*)"'
 
