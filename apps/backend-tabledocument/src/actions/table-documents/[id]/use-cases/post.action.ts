@@ -1,5 +1,5 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
 import type { TableRow } from '@magik/tabledocuments'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createUseCase as createUseCaseService } from '../../../../services/usecase.service.js'
 
 interface CreateUseCaseParams {
