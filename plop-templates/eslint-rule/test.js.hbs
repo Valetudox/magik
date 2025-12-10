@@ -1,0 +1,30 @@
+/**
+ * @fileoverview Tests for {{ruleName}}
+ */
+
+import { RuleTester } from 'eslint'
+import rule from '../{{ruleName}}.js'
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+  },
+})
+
+ruleTester.run('{{ruleName}}', rule, {
+  valid: [
+    // TODO: Add valid test cases
+    // {
+    //   code: 'const valid = true',
+    // },
+  ],
+
+  invalid: [
+    // TODO: Add invalid test cases
+    // {
+    //   code: 'const invalid = true',
+    //   errors: [{ messageId: '{{camelCase ruleName}}' }],
+    // },
+  ],
+})

@@ -14,6 +14,8 @@
     "magik": "./apps/cli-audio/src/index.ts"
   },
   "scripts": {
+    "plop": "plop",
+    "generate": "plop",
     "start": "bun run apps/cli-audio/src/index.ts",
     "dev:audio": "bun run --filter='@magik/cli-audio' dev",
     "dev:backend:audio": "bun run --cwd apps/backend-audio dev",
@@ -93,6 +95,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^10.6.2",
     "globals": "^16.5.0",
+    "plop": "^4.0.4",
     "prettier": "^3.7.4",
     "typescript-eslint": "^8.48.1",
     "vue-eslint-parser": "^10.2.0"
