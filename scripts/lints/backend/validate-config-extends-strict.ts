@@ -117,76 +117,70 @@ function validateService(
  * Main validation function
  */
 function main() {
+  // Check if backend name argument is provided
+  const args = process.argv.slice(2)
+
+  if (args.length === 0) {
+    console.log(`${RED}Error: Backend service name argument is required${NC}`)
+    console.log('Usage: validate-config-extends-strict.ts <backend-service-name>')
+    console.log('Example: validate-config-extends-strict.ts backend-audio')
+    process.exit(1)
+  }
+
+  const backendName = args[0]
   const appsDir = 'apps'
-  const backendServices: string[] = []
+  const serviceDir = join(appsDir, backendName)
 
-  // Find all backend-* directories
-  const dirs = readdirSync(appsDir)
-  for (const dir of dirs) {
-    if (dir.startsWith('backend-') && statSync(join(appsDir, dir)).isDirectory()) {
-      backendServices.push(dir)
+  // Validate that the backend service exists
+  try {
+    if (!statSync(serviceDir).isDirectory()) {
+      console.log(`${RED}Error: Backend service not found: ${backendName}${NC}`)
+      process.exit(1)
     }
+  } catch {
+    console.log(`${RED}Error: Backend service not found: ${backendName}${NC}`)
+    process.exit(1)
   }
 
-  // Validate all backend services
-  let allErrors: ValidationError[] = []
-
-  for (const service of backendServices) {
-    const serviceDir = join(appsDir, service)
-    const errors = validateService(service, serviceDir)
-    allErrors = allErrors.concat(errors)
-  }
+  // Validate the specified backend service
+  const errors = validateService(backendName, serviceDir)
 
   // Report results
-  if (allErrors.length === 0) {
+  if (errors.length === 0) {
     console.log(
-      `${GREEN}✓${NC} All backend services have proper config extends (strict validation)`,
+      `${GREEN}✓${NC} Backend service has proper config extends (strict validation)`,
     )
-    console.log(
-      `  Validated ${backendServices.length} service(s): ${backendServices.join(', ')}`,
-    )
+    console.log(`  Validated: ${backendName}`)
     process.exit(0)
   } else {
     console.log(`${RED}✗${NC} Config extends validation failed (strict mode)`)
     console.log('')
 
-    // Group errors by service
-    const errorsByService = new Map<string, ValidationError[]>()
-    for (const error of allErrors) {
-      if (!errorsByService.has(error.service)) {
-        errorsByService.set(error.service, [])
+    console.log(`  ${backendName}:`)
+
+    for (const error of errors) {
+      if (error.errorType === 'missing-file') {
+        console.log(`    ${RED}✗${NC} Missing file: ${error.file}`)
+      } else if (error.errorType === 'content-mismatch') {
+        console.log(`    ${RED}✗${NC} Content mismatch: ${error.file}`)
+        console.log(`      Expected content:`)
+        console.log(
+          error.expected
+            ?.split('\n')
+            .map((line) => `        ${line}`)
+            .join('\n'),
+        )
+        console.log(`      Actual content:`)
+        console.log(
+          error.actual
+            ?.split('\n')
+            .map((line) => `        ${line}`)
+            .join('\n'),
+        )
       }
-      errorsByService.get(error.service)!.push(error)
     }
 
-    // Print errors grouped by service
-    for (const [service, errors] of errorsByService.entries()) {
-      console.log(`  ${service}:`)
-
-      for (const error of errors) {
-        if (error.errorType === 'missing-file') {
-          console.log(`    ${RED}✗${NC} Missing file: ${error.file}`)
-        } else if (error.errorType === 'content-mismatch') {
-          console.log(`    ${RED}✗${NC} Content mismatch: ${error.file}`)
-          console.log(`      Expected content:`)
-          console.log(
-            error.expected
-              ?.split('\n')
-              .map((line) => `        ${line}`)
-              .join('\n'),
-          )
-          console.log(`      Actual content:`)
-          console.log(
-            error.actual
-              ?.split('\n')
-              .map((line) => `        ${line}`)
-              .join('\n'),
-          )
-        }
-      }
-
-      console.log('')
-    }
+    console.log('')
 
     process.exit(1)
   }
