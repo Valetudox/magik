@@ -1,0 +1,166 @@
+extends: [[spectral:oas, recommended]]
+
+rules:
+  # ========================================
+  # Custom Magik Project Rules
+  # ========================================
+
+  # Rule: Require /health endpoint
+  magik-health-endpoint-required:
+    description: Every API must have a /health GET endpoint for health checks
+    message: Missing required /health endpoint. All services must implement a health check endpoint.
+    severity: error
+    given: $.paths
+    then:
+      field: /health
+      function: truthy
+
+  # Rule: Health endpoint must have GET method
+  magik-health-endpoint-get:
+    description: Health endpoint must support GET method
+    message: /health endpoint must have a GET operation
+    severity: error
+    given: "$.paths['/health']"
+    then:
+      field: get
+      function: truthy
+
+  # Rule: Health endpoint must return 200 response
+  magik-health-endpoint-200:
+    description: Health endpoint must have a 200 response
+    message: /health endpoint must define a 200 success response
+    severity: error
+    given: "$.paths['/health'].get.responses"
+    then:
+      field: "200"
+      function: truthy
+
+  # Rule: Health endpoint must return status field
+  magik-health-status-field:
+    description: Health response must include status field
+    message: Health endpoint 200 response must have a 'status' property in the schema
+    severity: error
+    given: "$.paths['/health'].get.responses['200'].content['application/json'].schema.properties"
+    then:
+      field: status
+      function: truthy
+
+  # Rule: All services must have Error schema
+  magik-error-schema-required:
+    description: Every API must define a standard Error schema
+    message: Missing required 'Error' schema in components.schemas
+    severity: error
+    given: $.components.schemas
+    then:
+      field: Error
+      function: truthy
+
+  # Rule: Error schema must have error property
+  magik-error-schema-error-field:
+    description: Error schema must have an 'error' property
+    message: Error schema must define an 'error' property
+    severity: error
+    given: $.components.schemas.Error.properties
+    then:
+      field: error
+      function: truthy
+
+  # Rule: Error schema error field must be required
+  magik-error-schema-required-field:
+    description: Error schema must require the 'error' property
+    message: Error schema must mark 'error' as a required field
+    severity: error
+    given: $.components.schemas.Error
+    then:
+      field: required
+      function: truthy
+
+  # Rule: Use consistent OpenAPI version
+  magik-openapi-version:
+    description: All APIs should use OpenAPI version 3.0.3
+    message: Use OpenAPI version 3.0.3 for consistency across services (found {{value}})
+    severity: warn
+    given: $.openapi
+    then:
+      function: pattern
+      functionOptions:
+        match: "^3\\.0\\.3$"
+
+  # Rule: All operations must have operationId
+  magik-operation-id-required:
+    description: All operations must have an operationId for code generation
+    message: Operation {{path}} must have an operationId
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: operationId
+      function: truthy
+
+  # Rule: All operations must have a summary
+  magik-operation-summary-required:
+    description: All operations should have a summary
+    message: Operation {{path}} should have a summary for better documentation
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete,options,head]"
+    then:
+      field: summary
+      function: truthy
+
+  # Rule: 4xx and 5xx responses should reference Error schema
+  magik-error-responses-use-error-schema:
+    description: Error responses should use the Error schema
+    message: "{{property}} response should reference the Error schema"
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property.match(/^(4|5)/))]"
+    then:
+      field: content.application/json.schema.$ref
+      function: pattern
+      functionOptions:
+        match: ".*Error$"
+
+  # Rule: Success mutation responses should have success field
+  magik-mutation-success-field:
+    description: POST/PUT/PATCH/DELETE operations should return success field
+    message: Success response for mutation operation should include 'success' property
+    severity: warn
+    given: "$.paths[*][post,put,patch,delete].responses['200'].content['application/json'].schema.properties"
+    then:
+      field: success
+      function: truthy
+
+  # Rule: Info should have description
+  magik-info-description:
+    description: API info should have a description
+    message: API info should include a description for better documentation
+    severity: warn
+    given: $.info
+    then:
+      field: description
+      function: truthy
+
+  # Rule: Servers should be defined
+  magik-servers-defined:
+    description: API should define at least one server
+    message: API should define at least one server URL
+    severity: warn
+    given: $
+    then:
+      field: servers
+      function: truthy
+
+  # ========================================
+  # Override Built-in Rules
+  # ========================================
+
+  # Make some built-in rules warnings instead of errors
+  info-contact: warn
+  info-license: warn
+  operation-description: warn
+  operation-tags: warn
+  operation-tag-defined: warn
+
+  # Keep these as errors (important for quality)
+  oas3-schema: error
+  operation-operationId-unique: error
+  path-params: error
+  operation-parameters: error
