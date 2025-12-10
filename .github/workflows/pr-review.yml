@@ -124,4 +124,4 @@ jobs:
 
             **IMPORTANT:** Don't miss any inline comments - they contain the specific technical requirements that must be implemented.
 
-          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(nx:*),Bash(npx eslint:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(./scripts/**:*),Bash(./**/*.sh:*)"'
+          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(nx:*),Bash(npx eslint:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(./scripts/**:*),Bash(./**/*.sh:*)"'
