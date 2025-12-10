@@ -55,8 +55,21 @@ else
   validation_failed=1
 fi
 
-# Step 3: Run route-action alignment validation
-echo -e "${YELLOW}Step 3: Running route-action alignment validation...${NC}"
+# Step 3: Run config extends validation
+echo -e "${YELLOW}Step 3: Running config extends validation...${NC}"
+echo ""
+
+if "$SCRIPT_DIR/backend/validate-config-extends.sh"; then
+  echo ""
+  echo -e "${GREEN}✓ Config extends validation passed${NC}"
+else
+  echo ""
+  echo -e "${RED}✗ Config extends validation failed${NC}"
+  validation_failed=1
+fi
+
+# Step 4: Run route-action alignment validation
+echo -e "${YELLOW}Step 4: Running route-action alignment validation...${NC}"
 echo ""
 
 if "$SCRIPT_DIR/backend/validate-route-actions.sh"; then
