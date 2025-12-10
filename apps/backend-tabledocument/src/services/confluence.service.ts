@@ -1,9 +1,9 @@
 import { execSync } from 'child_process'
 import { readFile, writeFile } from 'fs/promises'
+import type { TableDocument } from '@magik/tabledocuments'
 import axios from 'axios'
 import FormData from 'form-data'
 import { JIRA_USERNAME, JIRA_TOKEN } from '../config.js'
-import type { TableDocument } from '@magik/tabledocuments'
 
 interface AttachmentInfo {
   id: string
@@ -31,12 +31,15 @@ async function generateMermaidImage(mermaidCode: string): Promise<Buffer> {
     execSync(`rm ${tempMmdPath} ${tempPngPath}`)
 
     return Buffer.from(imageBuffer)
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Clean up on error
     try {
       execSync(`rm -f ${tempMmdPath} ${tempPngPath}`)
-    } catch {}
-    throw new Error(`Failed to generate Mermaid diagram: ${error.message}`)
+    } catch {
+      // Ignore cleanup errors
+    }
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    throw new Error(`Failed to generate Mermaid diagram: ${errorMessage}`)
   }
 }
 
@@ -47,14 +50,14 @@ async function getExistingAttachments(pageId: string): Promise<AttachmentInfo[]>
   }
 
   try {
-    const response = await axios.get(
+    const response = await axios.get<{ results: AttachmentInfo[] }>(
       `https://emarsys.jira.com/wiki/rest/api/content/${pageId}/child/attachment`,
       {
         auth: { username: JIRA_USERNAME, password: JIRA_TOKEN },
       }
     )
     return response.data.results
-  } catch (error) {
+  } catch (_error: unknown) {
     return []
   }
 }
@@ -79,10 +82,9 @@ async function uploadAttachment(
     contentType: 'image/png',
   })
 
-  let response
   if (existingAttachment) {
     // Update existing attachment
-    response = await axios.post(
+    const response = await axios.post<AttachmentInfo>(
       `https://emarsys.jira.com/wiki/rest/api/content/${pageId}/child/attachment/${existingAttachment.id}/data`,
       formData,
       {
@@ -96,7 +98,7 @@ async function uploadAttachment(
     return response.data
   } else {
     // Create new attachment
-    response = await axios.post(
+    const response = await axios.post<{ results: AttachmentInfo[] }>(
       `https://emarsys.jira.com/wiki/rest/api/content/${pageId}/child/attachment`,
       formData,
       {
@@ -114,7 +116,7 @@ async function uploadAttachment(
 // Convert table document to Confluence Storage Format
 function convertToConfluenceStorage(
   data: TableDocument,
-  attachmentMap: Map<number, string> = new Map()
+  attachmentMap = new Map<number, string>()
 ): string {
   let html = ''
 
@@ -223,9 +225,12 @@ async function getPageVersion(pageId: string): Promise<number> {
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
   }
 
-  const response = await axios.get(`https://emarsys.jira.com/wiki/rest/api/content/${pageId}`, {
-    auth: { username: JIRA_USERNAME, password: JIRA_TOKEN },
-  })
+  const response = await axios.get<{ version: { number: number } }>(
+    `https://emarsys.jira.com/wiki/rest/api/content/${pageId}`,
+    {
+      auth: { username: JIRA_USERNAME, password: JIRA_TOKEN },
+    }
+  )
 
   return response.data.version.number
 }
@@ -263,7 +268,8 @@ async function updatePageContent(
 
 // Extract page ID from Confluence URL
 function extractPageId(url: string): string {
-  const match = url.match(/pages\/(\d+)/)
+  const regex = /pages\/(\d+)/
+  const match = regex.exec(url)
   if (!match) {
     throw new Error('Invalid Confluence URL: could not extract page ID')
   }
