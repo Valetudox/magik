@@ -2,7 +2,7 @@
 
 ## Overview
 
-Generate implementation plans for features or bugs by creating a GitHub issue with the `planning` label. Claude Code will analyze requirements and post a detailed implementation plan.
+Generate implementation plans for features or bugs by creating a GitHub issue with the `planning` label. 
 
 ## How It Works
 
