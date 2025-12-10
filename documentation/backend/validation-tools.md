@@ -127,22 +127,68 @@ bun run scripts/lints/backend/validate-route-actions.ts
 
 ---
 
+## 4. OpenAPI Schema Validator (`scripts/lints/backend/validate-openapi.ts`)
+
+**Purpose:** Validates OpenAPI documentation accuracy and alignment with actual routes
+
+**What it validates:**
+- ✅ Valid YAML syntax in openapi.yaml
+- ✅ Valid OpenAPI 3.x specification format
+- ✅ Required fields present:
+  - `openapi` version
+  - `info.title`
+  - `info.version`
+  - `paths` section
+- ✅ All routes in routes.ts are documented in openapi.yaml
+- ✅ All paths in openapi.yaml exist in routes.ts
+- ✅ HTTP methods match between routes.ts and openapi.yaml
+
+**Path normalization:**
+- Converts Express/Fastify route parameters to OpenAPI format
+- Example: `/api/decisions/:id` → `/api/decisions/{id}`
+
+**Usage:**
+```bash
+bun run scripts/lints/backend/validate-openapi.ts
+# or
+./scripts/lints/backend/validate-openapi.sh
+```
+
+**When to run:**
+- When adding or modifying API routes
+- When updating OpenAPI documentation
+- Pre-commit hooks
+- CI/CD pipelines
+
+**Error detection:**
+- Missing or invalid OpenAPI specification
+- Routes defined but not documented
+- Documentation for non-existent routes
+- Method mismatches between code and documentation
+
+---
+
 ## Summary: Division of Responsibility
 
-| Validation | Bash Script | ESLint | Route-Action Validator |
-|------------|-------------|--------|------------------------|
-| Required files exist | ✅ | ❌ | ❌ |
-| Required directories exist | ✅ | ❌ | ❌ |
-| Invalid folders in src/ | ✅ | ❌ | ❌ |
-| File naming conventions | ❌ | ✅ | ❌ |
-| Folder naming conventions | ❌ | ✅ | ❌ |
-| process.env access | ❌ | ✅ | ❌ |
-| Route-to-file mapping | ❌ | ❌ | ✅ |
-| Missing action files | ❌ | ❌ | ✅ |
-| Orphaned action files | ❌ | ❌ | ✅ |
-| Non-TS files (Dockerfile, etc.) | ✅ | ❌ | ❌ |
+| Validation | Bash Script | ESLint | Route-Action Validator | OpenAPI Validator |
+|------------|-------------|--------|------------------------|-------------------|
+| Required files exist | ✅ | ❌ | ❌ | ❌ |
+| Required directories exist | ✅ | ❌ | ❌ | ❌ |
+| Invalid folders in src/ | ✅ | ❌ | ❌ | ❌ |
+| File naming conventions | ❌ | ✅ | ❌ | ❌ |
+| Folder naming conventions | ❌ | ✅ | ❌ | ❌ |
+| process.env access | ❌ | ✅ | ❌ | ❌ |
+| Route-to-file mapping | ❌ | ❌ | ✅ | ❌ |
+| Missing action files | ❌ | ❌ | ✅ | ❌ |
+| Orphaned action files | ❌ | ❌ | ✅ | ❌ |
+| Non-TS files (Dockerfile, etc.) | ✅ | ❌ | ❌ | ❌ |
+| OpenAPI YAML syntax | ❌ | ❌ | ❌ | ✅ |
+| OpenAPI schema validity | ❌ | ❌ | ❌ | ✅ |
+| API documentation completeness | ❌ | ❌ | ❌ | ✅ |
+| Route-documentation alignment | ❌ | ❌ | ❌ | ✅ |
 
-**All three tools are needed:**
+**All four tools are needed:**
 - **Bash script** ensures the project structure exists and only allowed folders are present
 - **ESLint** ensures developers follow naming conventions in real-time
 - **Route-Action validator** ensures routes and action files stay in sync
+- **OpenAPI validator** ensures API documentation is accurate and complete

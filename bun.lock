@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "magik",
@@ -35,6 +34,7 @@
         "prettier": "^3.7.4",
         "typescript-eslint": "^8.48.1",
         "vue-eslint-parser": "^10.2.0",
+        "yaml": "^2.8.2",
       },
     },
     "apps/backend-audio": {

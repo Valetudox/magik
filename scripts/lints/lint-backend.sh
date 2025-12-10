@@ -68,6 +68,19 @@ else
   validation_failed=1
 fi
 
+# Step 4: Run OpenAPI schema validation
+echo -e "${YELLOW}Step 4: Running OpenAPI schema validation...${NC}"
+echo ""
+
+if "$SCRIPT_DIR/backend/validate-openapi.sh"; then
+  echo ""
+  echo -e "${GREEN}✓ OpenAPI schema validation passed${NC}"
+else
+  echo ""
+  echo -e "${RED}✗ OpenAPI schema validation failed${NC}"
+  validation_failed=1
+fi
+
 # Final summary
 echo ""
 echo -e "${BLUE}========================================${NC}"
