@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  base: process.env.VITE_BASE_PATH || '/',
+  base: process.env.VITE_BASE_PATH ?? '/',
   server: {
     port: 5175,
     watch: {

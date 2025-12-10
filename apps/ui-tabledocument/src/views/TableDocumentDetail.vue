@@ -78,7 +78,7 @@ onMounted(() => {
   void (async () => {
     try {
       document.value = await api.getTableDocument(id)
-      confluenceUrlInput.value = document.value.confluence_url || ''
+      confluenceUrlInput.value = document.value.confluence_url ?? ''
     } catch (e: unknown) {
       if ((e as { status?: number }).status === 404) {
         error.value = 'Table document not found'
@@ -116,19 +116,6 @@ const openAddUseCaseDialog = () => {
   showUseCaseDialog.value = true
 }
 
-const openEditUseCaseDialog = (useCase: TableRow) => {
-  editingUseCase.value = useCase
-  useCaseForm.value = {
-    use_case: useCase.use_case,
-    diagram: useCase.diagram || '',
-    required_context: useCase.required_context || [],
-    required_tools: useCase.required_tools || [],
-    potential_interactions: useCase.potential_interactions || [],
-    notes: useCase.notes || [],
-  }
-  showUseCaseDialog.value = true
-}
-
 const closeUseCaseDialog = () => {
   showUseCaseDialog.value = false
   editingUseCase.value = null
@@ -140,7 +127,7 @@ const saveUseCase = async () => {
   try {
     const cleanForm = {
       use_case: useCaseForm.value.use_case,
-      diagram: useCaseForm.value.diagram || undefined,
+      diagram: useCaseForm.value.diagram ?? undefined,
       required_context: useCaseForm.value.required_context?.length ? useCaseForm.value.required_context : undefined,
       required_tools: useCaseForm.value.required_tools?.length ? useCaseForm.value.required_tools : undefined,
       potential_interactions: useCaseForm.value.potential_interactions?.length ? useCaseForm.value.potential_interactions : undefined,
@@ -182,7 +169,7 @@ const deleteUseCase = async () => {
 }
 
 const openEditConfluenceUrlDialog = () => {
-  confluenceUrlInput.value = document.value?.confluence_url || ''
+  confluenceUrlInput.value = document.value?.confluence_url ?? ''
   showEditConfluenceUrlDialog.value = true
 }
 
@@ -356,231 +343,244 @@ const saveFieldEdit = async () => {
 
       <!-- Document Content -->
       <div v-if="document && !loading">
+        <!-- Update Notification -->
+        <v-snackbar v-model="showNotification" :timeout="3000" color="info">
+          Document updated by external change
+        </v-snackbar>
 
-      <!-- Update Notification -->
-      <v-snackbar v-model="showNotification" :timeout="3000" color="info">
-        Document updated by external change
-      </v-snackbar>
+        <!-- Push Notification -->
+        <v-snackbar v-model="pushNotification.show" :timeout="5000" :color="pushNotification.type">
+          {{ pushNotification.message }}
+        </v-snackbar>
 
-      <!-- Push Notification -->
-      <v-snackbar v-model="pushNotification.show" :timeout="5000" :color="pushNotification.type">
-        {{ pushNotification.message }}
-      </v-snackbar>
+        <!-- Agent Notification -->
+        <v-snackbar v-model="agentNotification.show" :timeout="5000" :color="agentNotification.type">
+          {{ agentNotification.message }}
+        </v-snackbar>
 
-      <!-- Agent Notification -->
-      <v-snackbar v-model="agentNotification.show" :timeout="5000" :color="agentNotification.type">
-        {{ agentNotification.message }}
-      </v-snackbar>
-
-      <!-- Use Cases Table -->
-      <v-row class="mt-4">
-        <v-col>
-          <v-card>
-            <v-card-title>
-              <v-row align="center">
-                <v-col>Use Cases</v-col>
-                <v-col class="text-right">
-                  <v-btn
-                    color="primary"
-                    prepend-icon="mdi-plus"
-                    @click="openAddUseCaseDialog"
-                  >
-                    Add Use Case
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-card-title>
-            <v-card-text>
-              <v-table>
-                <thead>
-                  <tr>
-                    <th style="width: 5%">#</th>
-                    <th style="width: 28%">Use Case</th>
-                    <th style="width: 25%">Diagram</th>
-                    <th style="width: 21%">Required Context</th>
-                    <th style="width: 21%">Required Tools</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(useCase, index) in document.table" :key="useCase.id">
-                    <td class="text-center font-weight-bold align-top">
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <span
-                            v-bind="props"
-                            class="index-number"
-                          >
-                            {{ index + 1 }}
-                          </span>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase)"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-delete"
-                            title="Remove"
-                            class="text-error"
-                            @click="confirmDelete(useCase)"
-                          />
-                        </v-list>
-                      </v-menu>
-                    </td>
-                    <td class="align-top">
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <span
-                            v-bind="props"
-                            class="editable-text"
-                            @dblclick.stop="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
-                          >
-                            {{ useCase.use_case }}
-                          </span>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase, 'use case')"
-                          />
-                        </v-list>
-                      </v-menu>
-                    </td>
-                    <td class="align-top">
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <div
-                            v-bind="props"
-                            class="editable-text"
-                            @dblclick.stop="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
-                          >
-                            <div v-if="useCase.diagram" class="diagram-container">
-                              <VueMermaidRender :content="useCase.diagram" />
+        <!-- Use Cases Table -->
+        <v-row class="mt-4">
+          <v-col>
+            <v-card>
+              <v-card-title>
+                <v-row align="center">
+                  <v-col>Use Cases</v-col>
+                  <v-col class="text-right">
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-plus"
+                      @click="openAddUseCaseDialog"
+                    >
+                      Add Use Case
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-card-title>
+              <v-card-text>
+                <v-table>
+                  <thead>
+                    <tr>
+                      <th style="width: 5%">
+                        #
+                      </th>
+                      <th style="width: 28%">
+                        Use Case
+                      </th>
+                      <th style="width: 25%">
+                        Diagram
+                      </th>
+                      <th style="width: 21%">
+                        Required Context
+                      </th>
+                      <th style="width: 21%">
+                        Required Tools
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(useCase, index) in document.table" :key="useCase.id">
+                      <td class="text-center font-weight-bold align-top">
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <span
+                              v-bind="props"
+                              class="index-number"
+                            >
+                              {{ index + 1 }}
+                            </span>
+                          </template>
+                          <v-list density="compact">
+                            <v-list-item
+                              prepend-icon="mdi-robot"
+                              title="Edit with AI"
+                              @click="appendAIPromptForUseCase(useCase)"
+                            />
+                            <v-list-item
+                              prepend-icon="mdi-delete"
+                              title="Remove"
+                              class="text-error"
+                              @click="confirmDelete(useCase)"
+                            />
+                          </v-list>
+                        </v-menu>
+                      </td>
+                      <td class="align-top">
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <span
+                              v-bind="props"
+                              class="editable-text"
+                              @dblclick.stop="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
+                            >
+                              {{ useCase.use_case }}
+                            </span>
+                          </template>
+                          <v-list density="compact">
+                            <v-list-item
+                              prepend-icon="mdi-pencil"
+                              title="Edit"
+                              @click="openEditFieldDialog(useCase, 'use_case', 'Use Case', 'textarea')"
+                            />
+                            <v-list-item
+                              prepend-icon="mdi-robot"
+                              title="Edit with AI"
+                              @click="appendAIPromptForUseCase(useCase, 'use case')"
+                            />
+                          </v-list>
+                        </v-menu>
+                      </td>
+                      <td class="align-top">
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <div
+                              v-bind="props"
+                              class="editable-text"
+                              @dblclick.stop="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
+                            >
+                              <div v-if="useCase.diagram" class="diagram-container">
+                                <VueMermaidRender :content="useCase.diagram" />
+                              </div>
+                              <span v-else class="empty-placeholder">Click to add diagram...</span>
                             </div>
-                            <span v-else class="empty-placeholder">Click to add diagram...</span>
-                          </div>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase, 'diagram')"
-                          />
-                        </v-list>
-                      </v-menu>
-                    </td>
-                    <td class="align-top">
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <div
-                            v-bind="props"
-                            class="editable-text"
-                            :class="{ 'empty-placeholder': !useCase.required_context?.length }"
-                            @dblclick.stop="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
-                          >
-                            <ul v-if="useCase.required_context && useCase.required_context.length">
-                              <li v-for="(item, i) in useCase.required_context" :key="i">{{ item }}</li>
-                            </ul>
-                            <span v-else>Click to add context...</span>
-                          </div>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase, 'required context')"
-                          />
-                        </v-list>
-                      </v-menu>
-                    </td>
-                    <td class="align-top">
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <div
-                            v-bind="props"
-                            class="editable-text"
-                            :class="{ 'empty-placeholder': !useCase.required_tools?.length }"
-                            @dblclick.stop="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
-                          >
-                            <ul v-if="useCase.required_tools && useCase.required_tools.length">
-                              <li v-for="(item, i) in useCase.required_tools" :key="i">{{ item }}</li>
-                            </ul>
-                            <span v-else>Click to add tools...</span>
-                          </div>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForUseCase(useCase, 'required tools')"
-                          />
-                        </v-list>
-                      </v-menu>
-                    </td>
-                  </tr>
-                  <tr v-if="!document.table.length">
-                    <td colspan="5" class="text-center text-grey pa-4">
-                      No use cases yet. Add your first use case!
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+                          </template>
+                          <v-list density="compact">
+                            <v-list-item
+                              prepend-icon="mdi-pencil"
+                              title="Edit"
+                              @click="openEditFieldDialog(useCase, 'diagram', 'Mermaid Diagram', 'textarea')"
+                            />
+                            <v-list-item
+                              prepend-icon="mdi-robot"
+                              title="Edit with AI"
+                              @click="appendAIPromptForUseCase(useCase, 'diagram')"
+                            />
+                          </v-list>
+                        </v-menu>
+                      </td>
+                      <td class="align-top">
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <div
+                              v-bind="props"
+                              class="editable-text"
+                              :class="{ 'empty-placeholder': !useCase.required_context?.length }"
+                              @dblclick.stop="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
+                            >
+                              <ul v-if="useCase.required_context && useCase.required_context.length">
+                                <li v-for="(item, i) in useCase.required_context" :key="i">
+                                  {{ item }}
+                                </li>
+                              </ul>
+                              <span v-else>Click to add context...</span>
+                            </div>
+                          </template>
+                          <v-list density="compact">
+                            <v-list-item
+                              prepend-icon="mdi-pencil"
+                              title="Edit"
+                              @click="openEditFieldDialog(useCase, 'required_context', 'Required Context', 'array')"
+                            />
+                            <v-list-item
+                              prepend-icon="mdi-robot"
+                              title="Edit with AI"
+                              @click="appendAIPromptForUseCase(useCase, 'required context')"
+                            />
+                          </v-list>
+                        </v-menu>
+                      </td>
+                      <td class="align-top">
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <div
+                              v-bind="props"
+                              class="editable-text"
+                              :class="{ 'empty-placeholder': !useCase.required_tools?.length }"
+                              @dblclick.stop="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
+                            >
+                              <ul v-if="useCase.required_tools && useCase.required_tools.length">
+                                <li v-for="(item, i) in useCase.required_tools" :key="i">
+                                  {{ item }}
+                                </li>
+                              </ul>
+                              <span v-else>Click to add tools...</span>
+                            </div>
+                          </template>
+                          <v-list density="compact">
+                            <v-list-item
+                              prepend-icon="mdi-pencil"
+                              title="Edit"
+                              @click="openEditFieldDialog(useCase, 'required_tools', 'Required Tools', 'array')"
+                            />
+                            <v-list-item
+                              prepend-icon="mdi-robot"
+                              title="Edit with AI"
+                              @click="appendAIPromptForUseCase(useCase, 'required tools')"
+                            />
+                          </v-list>
+                        </v-menu>
+                      </td>
+                    </tr>
+                    <tr v-if="!document.table.length">
+                      <td colspan="5" class="text-center text-grey pa-4">
+                        No use cases yet. Add your first use case!
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
 
-      <!-- AI Agent Section -->
-      <v-footer app fixed class="bg-surface">
-        <v-container>
-          <v-row>
-            <v-col>
-              <v-textarea
-                v-model="agentPrompt"
-                label="Ask AI Agent to modify this document..."
-                placeholder="e.g., Add a new use case about dynamic content personalization"
-                rows="2"
-                variant="outlined"
-                :disabled="agentProcessing"
-                @keydown.ctrl.enter="handleAgentRequest"
-                @keydown.meta.enter="handleAgentRequest"
-              >
-                <template #append>
-                  <v-btn
-                    icon="mdi-send"
-                    color="primary"
-                    :loading="agentProcessing"
-                    :disabled="!agentPrompt.trim()"
-                    @click="handleAgentRequest"
-                  />
-                </template>
-              </v-textarea>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-footer>
+        <!-- AI Agent Section -->
+        <v-footer app fixed class="bg-surface">
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-textarea
+                  v-model="agentPrompt"
+                  label="Ask AI Agent to modify this document..."
+                  placeholder="e.g., Add a new use case about dynamic content personalization"
+                  rows="2"
+                  variant="outlined"
+                  :disabled="agentProcessing"
+                  @keydown.ctrl.enter="handleAgentRequest"
+                  @keydown.meta.enter="handleAgentRequest"
+                >
+                  <template #append>
+                    <v-btn
+                      icon="mdi-send"
+                      color="primary"
+                      :loading="agentProcessing"
+                      :disabled="!agentPrompt.trim()"
+                      @click="handleAgentRequest"
+                    />
+                  </template>
+                </v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-footer>
       </div>
     </v-container>
 
@@ -633,7 +633,9 @@ const saveFieldEdit = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="closeUseCaseDialog">Cancel</v-btn>
+          <v-btn @click="closeUseCaseDialog">
+            Cancel
+          </v-btn>
           <v-btn color="primary" @click="saveUseCase">
             {{ editingUseCase ? 'Update' : 'Create' }}
           </v-btn>
@@ -651,8 +653,12 @@ const saveFieldEdit = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="closeDeleteDialog">Cancel</v-btn>
-          <v-btn color="error" @click="deleteUseCase">Delete</v-btn>
+          <v-btn @click="closeDeleteDialog">
+            Cancel
+          </v-btn>
+          <v-btn color="error" @click="deleteUseCase">
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

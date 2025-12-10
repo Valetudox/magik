@@ -126,7 +126,7 @@ const formatDate = (isoString: string) => {
 }
 
 const openDocument = (id: string) => {
-  router.push(`/${id}`)
+  void router.push(`/${id}`)
 }
 
 const openCreateDialog = () => {
@@ -154,7 +154,7 @@ const createDocument = async () => {
     const result = await api.createTableDocument(newDocumentName.value.trim())
     closeCreateDialog()
     // Navigate to the new document
-    router.push(`/${result.id}`)
+    void router.push(`/${result.id}`)
   } catch (e) {
     createError.value = e instanceof Error ? e.message : 'Failed to create document'
   } finally {
@@ -193,7 +193,9 @@ const deleteDocument = async () => {
     <!-- Header -->
     <v-row>
       <v-col>
-        <h1 class="text-h4 mb-4">Table Documents</h1>
+        <h1 class="text-h4 mb-4">
+          Table Documents
+        </h1>
       </v-col>
     </v-row>
 
@@ -250,7 +252,7 @@ const deleteDocument = async () => {
             item-value="id"
             class="elevation-1"
           >
-            <template #item.name="{ item }">
+            <template #[`item.name`]="{ item }">
               <a
                 href="#"
                 class="text-decoration-none text-primary"
@@ -260,28 +262,28 @@ const deleteDocument = async () => {
               </a>
             </template>
 
-            <template #item.directory="{ item }">
+            <template #[`item.directory`]="{ item }">
               <span v-if="item.directory" class="text-grey">
                 {{ item.directory }}
               </span>
               <span v-else class="text-grey-darken-1">—</span>
             </template>
 
-            <template #item.useCaseCount="{ item }">
+            <template #[`item.useCaseCount`]="{ item }">
               <v-chip size="small" color="primary" variant="tonal">
                 {{ item.useCaseCount }}
               </v-chip>
             </template>
 
-            <template #item.createdAt="{ item }">
+            <template #[`item.createdAt`]="{ item }">
               {{ formatDate(item.createdAt) }}
             </template>
 
-            <template #item.updatedAt="{ item }">
+            <template #[`item.updatedAt`]="{ item }">
               {{ formatDate(item.updatedAt) }}
             </template>
 
-            <template #item.actions="{ item }">
+            <template #[`item.actions`]="{ item }">
               <v-btn
                 icon="mdi-open-in-new"
                 size="small"
@@ -318,7 +320,9 @@ const deleteDocument = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="closeCreateDialog">Cancel</v-btn>
+          <v-btn @click="closeCreateDialog">
+            Cancel
+          </v-btn>
           <v-btn
             color="primary"
             :loading="creating"
@@ -340,7 +344,9 @@ const deleteDocument = async () => {
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="closeDeleteDialog">Cancel</v-btn>
+          <v-btn @click="closeDeleteDialog">
+            Cancel
+          </v-btn>
           <v-btn
             color="error"
             :loading="deleting"
