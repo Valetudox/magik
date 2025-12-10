@@ -116,12 +116,10 @@ jobs:
             2. Address EVERY piece of feedback from the inline comments. 
             3. Address any feedback from the review body
             4. Create a todo list of all the changes needed
-            5. Add 'run npm run implementation:validation' to the bottom of the todo list
-            6. Add 'Use the @agent-guidelines-compliance-reviewer to validate the changes' to the bottom of the todo list
-            7. Implement all the requested functionality following the todo list
+            5. Implement all the requested functionality following the todo list
 
             **Requirements:**
-            Try commit and push as often as possible
+            1. Try commit and push as often as possible
 
 
             **IMPORTANT:** Don't miss any inline comments - they contain the specific technical requirements that must be implemented.
