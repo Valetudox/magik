@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
-import type { TableDocument, TableRow } from '@magik/tabledocuments'
+import type { TableRow } from '@magik/tabledocuments'
 import { tableDocumentSchema, tableRowSchema } from '@magik/tabledocuments'
 import { TABLE_DOCUMENTS_DIR } from '../config.js'
 import { generateRandomId } from '../utils/generate-id.js'
