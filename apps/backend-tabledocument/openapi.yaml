@@ -1,0 +1,666 @@
+openapi: 3.0.3
+info:
+  title: Backend Table Document API
+  description: |
+    API for managing table documents for AI Agent use cases.
+
+    This service provides:
+    - CRUD operations for table documents
+    - Management of use cases within table documents
+    - File watching and change notifications via Socket.IO
+    - AI agent integration for table document generation
+    - Confluence integration for publishing table documents
+
+    ## File Watching
+
+    The service watches the table-documents directory for changes and broadcasts updates to the Socket.IO server.
+
+  version: 1.0.0
+  contact:
+    name: Magik Backend Table Document
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:4004
+    description: Local development server
+
+tags:
+  - name: table-documents
+    description: Table document operations
+  - name: use-cases
+    description: Use case operations
+  - name: agent
+    description: AI agent operations
+
+paths:
+  /api/table-documents:
+    get:
+      tags:
+        - table-documents
+      summary: List all table documents
+      description: Returns a list of all table documents with summary information
+      operationId: listTableDocuments
+      responses:
+        '200':
+          description: List of table document summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - documents
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TableDocumentSummary'
+        '500':
+          description: Failed to read table documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - table-documents
+      summary: Create a new table document
+      description: Creates a new table document with the given filename
+      operationId: createTableDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+              properties:
+                filename:
+                  type: string
+                  description: The filename for the new table document (without extension)
+                  example: 'ai-agent-use-cases'
+            examples:
+              simple:
+                summary: Create a table document
+                value:
+                  filename: 'ai-agent-use-cases'
+      responses:
+        '200':
+          description: Table document created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - id
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  id:
+                    type: string
+                    description: The ID of the created table document
+                    example: 'ai-agent-use-cases'
+        '400':
+          description: Bad request - filename is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Table document with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}:
+    get:
+      tags:
+        - table-documents
+      summary: Get a specific table document
+      description: Returns the details of a specific table document
+      operationId: getTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+          example: 'ai-agent-use-cases'
+      responses:
+        '200':
+          description: Table document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableDocument'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to read table document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - table-documents
+      summary: Delete a table document
+      description: Deletes a specific table document
+      operationId: deleteTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+      responses:
+        '200':
+          description: Table document deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          description: Failed to delete table document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - table-documents
+      summary: Update a table document
+      description: Updates the details of a specific table document
+      operationId: updateTableDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confluence_url:
+                  type: string
+                  format: uri
+                  description: Confluence page URL
+      responses:
+        '200':
+          description: Table document updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update table document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/push-to-confluence:
+    post:
+      tags:
+        - table-documents
+      summary: Push table document to Confluence
+      description: Publishes the table document to Confluence
+      operationId: pushToConfluence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+      responses:
+        '200':
+          description: Table document pushed to Confluence successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Bad request - table document does not have a Confluence URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to push to Confluence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/use-cases:
+    post:
+      tags:
+        - use-cases
+      summary: Create a use case
+      description: Adds a new use case to the table document
+      operationId: createUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - use_case
+              properties:
+                use_case:
+                  type: string
+                  description: The use case description
+                diagram:
+                  type: string
+                  description: Optional diagram in Mermaid format
+                required_context:
+                  type: array
+                  items:
+                    type: string
+                  description: List of required context items
+                required_tools:
+                  type: array
+                  items:
+                    type: string
+                  description: List of required tools
+                potential_interactions:
+                  type: array
+                  items:
+                    type: string
+                  description: List of potential interactions
+                notes:
+                  type: array
+                  items:
+                    type: string
+                  description: Additional notes
+      responses:
+        '200':
+          description: Use case created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - useCase
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  useCase:
+                    $ref: '#/components/schemas/TableRow'
+        '400':
+          description: Bad request - use_case is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to create use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/use-cases/{useCaseId}:
+    patch:
+      tags:
+        - use-cases
+      summary: Update a use case
+      description: Updates an existing use case
+      operationId: updateUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The use case ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                use_case:
+                  type: string
+                  description: The use case description
+                diagram:
+                  type: string
+                  description: Optional diagram in Mermaid format
+                required_context:
+                  type: array
+                  items:
+                    type: string
+                  description: List of required context items
+                required_tools:
+                  type: array
+                  items:
+                    type: string
+                  description: List of required tools
+                potential_interactions:
+                  type: array
+                  items:
+                    type: string
+                  description: List of potential interactions
+                notes:
+                  type: array
+                  items:
+                    type: string
+                  description: Additional notes
+      responses:
+        '200':
+          description: Use case updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - useCase
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  useCase:
+                    $ref: '#/components/schemas/TableRow'
+        '404':
+          description: Table document or use case not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to update use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - use-cases
+      summary: Delete a use case
+      description: Removes a use case from the table document
+      operationId: deleteUseCase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+        - name: useCaseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The use case ID
+      responses:
+        '200':
+          description: Use case deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/table-documents/{id}/agent:
+    post:
+      tags:
+        - agent
+      summary: Run AI agent
+      description: Runs the AI agent to generate or enhance table document content
+      operationId: runAgent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table document ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: The prompt for the AI agent
+      responses:
+        '200':
+          description: Agent executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Bad request - prompt is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Table document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to run agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    TableDocument:
+      type: object
+      required:
+        - table
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: Unique identifier (path-based), added when fetching individual table document
+        confluence_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Optional Confluence page URL where this table document is published
+        table:
+          type: array
+          items:
+            $ref: '#/components/schemas/TableRow'
+          description: Array of use cases (table rows)
+
+    TableRow:
+      type: object
+      required:
+        - id
+        - use_case
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the use case
+        use_case:
+          type: string
+          description: Description of the use case
+        diagram:
+          type: string
+          nullable: true
+          description: Optional Mermaid diagram code
+        required_context:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: List of required context items
+        required_tools:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: List of required tools
+        potential_interactions:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: List of potential interactions
+        notes:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Additional notes
+
+    TableDocumentSummary:
+      type: object
+      required:
+        - id
+        - name
+        - directory
+        - useCaseCount
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the table document (path-based)
+        name:
+          type: string
+          description: Display name derived from filename
+        directory:
+          type: string
+          description: Directory path of the table document file
+        useCaseCount:
+          type: integer
+          description: Number of use cases in the table
+        confluence_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Confluence page URL, if published
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: 'Failed to read table documents'

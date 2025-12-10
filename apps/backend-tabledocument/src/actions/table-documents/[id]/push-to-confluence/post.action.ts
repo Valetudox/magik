@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { getTableDocumentById } from '../../../../services/tabledocument.service.js'
 import { pushToConfluence as pushToConfluenceService } from '../../../../services/confluence.service.js'
+import { getTableDocumentById } from '../../../../services/tabledocument.service.js'
 
 interface PushToConfluenceParams {
   id: string
