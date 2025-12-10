@@ -1,17 +1,32 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Backend Audio API
   version: 1.0.0
   description: API for managing audio recordings and transcripts
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 
 servers:
   - url: http://localhost:3002
+
+tags:
+  - name: Health
+    description: Health check operations
+  - name: Recordings
+    description: Audio recording operations
 
 paths:
   /health:
     get:
       summary: Health check endpoint
+      description: Check if the service is running and healthy
       operationId: healthCheck
+      tags:
+        - Health
       responses:
         '200':
           description: Service is healthy
@@ -29,7 +44,10 @@ paths:
   /api/recordings:
     get:
       summary: List all recordings
+      description: Retrieve a list of all audio recordings stored in the system
       operationId: listRecordings
+      tags:
+        - Recordings
       responses:
         '200':
           description: List of recordings
@@ -57,7 +75,10 @@ paths:
   /api/recordings/{id}:
     get:
       summary: Get a specific recording
+      description: Retrieve details of a specific audio recording by its ID
       operationId: getRecording
+      tags:
+        - Recordings
       parameters:
         - name: id
           in: path
