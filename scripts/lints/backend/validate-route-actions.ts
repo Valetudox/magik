@@ -243,78 +243,66 @@ function validateService(
  * Main validation function
  */
 function main() {
+  // Check if backend name argument is provided
+  const args = process.argv.slice(2)
+
+  if (args.length === 0) {
+    console.log(`${RED}Error: Backend service name argument is required${NC}`)
+    console.log('Usage: validate-route-actions.ts <backend-service-name>')
+    console.log('Example: validate-route-actions.ts backend-audio')
+    process.exit(1)
+  }
+
+  const backendName = args[0]
   const appsDir = 'apps'
-  const backendServices: string[] = []
+  const serviceDir = join(appsDir, backendName)
 
-  // Find all backend-* directories
-  const dirs = readdirSync(appsDir)
-  for (const dir of dirs) {
-    if (dir.startsWith('backend-') && statSync(join(appsDir, dir)).isDirectory()) {
-      backendServices.push(dir)
-    }
+  // Validate that the backend service exists
+  if (!statSync(serviceDir).isDirectory()) {
+    console.log(`${RED}Error: Backend service not found: ${backendName}${NC}`)
+    process.exit(1)
   }
 
-  // Validate all backend services
-  const servicesToValidate = backendServices
-
-  let allErrors: ValidationError[] = []
-
-  // Validate each service
-  for (const service of servicesToValidate) {
-    const serviceDir = join(appsDir, service)
-    const errors = validateService(service, serviceDir)
-    allErrors = allErrors.concat(errors)
-  }
+  // Validate the specified backend service
+  const errors = validateService(backendName, serviceDir)
 
   // Report results
-  if (allErrors.length === 0) {
+  if (errors.length === 0) {
     console.log(
-      `${GREEN}✓${NC} All backend services have correct route-action alignment`,
+      `${GREEN}✓${NC} Backend service has correct route-action alignment`,
     )
-    console.log(`  Validated ${servicesToValidate.length} service(s): ${servicesToValidate.join(', ')}`)
+    console.log(`  Validated: ${backendName}`)
     process.exit(0)
   } else {
     console.log(`${RED}✗${NC} Route-action alignment validation failed`)
     console.log('')
 
-    // Group errors by service
-    const errorsByService = new Map<string, ValidationError[]>()
-    for (const error of allErrors) {
-      if (!errorsByService.has(error.service)) {
-        errorsByService.set(error.service, [])
+    console.log(`  ${backendName}:`)
+
+    // Group missing files by type
+    const missingFiles = errors.filter((e) => e.errorType === 'missing-action-files')
+    const extraFilesErrors = errors.filter((e) => e.errorType === 'extra-action-files')
+
+    if (missingFiles.length > 0) {
+      console.log(`    Missing action files:`)
+      for (const error of missingFiles) {
+        console.log(`      - ${error.actionFolder}`)
+        console.log(`        Route: ${error.routes?.[0]}`)
       }
-      errorsByService.get(error.service)!.push(error)
     }
 
-    // Print errors grouped by service
-    for (const [service, errors] of errorsByService.entries()) {
-      console.log(`  ${service}:`)
-
-      // Group missing files by type
-      const missingFiles = errors.filter((e) => e.errorType === 'missing-action-files')
-      const extraFilesErrors = errors.filter((e) => e.errorType === 'extra-action-files')
-
-      if (missingFiles.length > 0) {
-        console.log(`    Missing action files:`)
-        for (const error of missingFiles) {
-          console.log(`      - ${error.actionFolder}`)
-          console.log(`        Route: ${error.routes?.[0]}`)
-        }
-      }
-
-      if (extraFilesErrors.length > 0) {
-        console.log(`    Extra action files:`)
-        for (const error of extraFilesErrors) {
-          if (error.extraFiles) {
-            for (const file of error.extraFiles) {
-              console.log(`      - actions/${file}`)
-            }
+    if (extraFilesErrors.length > 0) {
+      console.log(`    Extra action files:`)
+      for (const error of extraFilesErrors) {
+        if (error.extraFiles) {
+          for (const file of error.extraFiles) {
+            console.log(`      - actions/${file}`)
           }
         }
       }
-
-      console.log('')
     }
+
+    console.log('')
 
     process.exit(1)
   }

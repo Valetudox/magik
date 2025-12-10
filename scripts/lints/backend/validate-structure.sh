@@ -100,66 +100,61 @@ validate_backend_service() {
 }
 
 main() {
-  local apps_dir="apps"
-
-  if [[ ! -d "$apps_dir" ]]; then
-    echo "Error: apps directory not found"
+  # Check if backend path argument is provided
+  if [[ $# -eq 0 ]]; then
+    echo -e "${RED}Error: Backend service path argument is required${NC}"
+    echo "Usage: $0 <backend-service-path>"
+    echo "Example: $0 apps/backend-audio"
     exit 1
   fi
 
-  # Find all backend-* directories
-  local backend_services=()
-  for dir in "$apps_dir"/backend-*; do
-    if [[ -d "$dir" ]]; then
-      backend_services+=("$(basename "$dir")")
-    fi
-  done
+  local service_path="$1"
 
-  if [[ ${#backend_services[@]} -eq 0 ]]; then
-    echo "No backend services found"
-    exit 0
+  # Validate that the path exists
+  if [[ ! -d "$service_path" ]]; then
+    echo -e "${RED}Error: Backend service path does not exist: $service_path${NC}"
+    exit 1
   fi
 
-  # Validate each service
-  for service in "${backend_services[@]}"; do
-    validate_backend_service "$apps_dir/$service" "$service"
-  done
+  # Extract service name from path
+  local service_name=$(basename "$service_path")
+
+  # Validate the backend service
+  validate_backend_service "$service_path" "$service_name"
 
   # Report results
   if [[ $error_count -eq 0 ]]; then
-    echo -e "${GREEN}✓${NC} All backend services have the required structure"
-    echo "  Validated ${#backend_services[@]} service(s): ${backend_services[*]}"
+    echo -e "${GREEN}✓${NC} Backend service has the required structure"
+    echo "  Validated: $service_name"
     exit 0
   else
     echo -e "${RED}✗${NC} Backend service validation failed"
     echo ""
 
-    # Print errors grouped by service
-    for service in "${!errors_by_service[@]}"; do
-      echo "  $service:"
-      while IFS='|' read -r error_type item; do
-        [[ -z "$error_type" ]] && continue
+    # Print errors
+    echo "  $service_name:"
+    while IFS='|' read -r error_type item; do
+      [[ -z "$error_type" ]] && continue
 
-        case "$error_type" in
-          missing_file)
-            echo "    - Missing file: $item"
-            ;;
-          missing_dir)
-            echo "    - Missing directory: $item"
-            ;;
-          missing_src_file)
-            echo "    - Missing required file in src: $item"
-            ;;
-          invalid_folder)
-            echo "    - Invalid folder in src/: $item (only 'actions', 'services', 'utils' are allowed)"
-            ;;
-        esac
-      done <<< "${errors_by_service[$service]}"
-      echo ""
-    done
+      case "$error_type" in
+        missing_file)
+          echo "    - Missing file: $item"
+          ;;
+        missing_dir)
+          echo "    - Missing directory: $item"
+          ;;
+        missing_src_file)
+          echo "    - Missing required file in src: $item"
+          ;;
+        invalid_folder)
+          echo "    - Invalid folder in src/: $item (only 'actions', 'services', 'utils' are allowed)"
+          ;;
+      esac
+    done <<< "${errors_by_service[$service_name]}"
+    echo ""
 
     exit 1
   fi
 }
 
-main
+main "$@"
