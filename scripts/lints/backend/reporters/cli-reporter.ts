@@ -53,18 +53,10 @@ export class CLIReporter extends BaseReporter {
       console.log(`${COLORS.CYAN}${serviceName}${COLORS.NC}`);
 
       const tasks = Array.from(serviceStatus.tasks.entries());
-      // Display tasks in two columns
-      for (let i = 0; i < tasks.length; i += 2) {
-        const [taskId1, taskStatus1] = tasks[i];
-        const task1Display = this.formatTask(taskId1, taskStatus1);
-
-        if (i + 1 < tasks.length) {
-          const [taskId2, taskStatus2] = tasks[i + 1];
-          const task2Display = this.formatTask(taskId2, taskStatus2);
-          console.log(`  ${task1Display}${' '.repeat(Math.max(0, 35 - this.stripAnsi(task1Display).length))}${task2Display}`);
-        } else {
-          console.log(`  ${task1Display}`);
-        }
+      // Display tasks in single column
+      for (const [taskId, taskStatus] of tasks) {
+        const taskDisplay = this.formatTask(taskId, taskStatus);
+        console.log(`  ${taskDisplay}`);
       }
       console.log('');
     }
