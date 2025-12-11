@@ -3,18 +3,15 @@ import Fastify from 'fastify'
 import { PORT } from './config'
 import { registerRoutes } from './routes'
 
-// Start server
 async function start() {
   const fastify = Fastify({
     logger: true,
   })
 
-  // Register CORS
   await fastify.register(cors, {
     origin: true,
   })
 
-  // Register all routes
   registerRoutes(fastify)
 
   try {

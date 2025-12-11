@@ -15,18 +15,15 @@ export async function pushToConfluence(
   decisionId: string,
   confluenceUrl: string
 ): Promise<ConfluenceUploadResult> {
-  // Check if decision exists
   const filePath = join(DECISIONS_DIR, `${decisionId}.json`)
-  await readFile(filePath, 'utf-8') // This will throw if file doesn't exist
+  await readFile(filePath, 'utf-8')
 
-  // Check environment variables
   if (!JIRA_USERNAME || !JIRA_TOKEN) {
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
   }
 
   const uploadScript = join(process.cwd(), '../../packages/decisions/scripts/uploadToConfluence.ts')
 
-  // Execute the upload script
   return new Promise((resolve, reject) => {
     const proc = spawn('bun', [uploadScript, '--url', confluenceUrl, filePath], {
       env: {

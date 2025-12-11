@@ -35,12 +35,10 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
           '**/temp/**',
           '**/tmp/**',
         ],
-        // Optimize watcher performance
         awaitWriteFinish: {
           stabilityThreshold: 100,
           pollInterval: 50,
         },
-        // Reduce system load
         usePolling: false,
         alwaysStat: false,
       })
@@ -63,7 +61,7 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
         }
 
         const relativePath = relative(baseDir, filePath)
-        const id = relativePath.slice(0, -5) // remove .json
+        const id = relativePath.slice(0, -5)
 
         try {
           const content = await readFile(filePath, 'utf-8')

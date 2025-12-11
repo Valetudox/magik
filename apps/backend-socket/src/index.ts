@@ -13,16 +13,13 @@ const fastify = Fastify({
   logger: true,
 }).withTypeProvider<ZodTypeProvider>()
 
-// Set Zod as the validator and serializer
 fastify.setValidatorCompiler(validatorCompiler)
 fastify.setSerializerCompiler(serializerCompiler)
 
-// Register CORS
 await fastify.register(cors, {
   origin: true,
 })
 
-// Create Socket.IO server
 const io = new Server(fastify.server, {
   cors: {
     origin: '*',
@@ -30,7 +27,6 @@ const io = new Server(fastify.server, {
   },
 })
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
   fastify.log.info(`Client connected: ${socket.id}`)
 
@@ -39,10 +35,8 @@ io.on('connection', (socket) => {
   })
 })
 
-// Register routes
 registerRoutes(fastify, io)
 
-// Start server
 async function start() {
   try {
     await fastify.listen({ port: PORT, host: '0.0.0.0' })

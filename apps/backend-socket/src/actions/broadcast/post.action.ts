@@ -17,7 +17,6 @@ export async function broadcastHandler(
   try {
     const clientCount = io.engine.clientsCount
 
-    // Broadcast to all connected clients
     io.emit(channel, payload)
 
     request.log.info(`Broadcasted to ${clientCount} client(s) on channel: ${channel}`)

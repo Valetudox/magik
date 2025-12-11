@@ -9,15 +9,11 @@ const fastify = Fastify({
   logger: true,
 })
 
-// Register CORS
 await fastify.register(cors, {
   origin: true,
 })
 
-// Register all routes
 registerRoutes(fastify)
-
-// Start server
 async function start() {
   try {
     const { getPort } = await import('../../../config/config.js')
