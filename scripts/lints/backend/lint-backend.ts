@@ -6,53 +6,32 @@ import { BackendLinterRunner } from './runner/backend-linter-runner';
 import { CIReporter } from './reporters/ci-reporter';
 import { CLIReporter } from './reporters/cli-reporter';
 
-// Detect if running in CI environment
-function isCIEnvironment(): boolean {
-  return !!(
-    process.env.CI ||
-    process.env.CONTINUOUS_INTEGRATION ||
-    process.env.GITHUB_ACTIONS ||
-    process.env.JENKINS_URL ||
-    process.env.GITLAB_CI ||
-    process.env.CIRCLECI ||
-    process.env.TRAVIS
-  );
-}
-
-// Detect if stdout is a TTY (terminal)
-function isTTY(): boolean {
-  return process.stdout.isTTY || false;
-}
-
 // Parse command line arguments
-function parseArgs(): { mode?: 'ci' | 'cli' } {
+function parseArgs(): { mode: 'ci' | 'cli' | null } {
   const args = process.argv.slice(2);
-  const result: { mode?: 'ci' | 'cli' } = {};
 
   for (const arg of args) {
     if (arg === '--mode=ci') {
-      result.mode = 'ci';
+      return { mode: 'ci' };
     } else if (arg === '--mode=cli') {
-      result.mode = 'cli';
+      return { mode: 'cli' };
     }
   }
 
-  return result;
+  return { mode: null };
 }
 
 async function main() {
   const args = parseArgs();
 
-  // Determine mode: CLI argument > CI environment detection > TTY detection
-  let mode: 'ci' | 'cli';
-
-  if (args.mode) {
-    mode = args.mode;
-  } else if (isCIEnvironment() || !isTTY()) {
-    mode = 'ci';
-  } else {
-    mode = 'cli';
+  // Mode argument is required
+  if (!args.mode) {
+    console.error('Error: --mode argument is required');
+    console.error('Usage: lint-backend.ts --mode=<ci|cli>');
+    process.exit(1);
   }
+
+  const mode = args.mode;
 
   // Get root directory (3 levels up from this script)
   const scriptDir = resolve(dirname(fileURLToPath(import.meta.url)));
