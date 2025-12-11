@@ -8,6 +8,8 @@ export default [
       'check-file': checkFile,
     },
     rules: {
+      'no-inline-comments': 'error',
+      'spaced-comment': ['error', 'never'],
       // Enforce naming conventions for backend files
       'check-file/filename-naming-convention': [
         'error',

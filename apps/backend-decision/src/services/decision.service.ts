@@ -14,7 +14,7 @@ export interface DecisionSummary {
   updatedAt: string
 }
 
-// Recursively find all JSON files and return their path-based IDs
+//Recursively find all JSON files and return their path-based IDs
 async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
   const files: string[] = []
@@ -24,7 +24,7 @@ async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]>
     if (entry.isDirectory()) {
       files.push(...(await findAllJsonFiles(fullPath, baseDir)))
     } else if (entry.name.endsWith('.json')) {
-      // Get relative path from baseDir, remove .json extension
+      //Get relative path from baseDir, remove .json extension
       const relativePath = relative(baseDir, fullPath).slice(0, -5)
       files.push(relativePath)
     }
@@ -42,7 +42,7 @@ export async function listAllDecisions(): Promise<DecisionSummary[]> {
       const fileStats = await stat(filePath)
       const decision = JSON.parse(content) as decision
 
-      // Extract just the filename part for the display name
+      //Extract just the filename part for the display name
       const filename = basename(id)
       const directory = dirname(id) === '.' ? '' : dirname(id)
 
@@ -74,7 +74,7 @@ export async function getDecisionById(id: string): Promise<decision & { id: stri
 }
 
 export async function createDecision(pathId: string): Promise<string> {
-  // Sanitize each part of the path: allow lowercase letters, numbers, hyphens, and underscores
+  //Sanitize each part of the path: allow lowercase letters, numbers, hyphens, and underscores
   const sanitized = pathId
     .split('/')
     .map((part) =>
@@ -94,7 +94,7 @@ export async function createDecision(pathId: string): Promise<string> {
 
   const filePath = join(DECISIONS_DIR, `${sanitized}.json`)
 
-  // Check if file already exists
+  //Check if file already exists
   try {
     await stat(filePath)
     throw new Error('Decision with this name already exists')
@@ -102,14 +102,14 @@ export async function createDecision(pathId: string): Promise<string> {
     if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e
     }
-    // File doesn't exist, continue
+    //File doesn't exist, continue
   }
 
-  // Create parent directories if needed
+  //Create parent directories if needed
   const parentDir = dirname(filePath)
   await mkdir(parentDir, { recursive: true })
 
-  // Create empty but valid decision
+  //Create empty but valid decision
   const emptyDecision: decision = {
     problemDefinition: '',
     components: [],

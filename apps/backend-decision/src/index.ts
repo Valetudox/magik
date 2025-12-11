@@ -10,15 +10,15 @@ const fastify = Fastify({
   logger: true,
 })
 
-// Register CORS
+//Register CORS
 await fastify.register(cors, {
   origin: true,
 })
 
-// Register all routes
+//Register all routes
 registerRoutes(fastify)
 
-// Start server
+//Start server
 async function start() {
   try {
     const { getPort } = await import('../../../config/config.js')
@@ -26,7 +26,7 @@ async function start() {
     await fastify.listen({ port, host: '0.0.0.0' })
     fastify.log.info(`Backend running at http://localhost:${port}`)
 
-    // Setup file watcher and subscribe to changes
+    //Setup file watcher and subscribe to changes
     const fileWatcher = setupFileWatcher(DECISIONS_DIR)
 
     fileWatcher.subscribe(async (event) => {

@@ -4,7 +4,7 @@ import type { TableDocument, TableDocumentSummary } from '@magik/tabledocuments'
 import { tableDocumentSchema } from '@magik/tabledocuments'
 import { TABLE_DOCUMENTS_DIR } from '../config.js'
 
-// Recursively find all JSON files and return their path-based IDs
+//Recursively find all JSON files and return their path-based IDs
 async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
   const files: string[] = []
@@ -14,7 +14,7 @@ async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]>
     if (entry.isDirectory()) {
       files.push(...(await findAllJsonFiles(fullPath, baseDir)))
     } else if (entry.name.endsWith('.json')) {
-      // Get relative path from baseDir, remove .json extension
+      //Get relative path from baseDir, remove .json extension
       const relativePath = relative(baseDir, fullPath).slice(0, -5)
       files.push(relativePath)
     }
@@ -32,7 +32,7 @@ export async function listAllTableDocuments(): Promise<TableDocumentSummary[]> {
       const fileStats = await stat(filePath)
       const document = JSON.parse(content) as TableDocument
 
-      // Extract just the filename part for the display name
+      //Extract just the filename part for the display name
       const filename = basename(id)
       const directory = dirname(id) === '.' ? '' : dirname(id)
 
@@ -63,7 +63,7 @@ export async function getTableDocumentById(id: string): Promise<TableDocument & 
 }
 
 export async function createTableDocument(pathId: string): Promise<string> {
-  // Sanitize each part of the path: allow lowercase letters, numbers, hyphens, and underscores
+  //Sanitize each part of the path: allow lowercase letters, numbers, hyphens, and underscores
   const sanitized = pathId
     .split('/')
     .map((part) =>
@@ -83,7 +83,7 @@ export async function createTableDocument(pathId: string): Promise<string> {
 
   const filePath = join(TABLE_DOCUMENTS_DIR, `${sanitized}.json`)
 
-  // Check if file already exists
+  //Check if file already exists
   try {
     await stat(filePath)
     throw new Error('Table document with this name already exists')
@@ -91,14 +91,14 @@ export async function createTableDocument(pathId: string): Promise<string> {
     if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e
     }
-    // File doesn't exist, continue
+    //File doesn't exist, continue
   }
 
-  // Create parent directories if needed
+  //Create parent directories if needed
   const parentDir = dirname(filePath)
   await mkdir(parentDir, { recursive: true })
 
-  // Create empty but valid table document
+  //Create empty but valid table document
   const emptyDocument: TableDocument = {
     table: [],
   }

@@ -1,4 +1,4 @@
-// Helper to generate kebab-case ID from name
+//Helper to generate kebab-case ID from name
 export function generateId(name: string): string {
   return name
     .toLowerCase()

@@ -13,16 +13,16 @@ export async function createUseCase(
   const content = await readFile(filePath, 'utf-8')
   const documentData = tableDocumentSchema.parse(JSON.parse(content))
 
-  // Generate new ID
+  //Generate new ID
   const newUseCase: TableRow = {
     id: generateRandomId(),
     ...useCase,
   }
 
-  // Validate the new use case
+  //Validate the new use case
   tableRowSchema.parse(newUseCase)
 
-  // Add to table
+  //Add to table
   documentData.table.push(newUseCase)
 
   await writeFile(filePath, JSON.stringify(documentData, null, 2), 'utf-8')
@@ -39,19 +39,19 @@ export async function updateUseCase(
   const content = await readFile(filePath, 'utf-8')
   const documentData = tableDocumentSchema.parse(JSON.parse(content))
 
-  // Find the use case
+  //Find the use case
   const useCaseIndex = documentData.table.findIndex((uc) => uc.id === useCaseId)
   if (useCaseIndex === -1) {
     throw new Error('Use case not found')
   }
 
-  // Update the use case
+  //Update the use case
   const updatedUseCase = {
     ...documentData.table[useCaseIndex],
     ...updates,
   }
 
-  // Validate the updated use case
+  //Validate the updated use case
   tableRowSchema.parse(updatedUseCase)
 
   documentData.table[useCaseIndex] = updatedUseCase
@@ -66,13 +66,13 @@ export async function deleteUseCase(documentId: string, useCaseId: string): Prom
   const content = await readFile(filePath, 'utf-8')
   const documentData = tableDocumentSchema.parse(JSON.parse(content))
 
-  // Find the use case
+  //Find the use case
   const useCaseIndex = documentData.table.findIndex((uc) => uc.id === useCaseId)
   if (useCaseIndex === -1) {
     throw new Error('Use case not found')
   }
 
-  // Remove the use case
+  //Remove the use case
   documentData.table.splice(useCaseIndex, 1)
 
   await writeFile(filePath, JSON.stringify(documentData, null, 2), 'utf-8')

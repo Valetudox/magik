@@ -10,40 +10,40 @@ interface AttachmentInfo {
   title: string
 }
 
-// Generate Mermaid PNG image using mmdc CLI
+//Generate Mermaid PNG image using mmdc CLI
 async function generateMermaidImage(mermaidCode: string): Promise<Buffer> {
   const tempMmdPath = `/tmp/mermaid-${Date.now()}.mmd`
   const tempPngPath = `/tmp/mermaid-${Date.now()}.png`
 
   try {
-    // Write mermaid code to temporary file
+    //Write mermaid code to temporary file
     await writeFile(tempMmdPath, mermaidCode, 'utf-8')
 
-    // Generate PNG using mermaid CLI
+    //Generate PNG using mermaid CLI
     execSync(`mmdc -i ${tempMmdPath} -o ${tempPngPath}`, {
       stdio: 'pipe',
     })
 
-    // Read the generated PNG
+    //Read the generated PNG
     const imageBuffer = await readFile(tempPngPath)
 
-    // Clean up temporary files
+    //Clean up temporary files
     execSync(`rm ${tempMmdPath} ${tempPngPath}`)
 
     return Buffer.from(imageBuffer)
   } catch (error: unknown) {
-    // Clean up on error
+    //Clean up on error
     try {
       execSync(`rm -f ${tempMmdPath} ${tempPngPath}`)
     } catch {
-      // Ignore cleanup errors
+      //Ignore cleanup errors
     }
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     throw new Error(`Failed to generate Mermaid diagram: ${errorMessage}`)
   }
 }
 
-// Get existing attachments for a Confluence page
+//Get existing attachments for a Confluence page
 async function getExistingAttachments(pageId: string): Promise<AttachmentInfo[]> {
   if (!JIRA_USERNAME || !JIRA_TOKEN) {
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
@@ -62,7 +62,7 @@ async function getExistingAttachments(pageId: string): Promise<AttachmentInfo[]>
   }
 }
 
-// Upload or update an attachment on a Confluence page
+//Upload or update an attachment on a Confluence page
 async function uploadAttachment(
   pageId: string,
   imageBuffer: Buffer,
@@ -72,7 +72,7 @@ async function uploadAttachment(
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
   }
 
-  // Check if attachment already exists
+  //Check if attachment already exists
   const existingAttachments = await getExistingAttachments(pageId)
   const existingAttachment = existingAttachments.find((att) => att.title === filename)
 
@@ -83,7 +83,7 @@ async function uploadAttachment(
   })
 
   if (existingAttachment) {
-    // Update existing attachment
+    //Update existing attachment
     const response = await axios.post<AttachmentInfo>(
       `https://emarsys.jira.com/wiki/rest/api/content/${pageId}/child/attachment/${existingAttachment.id}/data`,
       formData,
@@ -97,7 +97,7 @@ async function uploadAttachment(
     )
     return response.data
   } else {
-    // Create new attachment
+    //Create new attachment
     const response = await axios.post<{ results: AttachmentInfo[] }>(
       `https://emarsys.jira.com/wiki/rest/api/content/${pageId}/child/attachment`,
       formData,
@@ -113,17 +113,17 @@ async function uploadAttachment(
   }
 }
 
-// Convert table document to Confluence Storage Format
+//Convert table document to Confluence Storage Format
 function convertToConfluenceStorage(
   data: TableDocument,
   attachmentMap = new Map<number, string>()
 ): string {
   let html = ''
 
-  // Create table with full width
+  //Create table with full width
   html += '<table data-layout="full-width"><tbody>'
 
-  // Create table header row
+  //Create table header row
   html += '<tr>'
   html += '<th>#</th>'
   html += '<th>Use Case</th>'
@@ -134,23 +134,23 @@ function convertToConfluenceStorage(
   html += '<th>Notes</th>'
   html += '</tr>'
 
-  // Create rows for each table entry
+  //Create rows for each table entry
   data.table.forEach((row, index) => {
     html += '<tr>'
 
-    // Index column
+    //Index column
     html += `<td style="text-align: center; font-weight: 600;">${index + 1}</td>`
 
-    // Use Case column
+    //Use Case column
     html += `<td>${row.use_case}</td>`
 
-    // Diagram column
+    //Diagram column
     if (attachmentMap.has(index)) {
-      // Use uploaded attachment
+      //Use uploaded attachment
       const filename = attachmentMap.get(index)
       html += `<td><ac:image ac:width="400"><ri:attachment ri:filename="${filename}" /></ac:image></td>`
     } else if (row.diagram) {
-      // Fallback to Mermaid macro if attachment not available
+      //Fallback to Mermaid macro if attachment not available
       html +=
         '<td><ac:structured-macro ac:name="mermaid" ac:schema-version="1"><ac:plain-text-body><![CDATA['
       html += row.diagram
@@ -159,7 +159,7 @@ function convertToConfluenceStorage(
       html += '<td>—</td>'
     }
 
-    // Required Context column (as bullet list)
+    //Required Context column (as bullet list)
     html += '<td>'
     if (row.required_context && row.required_context.length > 0) {
       html += '<ul>'
@@ -172,7 +172,7 @@ function convertToConfluenceStorage(
     }
     html += '</td>'
 
-    // Required Tools column (as bullet list)
+    //Required Tools column (as bullet list)
     html += '<td>'
     if (row.required_tools && row.required_tools.length > 0) {
       html += '<ul>'
@@ -185,7 +185,7 @@ function convertToConfluenceStorage(
     }
     html += '</td>'
 
-    // Potential Interactions column (as bullet list)
+    //Potential Interactions column (as bullet list)
     html += '<td>'
     if (row.potential_interactions && row.potential_interactions.length > 0) {
       html += '<ul>'
@@ -198,7 +198,7 @@ function convertToConfluenceStorage(
     }
     html += '</td>'
 
-    // Notes column (as bullet list)
+    //Notes column (as bullet list)
     html += '<td>'
     if (row.notes && row.notes.length > 0) {
       html += '<ul>'
@@ -219,7 +219,7 @@ function convertToConfluenceStorage(
   return html
 }
 
-// Get current version of a Confluence page
+//Get current version of a Confluence page
 async function getPageVersion(pageId: string): Promise<number> {
   if (!JIRA_USERNAME || !JIRA_TOKEN) {
     throw new Error('JIRA_USERNAME and JIRA_TOKEN environment variables are required')
@@ -235,7 +235,7 @@ async function getPageVersion(pageId: string): Promise<number> {
   return response.data.version.number
 }
 
-// Update Confluence page content
+//Update Confluence page content
 async function updatePageContent(
   pageId: string,
   content: string,
@@ -266,7 +266,7 @@ async function updatePageContent(
   )
 }
 
-// Extract page ID from Confluence URL
+//Extract page ID from Confluence URL
 function extractPageId(url: string): string {
   const regex = /pages\/(\d+)/
   const match = regex.exec(url)
@@ -276,7 +276,7 @@ function extractPageId(url: string): string {
   return match[1]
 }
 
-// Main function to push table document to Confluence
+//Main function to push table document to Confluence
 export async function pushToConfluence(document: TableDocument): Promise<void> {
   if (!document.confluence_url) {
     throw new Error('Document does not have a Confluence URL')
@@ -284,7 +284,7 @@ export async function pushToConfluence(document: TableDocument): Promise<void> {
 
   const pageId = extractPageId(document.confluence_url)
 
-  // Upload diagram images and build attachment map
+  //Upload diagram images and build attachment map
   const attachmentMap = new Map<number, string>()
 
   for (let i = 0; i < document.table.length; i++) {
@@ -297,12 +297,12 @@ export async function pushToConfluence(document: TableDocument): Promise<void> {
     }
   }
 
-  // Convert document to Confluence Storage Format
+  //Convert document to Confluence Storage Format
   const confluenceContent = convertToConfluenceStorage(document, attachmentMap)
 
-  // Get current page version
+  //Get current page version
   const currentVersion = await getPageVersion(pageId)
 
-  // Update page content
+  //Update page content
   await updatePageContent(pageId, confluenceContent, currentVersion)
 }

@@ -32,7 +32,7 @@ export async function createDriver(
 
   decisionData.decisionDrivers.push(newDriver)
 
-  // Create evaluation records for all existing options
+  //Create evaluation records for all existing options
   for (const option of decisionData.options) {
     decisionData.evaluationMatrix.push({
       optionId: option.id,

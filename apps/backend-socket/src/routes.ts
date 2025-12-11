@@ -30,7 +30,7 @@ const HealthResponseSchema = z.object({
 })
 
 export function registerRoutes(fastify: FastifyInstance, io: Server) {
-  // Health check endpoint
+  //Health check endpoint
   fastify.get(
     '/health',
     {
@@ -49,7 +49,7 @@ export function registerRoutes(fastify: FastifyInstance, io: Server) {
     }
   )
 
-  // POST /api/broadcast - Broadcast event to all Socket.IO clients
+  //POST /api/broadcast - Broadcast event to all Socket.IO clients
   fastify.post(
     '/api/broadcast',
     {

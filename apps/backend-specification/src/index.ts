@@ -7,15 +7,15 @@ async function start() {
     logger: true,
   })
 
-  // Register CORS middleware
+  //Register CORS middleware
   await fastify.register(cors, {
     origin: true,
   })
 
-  // Register routes
+  //Register routes
   registerRoutes(fastify)
 
-  // Start server
+  //Start server
   const { getPort } = await import('../../../config/config.js')
   const port = getPort('BACKEND_SPECIFICATION')
 

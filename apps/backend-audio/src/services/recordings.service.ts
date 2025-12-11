@@ -7,17 +7,14 @@ export async function listRecordings(): Promise<Recording[]> {
   try {
     const files = await readdir(RECORDINGS_DIR)
 
-    // Filter for audio files only (wav, mp3)
     function isAudioFile(file: string) {
       const ext = extname(file).toLowerCase()
       return ext === '.wav' || ext === '.mp3'
     }
     const audioFiles = files.filter(isAudioFile)
 
-    // Process each audio file
     const recordings = await Promise.all(audioFiles.map(getRecordingInfo))
 
-    // Sort by modified date (newest first)
     function compareByModifiedDate(a: Recording, b: Recording) {
       return new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime()
     }
@@ -34,13 +31,12 @@ export async function getRecordingInfo(filename: string): Promise<Recording> {
   const ext = extname(filename).toLowerCase()
   const baseName = basename(filename, ext)
 
-  // Check for transcript file
   const transcriptPath = join(RECORDINGS_DIR, `${baseName}_transcript.json`)
   let hasTranscript = false
   let transcriptMetadata = undefined
 
-  try {
-    const transcriptContent = await readFile(transcriptPath, 'utf-8')
+  const transcriptContent = await readFile(transcriptPath, 'utf-8').catch(() => null)
+  if (transcriptContent) {
     const transcript = JSON.parse(transcriptContent) as TranscriptMetadata
     hasTranscript = true
 
@@ -51,8 +47,6 @@ export async function getRecordingInfo(filename: string): Promise<Recording> {
       jobId: transcript.job.id,
       transcriptCreatedAt: transcript.metadata.created_at,
     }
-  } catch (_error) {
-    // Transcript doesn't exist or couldn't be read
   }
 
   return {
@@ -71,7 +65,6 @@ export async function getRecordingById(id: string): Promise<Recording | null> {
   try {
     const files = await readdir(RECORDINGS_DIR)
 
-    // Find the audio file with matching ID
     function matchesId(file: string) {
       const ext = extname(file).toLowerCase()
       const baseName = basename(file, ext)

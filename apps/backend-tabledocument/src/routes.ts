@@ -11,26 +11,26 @@ import { listTableDocuments } from './actions/table-documents/get.action.js'
 import { createTableDocument } from './actions/table-documents/post.action.js'
 
 export function registerRoutes(fastify: FastifyInstance) {
-  // Health check endpoint
+  //Health check endpoint
   fastify.get('/health', () => {
     return { status: 'ok' }
   })
 
-  // Table document endpoints
+  //Table document endpoints
   fastify.get('/api/table-documents', listTableDocuments)
   fastify.post('/api/table-documents', createTableDocument)
   fastify.get('/api/table-documents/:id', getTableDocument)
   fastify.patch('/api/table-documents/:id', updateTableDocument)
   fastify.delete('/api/table-documents/:id', deleteTableDocument)
 
-  // Use cases endpoints
+  //Use cases endpoints
   fastify.post('/api/table-documents/:id/use-cases', createUseCase)
   fastify.patch('/api/table-documents/:id/use-cases/:useCaseId', updateUseCase)
   fastify.delete('/api/table-documents/:id/use-cases/:useCaseId', deleteUseCase)
 
-  // Agent endpoint
+  //Agent endpoint
   fastify.post('/api/table-documents/:id/agent', runAgent)
 
-  // Confluence push endpoint
+  //Confluence push endpoint
   fastify.post('/api/table-documents/:id/push-to-confluence', pushToConfluence)
 }
