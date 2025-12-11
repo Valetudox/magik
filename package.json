@@ -31,6 +31,7 @@
     "dev:socket": "bun run --cwd apps/backend-socket dev",
     "dev": "concurrently -n backend,socket,ui -c blue,yellow,green \"bun run dev:backend\" \"bun run dev:socket\" \"bun run dev:ui\"",
     "lint:backend": "./scripts/lints/lint-backend.sh",
+    "lint:backend:ci": "./scripts/lints/lint-backend.sh --mode=ci",
     "lint:frontend": "./scripts/lints/lint-frontend.sh",
     "lint:openapi": "node node_modules/.bin/spectral lint 'apps/backend-*/openapi.yaml' --format stylish",
     "lint:openapi:json": "node node_modules/.bin/spectral lint 'apps/backend-*/openapi.yaml' --format json",
