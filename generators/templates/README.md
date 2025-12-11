@@ -1,11 +1,11 @@
-# Plop Templates
+# Generator Templates
 
 This directory contains Handlebars templates used by plop.js for code generation.
 
 ## Template Structure
 
 ```
-plop-templates/
+generators/templates/
 ├── api-action/              # API action handler templates
 │   └── action.ts.hbs
 ├── backend-service/         # Complete backend service templates
@@ -67,7 +67,7 @@ export function {{camelCase functionName}}() {
 
 ## Adding New Templates
 
-1. Create a new directory in `plop-templates/`
+1. Create a new directory in `generators/templates/`
 2. Add `.hbs` template files
 3. Update `plopfile.js` to add the generator configuration
 4. Test the new generator
@@ -84,6 +84,6 @@ export function {{camelCase functionName}}() {
 ## Related Files
 
 - `/plopfile.js` - Main plop configuration
-- `/plop-helpers/` - Custom helper functions
+- `/generators/helpers/` - Custom helper functions
 - `/documentation/CODE_GENERATION.md` - Usage documentation
 - `/PLOP_EXAMPLES.md` - Practical examples

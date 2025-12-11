@@ -8,9 +8,6 @@ This project uses [Plop.js](https://plopjs.com/) to generate boilerplate code an
 - [Available Generators](#available-generators)
   - [Backend Service Generator](#backend-service-generator)
   - [API Action Generator](#api-action-generator)
-  - [ESLint Rule Generator](#eslint-rule-generator)
-  - [Documentation Generator](#documentation-generator)
-  - [Validation Script Generator](#validation-script-generator)
 - [Project Structure](#project-structure)
 - [Custom Helpers](#custom-helpers)
 - [Extending Generators](#extending-generators)
@@ -28,9 +25,6 @@ bun run plop
 # Run a specific generator directly
 bun run plop backend-service
 bun run plop api-action
-bun run plop eslint-rule
-bun run plop documentation
-bun run plop validation-script
 ```
 
 ## Available Generators
@@ -137,136 +131,28 @@ The generator automatically:
 - Generates appropriate function signatures based on HTTP method
 - Includes error handling boilerplate
 
-### ESLint Rule Generator
-
-Generates a custom ESLint rule with test scaffolding.
-
-**Command:**
-```bash
-bun run plop eslint-rule
-```
-
-**Prompts:**
-- Rule name (kebab-case, e.g., `no-console-log`)
-- Rule description
-
-**Generated Files:**
-```
-eslint-rules/
-├── {rule-name}.js          # Rule implementation
-└── tests/
-    └── {rule-name}.test.js # Rule tests
-```
-
-**Example Rule Structure:**
-```javascript
-// eslint-rules/no-console-log.js
-export default {
-  meta: {
-    type: 'problem',
-    docs: {
-      description: 'Disallow console.log statements',
-      recommended: false,
-    },
-    fixable: null,
-    schema: [],
-    messages: {
-      noConsoleLog: 'Disallow console.log statements',
-    },
-  },
-
-  create(context) {
-    return {
-      // TODO: Implement your rule logic here
-    }
-  },
-}
-```
-
-### Documentation Generator
-
-Generates standardized markdown documentation with a consistent template.
-
-**Command:**
-```bash
-bun run plop documentation
-```
-
-**Prompts:**
-- Documentation type (backend, frontend, api, architecture, guide)
-- Document title
-- Filename (without .md extension)
-
-**Generated File:**
-```
-documentation/{type}/{filename}.md
-```
-
-The template includes standard sections:
-- Overview
-- Purpose
-- Usage (with code examples)
-- Details
-- Best Practices
-- Related Documentation
-
-### Validation Script Generator
-
-Generates a shell script for validation or linting purposes.
-
-**Command:**
-```bash
-bun run plop validation-script
-```
-
-**Prompts:**
-- Script name (e.g., `validate-routes`, `check-imports`)
-- Script description
-
-**Generated File:**
-```bash
-#!/usr/bin/env bash
-# {description}
-
-set -e
-
-echo "Running {script-name}..."
-
-# TODO: Implement your validation logic here
-
-echo "✓ {script-name} completed successfully"
-```
-
-The script is placed in `scripts/lints/{script-name}.sh` with executable permissions.
-
 ## Project Structure
 
 ```
 .
 ├── plopfile.js                    # Main Plop configuration
-├── plop-templates/                # Handlebars templates
-│   ├── backend-service/
-│   │   ├── src/
-│   │   │   ├── index.ts.hbs
-│   │   │   ├── routes.ts.hbs
-│   │   │   └── actions/
-│   │   ├── package.json.hbs
-│   │   ├── tsconfig.json.hbs
-│   │   ├── Dockerfile.hbs
-│   │   └── openapi.yaml.hbs
-│   ├── api-action/
-│   │   └── action.ts.hbs
-│   ├── eslint-rule/
-│   │   ├── rule.js.hbs
-│   │   └── test.js.hbs
-│   ├── documentation/
-│   │   └── doc.md.hbs
-│   └── validation-script/
-│       └── script.sh.hbs
-└── plop-helpers/                  # Custom helper functions
-    ├── route-parser.js            # Route parsing utilities
-    ├── string-helpers.js          # String transformation helpers
-    └── validators.js              # Input validation functions
+└── generators/                    # Code generation files
+    ├── templates/                 # Handlebars templates
+    │   ├── backend-service/
+    │   │   ├── src/
+    │   │   │   ├── index.ts.hbs
+    │   │   │   ├── routes.ts.hbs
+    │   │   │   └── actions/
+    │   │   ├── package.json.hbs
+    │   │   ├── tsconfig.json.hbs
+    │   │   ├── Dockerfile.hbs
+    │   │   └── openapi.yaml.hbs
+    │   └── api-action/
+    │       └── action.ts.hbs
+    └── helpers/                   # Custom helper functions
+        ├── route-parser.js        # Route parsing utilities
+        ├── string-helpers.js      # String transformation helpers
+        └── validators.js          # Input validation functions
 ```
 
 ## Custom Helpers
@@ -295,7 +181,7 @@ The code generators use several custom Handlebars helpers:
 
 To add a new generator:
 
-1. **Create templates** in `plop-templates/{generator-name}/`
+1. **Create templates** in `generators/templates/{generator-name}/`
 2. **Add generator configuration** in `plopfile.js`:
 
 ```javascript
@@ -313,7 +199,7 @@ plop.setGenerator('my-generator', {
     {
       type: 'add',
       path: 'path/to/{{myInput}}.ts',
-      templateFile: 'plop-templates/my-generator/template.hbs'
+      templateFile: 'generators/templates/my-generator/template.hbs'
     }
   ]
 })
@@ -322,7 +208,7 @@ plop.setGenerator('my-generator', {
 3. **Create Handlebars templates** using `.hbs` extension:
 
 ```handlebars
-// plop-templates/my-generator/template.hbs
+// generators/templates/my-generator/template.hbs
 export class {{pascalCase myInput}} {
   constructor() {
     // Generated code
