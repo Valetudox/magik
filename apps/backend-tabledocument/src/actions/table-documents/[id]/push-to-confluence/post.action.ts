@@ -13,10 +13,8 @@ export async function pushToConfluence(
   try {
     const { id } = request.params
 
-    //Get the document
     const document = await getTableDocumentById(id)
 
-    //Push to Confluence
     await pushToConfluenceService(document)
 
     return { success: true }

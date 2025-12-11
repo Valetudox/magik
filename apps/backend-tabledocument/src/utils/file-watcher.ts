@@ -35,12 +35,10 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
           '**/temp/**',
           '**/tmp/**',
         ],
-        //Optimize watcher performance
         awaitWriteFinish: {
           stabilityThreshold: 100,
           pollInterval: 50,
         },
-        //Reduce system load
         usePolling: false,
         alwaysStat: false,
       })
