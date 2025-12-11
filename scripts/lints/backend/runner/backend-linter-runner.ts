@@ -39,10 +39,10 @@ export class BackendLinterRunner {
       });
     }
 
-    // Run linting for each service sequentially
-    for (const service of backendServices) {
-      await this.runServiceLinting(service);
-    }
+    // Run linting for all services concurrently
+    await Promise.all(
+      backendServices.map(service => this.runServiceLinting(service))
+    );
 
     // Notify completion
     this.reporter.onComplete(this.services);
