@@ -1,3 +1,6 @@
+---
+to: apps/backend-<%= serviceName %>/tsconfig.json
+---
 {
   "compilerOptions": {
     "target": "ES2022",

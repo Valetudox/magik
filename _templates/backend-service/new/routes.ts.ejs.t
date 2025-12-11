@@ -1,3 +1,6 @@
+---
+to: apps/backend-<%= serviceName %>/src/routes.ts
+---
 import type { FastifyInstance } from 'fastify'
 
 export function registerRoutes(fastify: FastifyInstance) {
@@ -8,6 +11,6 @@ export function registerRoutes(fastify: FastifyInstance) {
 
   // Add your API routes here
   // Example:
-  // fastify.get('/api/{{serviceName}}', list{{pascalCase serviceName}})
-  // fastify.post('/api/{{serviceName}}', create{{pascalCase serviceName}})
+  // fastify.get('/api/<%= serviceName %>', list<%= h.changeCase.pascalCase(serviceName) %>)
+  // fastify.post('/api/<%= serviceName %>', create<%= h.changeCase.pascalCase(serviceName) %>)
 }

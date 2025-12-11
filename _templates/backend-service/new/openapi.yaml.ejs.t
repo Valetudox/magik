@@ -1,10 +1,13 @@
+---
+to: apps/backend-<%= serviceName %>/openapi.yaml
+---
 openapi: 3.0.0
 info:
-  title: {{pascalCase serviceName}} API
-  description: {{description}}
+  title: <%= h.changeCase.pascalCase(serviceName) %> API
+  description: <%= description %>
   version: 1.0.0
 servers:
-  - url: http://localhost:{{port}}
+  - url: http://localhost:<%= port %>
     description: Local development server
 paths:
   /health:

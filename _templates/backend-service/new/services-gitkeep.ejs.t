@@ -1,3 +1,6 @@
+---
+to: apps/backend-<%= serviceName %>/src/services/.gitkeep
+---
 # Service files go here
 # Follow the pattern: [resource].service.ts
 # Example: decision.service.ts, option.service.ts
