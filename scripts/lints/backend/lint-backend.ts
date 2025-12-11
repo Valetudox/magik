@@ -1,0 +1,108 @@
+#!/usr/bin/env bun
+
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { BackendLinterRunner } from './runner/backend-linter-runner';
+import { CIReporter } from './reporters/ci-reporter';
+import { CLIReporter } from './reporters/cli-reporter';
+
+// Detect if running in CI environment
+function isCIEnvironment(): boolean {
+  return !!(
+    process.env.CI ||
+    process.env.CONTINUOUS_INTEGRATION ||
+    process.env.GITHUB_ACTIONS ||
+    process.env.JENKINS_URL ||
+    process.env.GITLAB_CI ||
+    process.env.CIRCLECI ||
+    process.env.TRAVIS
+  );
+}
+
+// Detect if stdout is a TTY (terminal)
+function isTTY(): boolean {
+  return process.stdout.isTTY || false;
+}
+
+// Parse command line arguments
+function parseArgs(): { mode?: 'ci' | 'cli' } {
+  const args = process.argv.slice(2);
+  const result: { mode?: 'ci' | 'cli' } = {};
+
+  for (const arg of args) {
+    if (arg === '--mode=ci') {
+      result.mode = 'ci';
+    } else if (arg === '--mode=cli') {
+      result.mode = 'cli';
+    }
+  }
+
+  return result;
+}
+
+async function main() {
+  const args = parseArgs();
+
+  // Determine mode: CLI argument > CI environment detection > TTY detection
+  let mode: 'ci' | 'cli';
+
+  if (args.mode) {
+    mode = args.mode;
+  } else if (isCIEnvironment() || !isTTY()) {
+    mode = 'ci';
+  } else {
+    mode = 'cli';
+  }
+
+  // Get root directory (3 levels up from this script)
+  const scriptDir = resolve(dirname(fileURLToPath(import.meta.url)));
+  const rootDir = resolve(scriptDir, '..', '..', '..');
+
+  // Create appropriate reporter
+  const reporter = mode === 'ci' ? new CIReporter() : new CLIReporter();
+
+  // Header for CI mode
+  if (mode === 'ci') {
+    console.log('\x1b[0;34m========================================\x1b[0m');
+    console.log('\x1b[0;34m  Backend Services Linting\x1b[0m');
+    console.log('\x1b[0;34m========================================\x1b[0m');
+    console.log('');
+
+    // Show discovered services
+    const { readdirSync, statSync } = await import('fs');
+    const { join } = await import('path');
+    const appsDir = join(rootDir, 'apps');
+    const services: string[] = [];
+
+    try {
+      const entries = readdirSync(appsDir);
+      for (const entry of entries) {
+        if (entry.startsWith('backend-')) {
+          const fullPath = join(appsDir, entry);
+          if (statSync(fullPath).isDirectory()) {
+            services.push(entry);
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore errors
+    }
+
+    if (services.length > 0) {
+      console.log(`\x1b[0;36mFound ${services.length} backend service(s): ${services.join(', ')}\x1b[0m`);
+      console.log('');
+    }
+  }
+
+  // Run linter
+  const runner = new BackendLinterRunner(rootDir, reporter);
+  const success = await runner.run();
+
+  // Exit with appropriate code
+  process.exit(success ? 0 : 1);
+}
+
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
