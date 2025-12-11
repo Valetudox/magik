@@ -28,7 +28,7 @@ gh issue view $1 --json title,url
 ```
 
 2. **Create async PR with issue URL and title**
-   Use the async skill to create a PR with description: "https://github.com/Valetudox/magik/issues/$1 implement this please"
+   Use the async skill to create a PR with description from the issue.
 
 3. **Add label to issue**
 
