@@ -1,0 +1,111 @@
+name: Claude Code - PR Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-comment-response:
+    # Only run on PR comments, not issue comments
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Get PR details
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_data=$(gh api ${{ github.event.issue.pull_request.url }})
+          echo "head_ref=$(echo "$pr_data" | jq -r .head.ref)" >> $GITHUB_OUTPUT
+          echo "pr_number=$(echo "$pr_data" | jq -r .number)" >> $GITHUB_OUTPUT
+          echo "pr_title=$(echo "$pr_data" | jq -r .title)" >> $GITHUB_OUTPUT
+          echo "pr_body=$(echo "$pr_data" | jq -r .body)" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Fetch PR context
+        id: fetch-context
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Fetch all comments for context
+          echo "all-comments<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/issues/${{ steps.pr.outputs.pr_number }}/comments --jq '
+            [.[] | {
+              body: .body,
+              user: .user.login,
+              created_at: .created_at
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Fetch files changed
+          echo "files-changed<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.pr_number }}/files --jq '
+            [.[] | {
+              filename: .filename,
+              status: .status,
+              additions: .additions,
+              deletions: .deletions
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Claude Code Comment Response
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: claude-opus-4.5
+          show_full_output: true
+          prompt: |
+            A new comment has been posted on this pull request. Please address the request.
+
+            **PR Details:**
+            - Title: ${{ steps.pr.outputs.pr_title }}
+            - PR #${{ steps.pr.outputs.pr_number }}
+            - Description: ${{ steps.pr.outputs.pr_body }}
+
+            **New Comment:**
+            - Author: ${{ github.event.comment.user.login }}
+            - Comment: ${{ github.event.comment.body }}
+            - Posted at: ${{ github.event.comment.created_at }}
+
+            **Files Changed in PR:**
+            ${{ steps.fetch-context.outputs.files-changed }}
+
+            **All Comments (Context):**
+            ${{ steps.fetch-context.outputs.all-comments }}
+
+            **Your Task:**
+            1. Read and understand the new comment above
+            2. If it's a request for changes, create a todo list
+            3. Implement the requested changes
+            4. Commit and push after each logical step
+            5. If it's a question, investigate and respond by commenting on the PR
+
+            **Important:** Focus on the most recent comment but keep the full conversation context in mind.
+
+          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
