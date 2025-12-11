@@ -45,7 +45,6 @@ export interface SpecificationDetail extends Specification {
   id: string
 }
 
-//Recursively find all JSON files in a directory
 async function findJsonFiles(dir: string): Promise<string[]> {
   const files: string[] = []
 
@@ -56,16 +55,13 @@ async function findJsonFiles(dir: string): Promise<string[]> {
       const fullPath = join(dir, entry.name)
 
       if (entry.isDirectory()) {
-        //Recursively search subdirectories
         const subFiles = await findJsonFiles(fullPath)
         files.push(...subFiles)
       } else if (entry.isFile() && entry.name.endsWith('.json')) {
-        //Add JSON files
         files.push(fullPath)
       }
     }
   } catch (error) {
-    //Skip directories we can't read
     console.warn(`Could not read directory: ${dir}`, error)
   }
 
@@ -74,24 +70,18 @@ async function findJsonFiles(dir: string): Promise<string[]> {
 
 export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
   try {
-    //Recursively find all JSON files
     const jsonFiles = await findJsonFiles(SPECIFICATIONS_DIR)
 
     const summaries: SpecificationSummary[] = []
 
-    //Process each JSON file
     for (const filePath of jsonFiles) {
       try {
         const content = await readFile(filePath, 'utf-8')
         const spec = JSON.parse(content) as Specification
 
-        //Extract ID from relative path without .json extension
-        //e.g., "projects/diagram-management/specification.json" -> "projects/diagram-management/specification"
         const relativePath = relative(SPECIFICATIONS_DIR, filePath)
         const id = relativePath.slice(0, -5)
 
-        //Extract project name from path
-        //e.g., "projects/diagram-management/specification" -> "diagram-management"
         const pathParts = id.split('/')
         const project = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'unknown'
 
@@ -103,7 +93,6 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
           project,
         })
       } catch (error) {
-        //Skip invalid JSON files, continue processing
         console.warn(`Skipping invalid specification file: ${filePath}`, error)
         continue
       }
@@ -111,7 +100,6 @@ export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
 
     return summaries
   } catch (error) {
-    //If directory doesn't exist, return empty array
     const nodeError = error as NodeError
     if (nodeError.code === 'ENOENT') {
       return []
