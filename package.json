@@ -30,7 +30,7 @@
     "dev:ui": "concurrently -n ui-decision,ui-audio,ui-specification,ui-tabledocument -c green,cyan,purple,yellow \"bun run dev:ui:decision\" \"bun run dev:ui:audio\" \"bun run dev:ui:specification\" \"bun run dev:ui:tabledocument\"",
     "dev:socket": "bun run --cwd apps/backend-socket dev",
     "dev": "concurrently -n backend,socket,ui -c blue,yellow,green \"bun run dev:backend\" \"bun run dev:socket\" \"bun run dev:ui\"",
-    "lint:backend": "./scripts/lints/lint-backend.sh",
+    "lint:backend": "./scripts/lints/lint-backend.sh --mode=cli",
     "lint:backend:ci": "./scripts/lints/lint-backend.sh --mode=ci",
     "lint:frontend": "./scripts/lints/lint-frontend.sh",
     "lint:openapi": "node node_modules/.bin/spectral lint 'apps/backend-*/openapi.yaml' --format stylish",

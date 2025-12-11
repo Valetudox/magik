@@ -6,7 +6,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Determine mode based on environment if not provided
+# Check if mode is provided
 MODE=""
 for arg in "$@"; do
   if [[ "$arg" == --mode=* ]]; then
@@ -15,18 +15,11 @@ for arg in "$@"; do
   fi
 done
 
-# If no mode specified, detect from environment
+# Mode is required
 if [ -z "$MODE" ]; then
-  if [ -n "$CI" ] || [ -n "$CONTINUOUS_INTEGRATION" ] || [ -n "$GITHUB_ACTIONS" ] || \
-     [ -n "$JENKINS_URL" ] || [ -n "$GITLAB_CI" ] || [ -n "$CIRCLECI" ] || [ -n "$TRAVIS" ]; then
-    MODE="--mode=ci"
-  elif [ -t 1 ]; then
-    # stdout is a TTY (interactive terminal)
-    MODE="--mode=cli"
-  else
-    # Not a TTY (piped or redirected)
-    MODE="--mode=ci"
-  fi
+  echo "Error: --mode argument is required"
+  echo "Usage: $0 --mode=<ci|cli>"
+  exit 1
 fi
 
 # Execute TypeScript implementation with mode
