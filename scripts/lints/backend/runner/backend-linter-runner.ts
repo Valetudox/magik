@@ -7,15 +7,32 @@ export class BackendLinterRunner {
   private rootDir: string;
   private reporter: Reporter;
   private services: Map<string, ServiceStatus> = new Map();
+  private targetServices?: string[];
 
-  constructor(rootDir: string, reporter: Reporter) {
+  constructor(rootDir: string, reporter: Reporter, targetServices?: string[]) {
     this.rootDir = rootDir;
     this.reporter = reporter;
+    this.targetServices = targetServices;
   }
 
   async run(): Promise<boolean> {
     // Discover backend services
-    const backendServices = this.discoverBackendServices();
+    const allServices = this.discoverBackendServices();
+
+    // Filter services if specific ones were requested
+    const backendServices = this.targetServices
+      ? allServices.filter(s => this.targetServices!.includes(s))
+      : allServices;
+
+    // Validate requested services exist
+    if (this.targetServices && this.targetServices.length > 0) {
+      const invalidServices = this.targetServices.filter(s => !allServices.includes(s));
+      if (invalidServices.length > 0) {
+        console.error(`Error: Invalid service(s): ${invalidServices.join(', ')}`);
+        console.error(`Available services: ${allServices.join(', ')}`);
+        return false;
+      }
+    }
 
     if (backendServices.length === 0) {
       console.log('No backend services found');
@@ -49,6 +66,10 @@ export class BackendLinterRunner {
 
     // Check if all services passed
     return this.allServicesPassed();
+  }
+
+  getServices(): string[] {
+    return this.discoverBackendServices();
   }
 
   private discoverBackendServices(): string[] {
