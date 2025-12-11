@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, Reporter, ServiceStatus, TaskStatus, TaskResult } from '../types';
-import { validateStructure, validateConfig, validateRouteActions } from '../validators';
+import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure } from '../validators';
 
 export class BackendLinterRunner {
   private rootDir: string;
@@ -254,23 +254,20 @@ export class BackendLinterRunner {
   }
 
   private async runIndexStructureValidation(service: string): Promise<TaskResult> {
-    const scriptPath = join(this.rootDir, 'scripts', 'lints', 'backend', 'validate-index-structure.sh');
+    const servicePath = join(this.rootDir, 'apps', service);
 
     try {
-      const output = execSync(`"${scriptPath}" "${service}"`, {
-        cwd: this.rootDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+      const result = validateIndexStructure(service, servicePath, this.rootDir);
 
       return {
-        success: true,
-        output,
+        success: result.success,
+        output: result.success ? result.output : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.stdout || error.stderr || error.message,
+        error: error.message || String(error),
       };
     }
   }
