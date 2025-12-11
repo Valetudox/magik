@@ -1,4 +1,4 @@
-# Plop Helpers
+# Generator Helpers
 
 This directory contains custom JavaScript helper functions used by plop.js generators.
 
@@ -104,9 +104,9 @@ These helpers are registered in `plopfile.js` and available in all Handlebars te
 Helpers are imported and registered at the top of `plopfile.js`:
 
 ```javascript
-import { extractParams, routeToPath } from './plop-helpers/route-parser.js'
-import { camelCase, pascalCase } from './plop-helpers/string-helpers.js'
-import { validateServiceName } from './plop-helpers/validators.js'
+import { extractParams, routeToPath } from './generators/helpers/route-parser.js'
+import { camelCase, pascalCase } from './generators/helpers/string-helpers.js'
+import { validateServiceName } from './generators/helpers/validators.js'
 
 export default function (plop) {
   plop.setHelper('camelCase', camelCase)
@@ -135,5 +135,5 @@ export default function (plop) {
 ## Related Files
 
 - `/plopfile.js` - Helper registration
-- `/plop-templates/` - Templates that use helpers
+- `/generators/templates/` - Templates that use helpers
 - `/documentation/CODE_GENERATION.md` - Usage documentation

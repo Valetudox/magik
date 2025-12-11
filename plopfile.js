@@ -1,8 +1,8 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { extractParams, routeToPath, calculateImportDepth, hasParams } from './plop-helpers/route-parser.js'
-import { camelCase, pascalCase, upperCase, contains } from './plop-helpers/string-helpers.js'
-import { validateServiceName, validatePort, validateRoute, validateFunctionName } from './plop-helpers/validators.js'
+import { extractParams, routeToPath, calculateImportDepth, hasParams } from './generators/helpers/route-parser.js'
+import { camelCase, pascalCase, upperCase, contains } from './generators/helpers/string-helpers.js'
+import { validateServiceName, validatePort, validateRoute, validateFunctionName } from './generators/helpers/validators.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -68,52 +68,52 @@ export default function (plop) {
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/src/index.ts',
-        templateFile: 'plop-templates/backend-service/src/index.ts.hbs'
+        templateFile: 'generators/templates/backend-service/src/index.ts.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/src/routes.ts',
-        templateFile: 'plop-templates/backend-service/src/routes.ts.hbs'
+        templateFile: 'generators/templates/backend-service/src/routes.ts.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/src/actions/.gitkeep',
-        templateFile: 'plop-templates/backend-service/src/actions/.gitkeep.hbs'
+        templateFile: 'generators/templates/backend-service/src/actions/.gitkeep.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/src/services/.gitkeep',
-        templateFile: 'plop-templates/backend-service/src/services/.gitkeep.hbs'
+        templateFile: 'generators/templates/backend-service/src/services/.gitkeep.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/package.json',
-        templateFile: 'plop-templates/backend-service/package.json.hbs'
+        templateFile: 'generators/templates/backend-service/package.json.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/tsconfig.json',
-        templateFile: 'plop-templates/backend-service/tsconfig.json.hbs'
+        templateFile: 'generators/templates/backend-service/tsconfig.json.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/eslint.config.js',
-        templateFile: 'plop-templates/backend-service/eslint.config.js.hbs'
+        templateFile: 'generators/templates/backend-service/eslint.config.js.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/Dockerfile',
-        templateFile: 'plop-templates/backend-service/Dockerfile.hbs'
+        templateFile: 'generators/templates/backend-service/Dockerfile.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/openapi.yaml',
-        templateFile: 'plop-templates/backend-service/openapi.yaml.hbs'
+        templateFile: 'generators/templates/backend-service/openapi.yaml.hbs'
       },
       {
         type: 'add',
         path: 'apps/backend-{{serviceName}}/.gitignore',
-        templateFile: 'plop-templates/backend-service/.gitignore.hbs'
+        templateFile: 'generators/templates/backend-service/.gitignore.hbs'
       }
     ]
   })
@@ -163,7 +163,7 @@ export default function (plop) {
         {
           type: 'add',
           path: `apps/backend-{{serviceName}}/src/actions/${actionPath}/{{method}}.action.ts`,
-          templateFile: 'plop-templates/api-action/action.ts.hbs'
+          templateFile: 'generators/templates/api-action/action.ts.hbs'
         }
       ]
     }

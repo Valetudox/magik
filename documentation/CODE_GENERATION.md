@@ -244,29 +244,30 @@ The script is placed in `scripts/lints/{script-name}.sh` with executable permiss
 ```
 .
 ├── plopfile.js                    # Main Plop configuration
-├── plop-templates/                # Handlebars templates
-│   ├── backend-service/
-│   │   ├── src/
-│   │   │   ├── index.ts.hbs
-│   │   │   ├── routes.ts.hbs
-│   │   │   └── actions/
-│   │   ├── package.json.hbs
-│   │   ├── tsconfig.json.hbs
-│   │   ├── Dockerfile.hbs
-│   │   └── openapi.yaml.hbs
-│   ├── api-action/
-│   │   └── action.ts.hbs
-│   ├── eslint-rule/
-│   │   ├── rule.js.hbs
-│   │   └── test.js.hbs
-│   ├── documentation/
-│   │   └── doc.md.hbs
-│   └── validation-script/
-│       └── script.sh.hbs
-└── plop-helpers/                  # Custom helper functions
-    ├── route-parser.js            # Route parsing utilities
-    ├── string-helpers.js          # String transformation helpers
-    └── validators.js              # Input validation functions
+└── generators/                    # Code generation files
+    ├── templates/                 # Handlebars templates
+    │   ├── backend-service/
+    │   │   ├── src/
+    │   │   │   ├── index.ts.hbs
+    │   │   │   ├── routes.ts.hbs
+    │   │   │   └── actions/
+    │   │   ├── package.json.hbs
+    │   │   ├── tsconfig.json.hbs
+    │   │   ├── Dockerfile.hbs
+    │   │   └── openapi.yaml.hbs
+    │   ├── api-action/
+    │   │   └── action.ts.hbs
+    │   ├── eslint-rule/
+    │   │   ├── rule.js.hbs
+    │   │   └── test.js.hbs
+    │   ├── documentation/
+    │   │   └── doc.md.hbs
+    │   └── validation-script/
+    │       └── script.sh.hbs
+    └── helpers/                   # Custom helper functions
+        ├── route-parser.js        # Route parsing utilities
+        ├── string-helpers.js      # String transformation helpers
+        └── validators.js          # Input validation functions
 ```
 
 ## Custom Helpers
@@ -295,7 +296,7 @@ The code generators use several custom Handlebars helpers:
 
 To add a new generator:
 
-1. **Create templates** in `plop-templates/{generator-name}/`
+1. **Create templates** in `generators/templates/{generator-name}/`
 2. **Add generator configuration** in `plopfile.js`:
 
 ```javascript
@@ -313,7 +314,7 @@ plop.setGenerator('my-generator', {
     {
       type: 'add',
       path: 'path/to/{{myInput}}.ts',
-      templateFile: 'plop-templates/my-generator/template.hbs'
+      templateFile: 'generators/templates/my-generator/template.hbs'
     }
   ]
 })
@@ -322,7 +323,7 @@ plop.setGenerator('my-generator', {
 3. **Create Handlebars templates** using `.hbs` extension:
 
 ```handlebars
-// plop-templates/my-generator/template.hbs
+// generators/templates/my-generator/template.hbs
 export class {{pascalCase myInput}} {
   constructor() {
     // Generated code
