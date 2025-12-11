@@ -2,6 +2,7 @@ import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, Reporter, ServiceStatus, TaskStatus, TaskResult } from '../types';
+import { validateStructure, validateConfig, validateRouteActions } from '../validators';
 
 export class BackendLinterRunner {
   private rootDir: string;
@@ -210,68 +211,58 @@ export class BackendLinterRunner {
   }
 
   private async runStructureValidation(service: string): Promise<TaskResult> {
-    const scriptPath = join(this.rootDir, 'scripts', 'lints', 'backend', 'validate-structure.sh');
-    const servicePath = `apps/${service}`;
+    const servicePath = join(this.rootDir, 'apps', service);
 
     try {
-      const output = execSync(`"${scriptPath}" "${servicePath}"`, {
-        cwd: this.rootDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+      const result = validateStructure(service, servicePath);
 
       return {
-        success: true,
-        output,
+        success: result.success,
+        output: result.success ? 'Structure validation passed' : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.stdout || error.stderr || error.message,
+        error: error.message || String(error),
       };
     }
   }
 
   private async runConfigExtendsValidation(service: string): Promise<TaskResult> {
-    const scriptPath = join(this.rootDir, 'scripts', 'lints', 'backend', 'validate-config-extends-strict.ts');
+    const servicePath = join(this.rootDir, 'apps', service);
 
     try {
-      const output = execSync(`"${scriptPath}" "${service}"`, {
-        cwd: this.rootDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+      const result = validateConfig(service, servicePath);
 
       return {
-        success: true,
-        output,
+        success: result.success,
+        output: result.success ? 'Config validation passed' : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.stdout || error.stderr || error.message,
+        error: error.message || String(error),
       };
     }
   }
 
   private async runRouteActionValidation(service: string): Promise<TaskResult> {
-    const scriptPath = join(this.rootDir, 'scripts', 'lints', 'backend', 'validate-route-actions.sh');
+    const servicePath = join(this.rootDir, 'apps', service);
 
     try {
-      const output = execSync(`"${scriptPath}" "${service}"`, {
-        cwd: this.rootDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+      const result = validateRouteActions(service, servicePath);
 
       return {
-        success: true,
-        output,
+        success: result.success,
+        output: result.success ? 'Route-action validation passed' : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.stdout || error.stderr || error.message,
+        error: error.message || String(error),
       };
     }
   }
