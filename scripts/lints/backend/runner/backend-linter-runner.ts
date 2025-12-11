@@ -110,6 +110,11 @@ export class BackendLinterRunner {
         command: async () => this.runStructureValidation(service),
       },
       {
+        id: 'index-structure',
+        name: 'Index.ts structure validation',
+        command: async () => this.runIndexStructureValidation(service),
+      },
+      {
         id: 'config',
         name: 'Config extends validation',
         command: async () => this.runConfigExtendsValidation(service),
@@ -244,6 +249,28 @@ export class BackendLinterRunner {
       return {
         success: false,
         error: error.message || String(error),
+      };
+    }
+  }
+
+  private async runIndexStructureValidation(service: string): Promise<TaskResult> {
+    const scriptPath = join(this.rootDir, 'scripts', 'lints', 'backend', 'validate-index-structure.sh');
+
+    try {
+      const output = execSync(`"${scriptPath}" "${service}"`, {
+        cwd: this.rootDir,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      return {
+        success: true,
+        output,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.stdout || error.stderr || error.message,
       };
     }
   }
