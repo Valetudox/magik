@@ -27,10 +27,7 @@ async function generateMermaidImage(mermaidCode: string): Promise<Buffer> {
 
     return Buffer.from(imageBuffer)
   } catch (error: unknown) {
-    try {
-      execSync(`rm -f ${tempMmdPath} ${tempPngPath}`)
-    } catch {
-    }
+    execSync(`rm -f ${tempMmdPath} ${tempPngPath}`, { stdio: 'ignore' })
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     throw new Error(`Failed to generate Mermaid diagram: ${errorMessage}`)
   }
