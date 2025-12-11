@@ -14,8 +14,9 @@
     "magik": "./apps/cli-audio/src/index.ts"
   },
   "scripts": {
-    "plop": "plop",
-    "generate": "plop",
+    "generate": "node generate.js",
+    "generate:backend-service": "hygen backend-service new",
+    "generate:api-action": "hygen api-action new",
     "start": "bun run apps/cli-audio/src/index.ts",
     "dev:audio": "bun run --filter='@magik/cli-audio' dev",
     "dev:backend:audio": "bun run --cwd apps/backend-audio dev",
@@ -101,7 +102,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^10.6.2",
     "globals": "^16.5.0",
-    "plop": "^4.0.4",
+    "hygen": "^6.2.11",
     "prettier": "^3.7.4",
     "typescript-eslint": "^8.48.1",
     "vue-eslint-parser": "^10.2.0"

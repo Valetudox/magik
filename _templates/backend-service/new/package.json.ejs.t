@@ -1,5 +1,8 @@
+---
+to: apps/backend-<%= serviceName %>/package.json
+---
 {
-  "name": "backend-{{serviceName}}",
+  "name": "backend-<%= serviceName %>",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
