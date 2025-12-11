@@ -5,6 +5,7 @@ export interface ServiceConfig {
   prod: number
   apiRoute: string
   containerName: string
+  backendMode?: 'endpoint-only' | 'custom'
 }
 
 export const SERVICES = configData.services as Record<string, ServiceConfig>
@@ -69,4 +70,12 @@ export function getAllApiRoutes(): Record<string, string> {
     acc[key] = value.apiRoute
     return acc
   }, {} as Record<string, string>)
+}
+
+export function getBackendMode(service: ServiceName): 'endpoint-only' | 'custom' {
+  const serviceConfig = SERVICES[service]
+  if (!serviceConfig) {
+    throw new Error(`Service "${service}" not found in configuration`)
+  }
+  return serviceConfig.backendMode || 'custom'
 }

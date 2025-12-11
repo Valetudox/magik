@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, Reporter, ServiceStatus, TaskStatus, TaskResult } from '../types';
-import { validateStructure, validateConfig, validateRouteActions } from '../validators';
+import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure } from '../validators';
 
 export class BackendLinterRunner {
   private rootDir: string;
@@ -108,6 +108,11 @@ export class BackendLinterRunner {
         id: 'structure',
         name: 'Structure validation',
         command: async () => this.runStructureValidation(service),
+      },
+      {
+        id: 'index-structure',
+        name: 'Index.ts structure validation',
+        command: async () => this.runIndexStructureValidation(service),
       },
       {
         id: 'config',
@@ -238,6 +243,25 @@ export class BackendLinterRunner {
       return {
         success: result.success,
         output: result.success ? 'Config validation passed' : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || String(error),
+      };
+    }
+  }
+
+  private async runIndexStructureValidation(service: string): Promise<TaskResult> {
+    const servicePath = join(this.rootDir, 'apps', service);
+
+    try {
+      const result = validateIndexStructure(service, servicePath, this.rootDir);
+
+      return {
+        success: result.success,
+        output: result.success ? result.output : undefined,
         error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
