@@ -37,7 +37,6 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          model: claude-opus-4.5
           show_full_output: true
           prompt: |
             Please implement the following pull request:
@@ -48,12 +47,12 @@ jobs:
             - Description: ${{ github.event.pull_request.body }}
 
             **Your Task:**
-            This PR was created from an approved issue. 
+            This PR was created from an approved issue.
 
-            - Use `gh issue view` to read the issue for detailed implementation plans and requirements. 
+            - Use `gh issue view` to read the issue for detailed implementation plans and requirements.
             - Create a todo list and start the implementation.
             - Implement the requested functionality following the todo list.
             - After each logical step commit and push
 
-          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
+          claude_args: '--model=opus --allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
 

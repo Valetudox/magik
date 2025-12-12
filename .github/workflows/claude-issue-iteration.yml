@@ -25,7 +25,6 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          model: claude-opus-4.5
           prompt: |
             You are responding to a comment on issue #${{ github.event.issue.number }}.
 
@@ -52,4 +51,4 @@ jobs:
             - Reference specific files/components when relevant (use file_path:line_number format)
             - Analyze code structure to inform but don't modify anything
 
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh search:*)"'
+          claude_args: '--model=opus --allowed-tools "Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh search:*)"'

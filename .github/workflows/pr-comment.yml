@@ -78,7 +78,6 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          model: claude-opus-4.5
           show_full_output: true
           prompt: |
             A new comment has been posted on this pull request. Please address the request.
@@ -108,4 +107,4 @@ jobs:
 
             **Important:** Focus on the most recent comment but keep the full conversation context in mind.
 
-          claude_args: '--allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
+          claude_args: '--model=opus --allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
