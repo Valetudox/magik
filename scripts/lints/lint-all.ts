@@ -2,14 +2,15 @@
 
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { Command } from 'commander';
-import { LinterRunner } from './runner/linter-runner';
+import { TaskExecutor } from './executor';
 import { CIReporter } from './reporters/ci-reporter';
 import { CLIReporter } from './reporters/cli-reporter';
 import { createBackendTasks, BACKEND_TASK_NAMES } from './configs/backend-tasks';
 import { createFrontendTasks, FRONTEND_TASK_NAMES } from './configs/frontend-tasks';
-import { execSync } from 'child_process';
+import { createOpenAPITasks, OPENAPI_TASK_NAMES } from './configs/openapi-tasks';
+import type { UnifiedTask } from './types';
 
 // Get root directory
 const scriptDir = resolve(dirname(fileURLToPath(import.meta.url)));
@@ -21,6 +22,110 @@ program
   .name('lint')
   .description('Unified linting tool for all services')
   .version('1.0.0');
+
+/**
+ * Discovers services in the apps directory with the given prefix.
+ */
+function discoverServices(prefix: string): string[] {
+  const appsDir = resolve(rootDir, 'apps');
+  const services: string[] = [];
+
+  try {
+    const entries = readdirSync(appsDir);
+
+    for (const entry of entries) {
+      if (entry.startsWith(prefix)) {
+        const fullPath = resolve(appsDir, entry);
+        if (statSync(fullPath).isDirectory()) {
+          services.push(entry);
+        }
+      }
+    }
+  } catch {
+    // Directory might not exist
+  }
+
+  return services.sort();
+}
+
+/**
+ * Builds a list of unified tasks based on CLI options.
+ */
+function buildUnifiedTasks(options: {
+  lintBackends: boolean;
+  lintFrontends: boolean;
+  lintOpenAPI: boolean;
+  specificBackends?: string[];
+  specificFrontends?: string[];
+}): UnifiedTask[] {
+  const tasks: UnifiedTask[] = [];
+
+  // Build backend tasks
+  if (options.lintBackends) {
+    const allBackends = discoverServices('backend-');
+    const backends = options.specificBackends && options.specificBackends.length > 0
+      ? allBackends.filter(s => options.specificBackends!.includes(s))
+      : allBackends;
+
+    // Validate requested backends exist
+    if (options.specificBackends && options.specificBackends.length > 0) {
+      const invalidBackends = options.specificBackends.filter(s => !allBackends.includes(s));
+      if (invalidBackends.length > 0) {
+        console.error(`Error: Invalid backend service(s): ${invalidBackends.join(', ')}`);
+        console.error(`Available backends: ${allBackends.join(', ')}`);
+        process.exit(1);
+      }
+    }
+
+    for (const service of backends) {
+      tasks.push({
+        id: service,
+        name: service,
+        type: 'backend',
+        subtasks: createBackendTasks(service, rootDir),
+      });
+    }
+  }
+
+  // Build frontend tasks
+  if (options.lintFrontends) {
+    const allFrontends = discoverServices('ui-');
+    const frontends = options.specificFrontends && options.specificFrontends.length > 0
+      ? allFrontends.filter(s => options.specificFrontends!.includes(s))
+      : allFrontends;
+
+    // Validate requested frontends exist
+    if (options.specificFrontends && options.specificFrontends.length > 0) {
+      const invalidFrontends = options.specificFrontends.filter(s => !allFrontends.includes(s));
+      if (invalidFrontends.length > 0) {
+        console.error(`Error: Invalid frontend service(s): ${invalidFrontends.join(', ')}`);
+        console.error(`Available frontends: ${allFrontends.join(', ')}`);
+        process.exit(1);
+      }
+    }
+
+    for (const service of frontends) {
+      tasks.push({
+        id: service,
+        name: service,
+        type: 'frontend',
+        subtasks: createFrontendTasks(service, rootDir),
+      });
+    }
+  }
+
+  // Build OpenAPI task
+  if (options.lintOpenAPI) {
+    tasks.push({
+      id: 'openapi',
+      name: 'openapi',
+      type: 'openapi',
+      subtasks: createOpenAPITasks(rootDir),
+    });
+  }
+
+  return tasks;
+}
 
 // List command - lists all available services
 program
@@ -86,17 +191,35 @@ program
     // Determine what to lint
     const lintBackends = !options.frontends; // Lint backends unless only frontends specified
     const lintFrontends = !options.backends; // Lint frontends unless only backends specified
+    const lintOpenAPI = !skipOpenAPI && !options.frontends; // OpenAPI only with backends
     const specificBackends = Array.isArray(options.backends) ? options.backends : undefined;
     const specificFrontends = Array.isArray(options.frontends) ? options.frontends : undefined;
 
-    // Read config to get service counts
-    const configPath = resolve(rootDir, 'config/config.json');
-    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+    // Build unified task list
+    const unifiedTasks = buildUnifiedTasks({
+      lintBackends,
+      lintFrontends,
+      lintOpenAPI,
+      specificBackends,
+      specificFrontends,
+    });
 
-    const backendCount = Object.keys(config.services || {}).filter(k => k.startsWith('BACKEND_')).length;
-    const frontendCount = Object.keys(config.uis || {}).length;
+    if (unifiedTasks.length === 0) {
+      console.log('No services to lint.');
+      process.exit(0);
+    }
 
-    let allPassed = true;
+    // Combine all task names for the reporter
+    const allTaskNames: Record<string, string> = {
+      ...BACKEND_TASK_NAMES,
+      ...FRONTEND_TASK_NAMES,
+      ...OPENAPI_TASK_NAMES,
+    };
+
+    // Create reporter
+    const reporter = isCIMode
+      ? new CIReporter(allTaskNames)
+      : new CLIReporter(allTaskNames);
 
     // Header
     if (!isCIMode) {
@@ -111,111 +234,37 @@ program
       console.log('');
     }
 
+    // Show what we're linting
+    const backendTasks = unifiedTasks.filter(t => t.type === 'backend');
+    const frontendTasks = unifiedTasks.filter(t => t.type === 'frontend');
+    const openapiTasks = unifiedTasks.filter(t => t.type === 'openapi');
+
     if (specificBackends && specificBackends.length > 0) {
       console.log(`\x1b[0;36mLinting specific backend(s): ${specificBackends.join(', ')}\x1b[0m`);
-    } else if (lintBackends) {
-      console.log(`\x1b[0;36mDiscovered ${backendCount} backend services from config\x1b[0m`);
+    } else if (backendTasks.length > 0) {
+      console.log(`\x1b[0;36mDiscovered ${backendTasks.length} backend service(s)\x1b[0m`);
     }
 
     if (specificFrontends && specificFrontends.length > 0) {
       console.log(`\x1b[0;36mLinting specific frontend(s): ${specificFrontends.join(', ')}\x1b[0m`);
-    } else if (lintFrontends) {
-      console.log(`\x1b[0;36mDiscovered ${frontendCount} frontend services from config\x1b[0m`);
+    } else if (frontendTasks.length > 0) {
+      console.log(`\x1b[0;36mDiscovered ${frontendTasks.length} frontend service(s)\x1b[0m`);
+    }
+
+    if (openapiTasks.length > 0) {
+      console.log(`\x1b[0;36mOpenAPI validation enabled\x1b[0m`);
     }
 
     console.log('');
 
-    // Lint backends
-    if (lintBackends && backendCount > 0) {
-      if (!isCIMode) {
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('\x1b[0;34m  Backend Services\x1b[0m');
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('');
-      }
+    // Create executor and run all tasks
+    const executor = new TaskExecutor(rootDir, reporter);
+    const allPassed = await executor.execute(unifiedTasks);
 
-      const backendReporter = isCIMode ? new CIReporter(BACKEND_TASK_NAMES) : new CLIReporter(BACKEND_TASK_NAMES);
-      const backendRunner = new LinterRunner(
-        rootDir,
-        backendReporter,
-        {
-          serviceType: 'backend',
-          servicePrefix: 'backend-',
-          createTasks: createBackendTasks,
-        },
-        specificBackends
-      );
-
-      const backendSuccess = await backendRunner.run();
-      if (!backendSuccess) allPassed = false;
-
-      console.log('');
-    }
-
-    // Lint frontends
-    if (lintFrontends && frontendCount > 0) {
-      if (!isCIMode) {
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('\x1b[0;34m  Frontend Services\x1b[0m');
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('');
-      }
-
-      const frontendReporter = isCIMode ? new CIReporter(FRONTEND_TASK_NAMES) : new CLIReporter(FRONTEND_TASK_NAMES);
-      const frontendRunner = new LinterRunner(
-        rootDir,
-        frontendReporter,
-        {
-          serviceType: 'frontend',
-          servicePrefix: 'ui-',
-          createTasks: createFrontendTasks,
-        },
-        specificFrontends
-      );
-
-      const frontendSuccess = await frontendRunner.run();
-      if (!frontendSuccess) allPassed = false;
-
-      console.log('');
-    }
-
-    // Lint OpenAPI specs
-    if (!skipOpenAPI) {
-      if (!isCIMode) {
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('\x1b[0;34m  OpenAPI Specifications\x1b[0m');
-        console.log('\x1b[0;34m========================================\x1b[0m');
-        console.log('');
-      }
-
-      try {
-        execSync('node node_modules/.bin/spectral lint "apps/backend-*/openapi.yaml" --format stylish', {
-          cwd: rootDir,
-          encoding: 'utf-8',
-          stdio: 'inherit',
-        });
-        console.log('\x1b[0;32m✓ OpenAPI validation passed\x1b[0m');
-      } catch (error) {
-        console.log('\x1b[0;31m✗ OpenAPI validation failed\x1b[0m');
-        allPassed = false;
-      }
-
-      console.log('');
-    }
-
-    // Final summary
-    if (!isCIMode) {
-      console.log('\x1b[0;34m========================================\x1b[0m');
-      console.log('\x1b[0;34m  Final Summary\x1b[0m');
-      console.log('\x1b[0;34m========================================\x1b[0m');
-      console.log('');
-    }
-
+    // Exit with appropriate code
     if (allPassed) {
-      console.log('\x1b[0;32m✓ All linting checks passed!\x1b[0m');
       process.exit(0);
     } else {
-      console.log('\x1b[0;31m✗ Some linting checks failed\x1b[0m');
       process.exit(1);
     }
   });

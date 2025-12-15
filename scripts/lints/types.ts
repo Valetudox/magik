@@ -51,3 +51,34 @@ export interface SummaryStats {
   passedTasks: number;
   failedTasks: number;
 }
+
+/**
+ * Unified task type representing a complete linting target.
+ * All task types (backend, frontend, openapi) follow the same structure.
+ */
+export type UnifiedTaskType = 'backend' | 'frontend' | 'openapi';
+
+export interface UnifiedTask {
+  /** Unique identifier, e.g., "backend-decision", "ui-decision", "openapi" */
+  id: string;
+  /** Display name shown in output */
+  name: string;
+  /** Type of task for categorization */
+  type: UnifiedTaskType;
+  /** Subtasks to execute for this unified task */
+  subtasks: LintTask[];
+}
+
+/**
+ * Configuration for building unified tasks
+ */
+export interface UnifiedTaskConfig {
+  /** Task type for grouping */
+  type: UnifiedTaskType;
+  /** Prefix for service discovery, e.g., 'backend-' or 'ui-' */
+  servicePrefix?: string;
+  /** Function to create subtasks for a service */
+  createTasks: (service: string, rootDir: string) => LintTask[];
+  /** Task names mapping for display */
+  taskNames: Record<string, string>;
+}
