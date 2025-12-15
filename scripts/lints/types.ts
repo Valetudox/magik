@@ -43,6 +43,11 @@ export interface LinterConfig {
   rootDir: string;
 }
 
+export interface ExecutorOptions {
+  /** Max number of services to run concurrently */
+  maxConcurrency: number;
+}
+
 export interface SummaryStats {
   totalServices: number;
   totalTasks: number;

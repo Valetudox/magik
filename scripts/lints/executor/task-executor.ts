@@ -1,4 +1,5 @@
-import type { Reporter, ServiceStatus, TaskStatus, UnifiedTask, LintTask } from '../types';
+import pAll from 'p-all';
+import type { Reporter, ServiceStatus, TaskStatus, UnifiedTask, LintTask, ExecutorOptions } from '../types';
 
 /**
  * Unified task executor that handles all task types (backend, frontend, openapi)
@@ -7,11 +8,13 @@ import type { Reporter, ServiceStatus, TaskStatus, UnifiedTask, LintTask } from 
 export class TaskExecutor {
   private rootDir: string;
   private reporter: Reporter;
+  private options: ExecutorOptions;
   private services: Map<string, ServiceStatus> = new Map();
 
-  constructor(rootDir: string, reporter: Reporter) {
+  constructor(rootDir: string, reporter: Reporter, options: ExecutorOptions) {
     this.rootDir = rootDir;
     this.reporter = reporter;
+    this.options = options;
   }
 
   /**
@@ -39,9 +42,10 @@ export class TaskExecutor {
       });
     }
 
-    // Run all unified tasks concurrently
-    await Promise.all(
-      tasks.map(task => this.executeUnifiedTask(task))
+    // Run all unified tasks with controlled concurrency
+    await pAll(
+      tasks.map(task => () => this.executeUnifiedTask(task)),
+      { concurrency: this.options.maxConcurrency }
     );
 
     // Notify completion

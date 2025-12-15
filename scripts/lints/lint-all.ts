@@ -181,6 +181,7 @@ program
   .command('lint')
   .description('Lint services (all by default)')
   .option('--ci', 'Use CI mode (streaming output)')
+  .option('--concurrency <number>', 'Max concurrent services to lint', '5')
   .option('--backends [services...]', 'Lint only specified backend services (or all if no services specified)')
   .option('--frontends [services...]', 'Lint only specified frontend services (or all if no services specified)')
   .option('--skip-openapi', 'Skip OpenAPI validation')
@@ -257,8 +258,11 @@ program
 
     console.log('');
 
+    // Parse concurrency option
+    const maxConcurrency = parseInt(options.concurrency, 10);
+
     // Create executor and run all tasks
-    const executor = new TaskExecutor(rootDir, reporter);
+    const executor = new TaskExecutor(rootDir, reporter, { maxConcurrency });
     const allPassed = await executor.execute(unifiedTasks);
 
     // Exit with appropriate code
