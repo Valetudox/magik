@@ -39,7 +39,7 @@ if [ ! -f "$PROJECT_ROOT/config/config.json" ]; then
 fi
 
 BACKEND_SERVICES=()
-# Extract service names from config.json, convert BACKEND_* to backend-*
+# Extract service names from config.json, convert BACKEND_* to backeud-*
 while IFS= read -r service_key; do
     # Convert BACKEND_AUDIO to backend-audio
     service_name=$(echo "$service_key" | sed 's/BACKEND_/backend-/' | tr '[:upper:]' '[:lower:]')

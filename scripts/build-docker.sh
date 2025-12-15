@@ -19,11 +19,32 @@ echo "Registry: $DOCKER_REGISTRY"
 
 # Build packages that workspace dependencies need
 echo "→ Building workspace packages..."
-# Build agents package (has TypeScript that needs compilation)
-if [ -d "packages/agents" ]; then
-    cd packages/agents && bun run build && cd ../..
+# Build agents package if it has a build script
+if [ -d "packages/agents" ] && [ -f "packages/agents/package.json" ]; then
+    if jq -e '.scripts.build' packages/agents/package.json > /dev/null 2>&1; then
+        cd packages/agents && bun run build && cd ../..
+    else
+        echo "  Skipping packages/agents (no build script)"
+    fi
 fi
 # decisions and ui-shared don't need build steps
+
+# Discover backend services from config.json
+if [ ! -f "$PROJECT_ROOT/config/config.json" ]; then
+    echo "❌ Error: config/config.json not found"
+    echo "Backend services must be defined in config/config.json"
+    exit 1
+fi
+
+BACKEND_SERVICES=()
+while IFS= read -r service_key; do
+    service_name=$(echo "$service_key" | sed 's/BACKEND_/backend-/' | tr '[:upper:]' '[:lower:]')
+    BACKEND_SERVICES+=("$service_name")
+done < <(jq -r '.services | keys[]' "$PROJECT_ROOT/config/config.json" | grep '^BACKEND_')
+
+# Hardcoded UI and gateway services
+UI_SERVICES=("ui-decision" "ui-audio")
+GATEWAY_SERVICES=("gateway")
 
 # Build Docker images
 echo "→ Building Docker images..."
@@ -32,9 +53,15 @@ docker compose -f docker-compose.prod.yml build --no-cache
 echo "✓ Docker images built successfully!"
 echo ""
 echo "Images tagged as:"
-echo "  - $DOCKER_REGISTRY/magik-backend-socket:latest"
-echo "  - $DOCKER_REGISTRY/magik-backend-decision:latest"
-echo "  - $DOCKER_REGISTRY/magik-ui-decision:latest"
+for service in "${BACKEND_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
+for service in "${UI_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
+for service in "${GATEWAY_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
 echo ""
 echo "Next steps:"
 echo "  1. Deploy to registry: bun run docker:deploy"

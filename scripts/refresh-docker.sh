@@ -23,24 +23,8 @@ echo ""
 
 # Step 3: Restart services with latest images
 echo "Step 3/3: Restarting services..."
-
-# Load environment variables
-if [ -f .env.production ]; then
-    export $(cat .env.production | grep -v '^#' | xargs)
-fi
-
-# Set default registry if not specified
-DOCKER_REGISTRY="${DOCKER_REGISTRY:-localhost:5000}"
-
-# Pull latest images
-echo "→ Pulling latest images from registry: $DOCKER_REGISTRY"
-docker pull "$DOCKER_REGISTRY/magik-backend-socket:latest"
-docker pull "$DOCKER_REGISTRY/magik-backend-decision:latest"
-docker pull "$DOCKER_REGISTRY/magik-ui-decision:latest"
-
-# Force recreate all containers with latest images
-echo "→ Recreating containers..."
-docker compose -f docker-compose.prod.yml up -d --force-recreate
+./scripts/stop-docker.sh
+./scripts/start-docker.sh
 
 echo ""
 echo "✓ Refresh complete!"

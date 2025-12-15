@@ -3,8 +3,8 @@ FROM oven/bun:1.3.3 AS builder
 
 WORKDIR /workspace
 
-# Copy workspace package.json to set up workspace
-COPY package.json ./
+# Copy workspace package.json and lockfile
+COPY package.json bun.lock ./
 
 # Copy workspace packages
 COPY packages/ui-shared ./packages/ui-shared
@@ -13,9 +13,10 @@ COPY packages/decisions ./packages/decisions
 # Copy ui-decision app
 COPY apps/ui-decision ./apps/ui-decision
 
-# Install dependencies and build (skip type checking for Docker build)
-# Set VITE_BASE_PATH explicitly during build
-RUN cd apps/ui-decision && bun install --ignore-scripts && VITE_BASE_PATH=/decisions bunx vite build
+# Install dependencies from workspace root, then build
+RUN bun install --filter=@magik/ui-decision --ignore-scripts && \
+    cd apps/ui-decision && \
+    VITE_BASE_PATH=/decisions bunx vite build
 
 # Production stage with Nginx
 FROM nginx:alpine
