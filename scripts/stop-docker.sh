@@ -8,6 +8,14 @@ cd "$PROJECT_ROOT"
 
 echo "Stopping Magik Decision Management System..."
 
-docker compose -f docker-compose.prod.yml down
+# Generate docker-compose dynamically to /tmp
+echo "→ Generating docker-compose.prod.yml..."
+COMPOSE_FILE=$(./scripts/generate-docker-compose.ts)
+echo "   Using: $COMPOSE_FILE"
+
+docker compose -f "$COMPOSE_FILE" down
+
+# Cleanup temp file
+rm -f "$COMPOSE_FILE"
 
 echo "✓ Services stopped!"

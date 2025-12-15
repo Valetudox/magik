@@ -7,7 +7,9 @@ import ejs from 'ejs';
 const PROJECT_ROOT = join(import.meta.dir, '..');
 const CONFIG_PATH = join(PROJECT_ROOT, 'config/config.json');
 const TEMPLATE_PATH = join(PROJECT_ROOT, '_templates/docker-compose/prod/docker-compose.yml.ejs.t');
-const OUTPUT_PATH = join(PROJECT_ROOT, 'docker-compose.prod.yml');
+
+// Generate to /tmp with unique ID (timestamp + process ID)
+const OUTPUT_PATH = `/tmp/magik-docker-compose-${Date.now()}-${process.pid}.yml`;
 
 interface ServiceConfig {
   dev: number;
@@ -38,7 +40,8 @@ try {
   // Write output
   writeFileSync(OUTPUT_PATH, rendered);
 
-  console.log('✓ Generated docker-compose.prod.yml successfully');
+  // Output only the path for scripts to capture
+  console.log(OUTPUT_PATH);
 } catch (error) {
   console.error('❌ Error generating docker-compose.prod.yml:', error);
   process.exit(1);

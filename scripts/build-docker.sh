@@ -46,9 +46,17 @@ done < <(jq -r '.services | keys[]' "$PROJECT_ROOT/config/config.json" | grep '^
 UI_SERVICES=("ui-decision" "ui-audio")
 GATEWAY_SERVICES=("gateway")
 
+# Generate docker-compose dynamically to /tmp
+echo "→ Generating docker-compose.prod.yml..."
+COMPOSE_FILE=$(./scripts/generate-docker-compose.ts)
+echo "   Using: $COMPOSE_FILE"
+
 # Build Docker images
 echo "→ Building Docker images..."
-docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f "$COMPOSE_FILE" build --no-cache
+
+# Cleanup temp file
+rm -f "$COMPOSE_FILE"
 
 echo "✓ Docker images built successfully!"
 echo ""

@@ -56,9 +56,14 @@ for service in "${GATEWAY_SERVICES[@]}"; do
     docker pull "$DOCKER_REGISTRY/magik-$service:latest" || echo "⚠ Failed to pull $service, will use local image"
 done
 
+# Generate docker-compose dynamically to /tmp
+echo "→ Generating docker-compose.prod.yml..."
+COMPOSE_FILE=$(./scripts/generate-docker-compose.ts)
+echo "   Using: $COMPOSE_FILE"
+
 # Start services
 echo "→ Starting services..."
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f "$COMPOSE_FILE" up -d
 
 echo ""
 echo "✓ Services started!"
