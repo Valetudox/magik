@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, Reporter, ServiceStatus, TaskStatus, TaskResult } from '../types';
-import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure } from '../validators';
+import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile } from '../validators';
 
 export class BackendLinterRunner {
   private rootDir: string;
@@ -108,6 +108,11 @@ export class BackendLinterRunner {
         id: 'structure',
         name: 'Structure validation',
         command: async () => this.runStructureValidation(service),
+      },
+      {
+        id: 'dockerfile',
+        name: 'Dockerfile template validation',
+        command: async () => this.runDockerfileValidation(service),
       },
       {
         id: 'index-structure',
@@ -281,6 +286,25 @@ export class BackendLinterRunner {
       return {
         success: result.success,
         output: result.success ? 'Route-action validation passed' : undefined,
+        error: result.errors ? result.errors.join('\n') : undefined,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || String(error),
+      };
+    }
+  }
+
+  private async runDockerfileValidation(service: string): Promise<TaskResult> {
+    const servicePath = join(this.rootDir, 'apps', service);
+
+    try {
+      const result = validateDockerfile(service, servicePath);
+
+      return {
+        success: result.success,
+        output: result.success ? 'Dockerfile matches template' : undefined,
         error: result.errors ? result.errors.join('\n') : undefined,
       };
     } catch (error: any) {
