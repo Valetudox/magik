@@ -3,17 +3,18 @@ FROM oven/bun:1.3.3 AS builder
 
 WORKDIR /workspace
 
-# Copy workspace package.json and lockfile
-COPY package.json bun.lock ./
+# Copy workspace package.json
+COPY package.json ./
 
 # Copy workspace packages
-COPY packages/ui-shared ./packages/ui-shared
+COPY packages ./packages
+COPY config ./config
 
 # Copy ui-specification app
 COPY apps/ui-specification ./apps/ui-specification
 
-# Install dependencies from workspace root, then build
-RUN bun install --filter=@magik/ui-specification --ignore-scripts && \
+# Install all workspace dependencies, then build
+RUN bun install && \
     cd apps/ui-specification && \
     VITE_BASE_PATH=/specifications bunx vite build
 

@@ -3,18 +3,23 @@ FROM oven/bun:1.3.3 AS builder
 
 WORKDIR /workspace
 
-# Copy workspace package.json and lockfile
-COPY package.json bun.lock ./
+# Copy workspace package.json
+COPY package.json ./
 
 # Copy workspace packages
-COPY packages/ui-shared ./packages/ui-shared
-COPY packages/backend-audio-client ./packages/backend-audio-client
+COPY packages ./packages
+COPY config ./config
+COPY specs ./specs
 
 # Copy ui-audio app
 COPY apps/ui-audio ./apps/ui-audio
 
-# Install dependencies from workspace root, then build
-RUN bun install --filter=@magik/ui-audio --ignore-scripts && \
+# Copy OpenAPI spec for client generation
+RUN mkdir -p apps/backend-audio && \
+    cp specs/domains/audio/openapi.yaml apps/backend-audio/openapi.yaml
+
+# Install all workspace dependencies, then build
+RUN bun install && \
     cd apps/ui-audio && \
     VITE_BASE_PATH=/audio bunx vite build
 

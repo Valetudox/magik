@@ -3,18 +3,18 @@ FROM oven/bun:1.3.3 AS builder
 
 WORKDIR /workspace
 
-# Copy workspace package.json and lockfile
-COPY package.json bun.lock ./
+# Copy workspace package.json
+COPY package.json ./
 
 # Copy workspace packages
-COPY packages/ui-shared ./packages/ui-shared
-COPY packages/decisions ./packages/decisions
+COPY packages ./packages
+COPY config ./config
 
 # Copy ui-decision app
 COPY apps/ui-decision ./apps/ui-decision
 
-# Install dependencies from workspace root, then build
-RUN bun install --filter=@magik/ui-decision --ignore-scripts && \
+# Install all workspace dependencies, then build
+RUN bun install && \
     cd apps/ui-decision && \
     VITE_BASE_PATH=/decisions bunx vite build
 
