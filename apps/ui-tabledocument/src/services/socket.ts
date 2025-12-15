@@ -5,7 +5,7 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:4004'
 
 let socket: Socket | null = null
 
-export function initSocket() {
+export function initSocket(): Socket {
   if (socket) {
     return socket
   }

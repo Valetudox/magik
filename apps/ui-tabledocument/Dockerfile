@@ -11,7 +11,7 @@ COPY packages ./packages
 COPY config ./config
 
 # Copy ui-tabledocument app
-COPY apps/ui-tabledocument ./apps/ui-tabledocument
+COPY apps/ui-tabledocument ./apps/ui-tabledocument/
 
 # Install all workspace dependencies, then build
 RUN bun install && \

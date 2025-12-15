@@ -11,7 +11,7 @@ COPY packages ./packages
 COPY config ./config
 
 # Copy ui-decision app
-COPY apps/ui-decision ./apps/ui-decision
+COPY apps/ui-decision ./apps/ui-decision/
 
 # Install all workspace dependencies, then build
 RUN bun install && \

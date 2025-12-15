@@ -12,7 +12,7 @@ COPY config ./config
 COPY specs ./specs
 
 # Copy ui-audio app
-COPY apps/ui-audio ./apps/ui-audio
+COPY apps/ui-audio ./apps/ui-audio/
 
 # Copy OpenAPI spec for client generation
 RUN mkdir -p apps/backend-audio && \

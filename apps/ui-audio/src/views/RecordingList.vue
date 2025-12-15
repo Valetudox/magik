@@ -118,7 +118,7 @@ onMounted(() => {
               :items-per-page="25"
               class="elevation-1"
               hover
-              @click:row="(event, { item }) => viewRecording(item)"
+              @click:row="(_event: Event, { item }: { item: Recording }) => viewRecording(item)"
             >
               <template #[`item.format`]="{ item }">
                 <v-chip size="small" :color="item.format === 'mp3' ? 'primary' : 'secondary'">

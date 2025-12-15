@@ -51,14 +51,16 @@ onMounted(() => {
     const index = documents.value.findIndex((d) => d.id === id)
     if (index !== -1) {
       const existing = documents.value[index]
-      documents.value[index] = {
-        id,
-        name: existing.name,
-        directory: existing.directory,
-        useCaseCount: document.table.length,
-        confluence_url: document.confluence_url,
-        createdAt: existing.createdAt,
-        updatedAt: new Date().toISOString(),
+      if (existing) {
+        documents.value[index] = {
+          id,
+          name: existing.name,
+          directory: existing.directory,
+          useCaseCount: document.table.length,
+          confluence_url: document.confluence_url,
+          createdAt: existing.createdAt,
+          updatedAt: new Date().toISOString(),
+        }
       }
     }
   })

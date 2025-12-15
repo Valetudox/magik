@@ -11,7 +11,7 @@ COPY packages ./packages
 COPY config ./config
 
 # Copy ui-specification app
-COPY apps/ui-specification ./apps/ui-specification
+COPY apps/ui-specification ./apps/ui-specification/
 
 # Install all workspace dependencies, then build
 RUN bun install && \
