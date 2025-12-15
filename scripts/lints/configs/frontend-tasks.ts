@@ -1,11 +1,13 @@
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, TaskResult } from '../types';
+import { validateDockerfile } from '../validators/frontend/dockerfile-validator';
 
 export const FRONTEND_TASK_NAMES: Record<string, string> = {
   eslint: 'ESLint',
   'vue-tsc': 'TypeScript (vue-tsc)',
   'vite-build': 'Vite build check',
+  dockerfile: 'Dockerfile template validation',
 };
 
 export function createFrontendTasks(service: string, rootDir: string): LintTask[] {
@@ -79,6 +81,25 @@ export function createFrontendTasks(service: string, rootDir: string): LintTask[
           return {
             success: false,
             error: error.stdout || error.stderr || error.message,
+          };
+        }
+      },
+    },
+    {
+      id: 'dockerfile',
+      name: 'Dockerfile template validation',
+      command: async (): Promise<TaskResult> => {
+        const result = validateDockerfile(service, serviceDir);
+
+        if (result.success) {
+          return {
+            success: true,
+            output: 'Dockerfile matches template',
+          };
+        } else {
+          return {
+            success: false,
+            error: result.errors?.join('\n') || 'Dockerfile validation failed',
           };
         }
       },
