@@ -2,7 +2,7 @@
 to: apps/backend-<%= serviceName %>/package.json
 ---
 {
-  "name": "backend-<%= serviceName %>",
+  "name": "@magik/backend-<%= serviceName %>",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
