@@ -12,7 +12,7 @@ COPY config ./config/
 COPY apps/backend-specification ./apps/backend-specification/
 
 # Install all dependencies
-RUN bun install --filter=backend-specification
+RUN bun install --filter=@magik/backend-specification
 
 # Production stage
 FROM oven/bun:1.3.3
@@ -34,7 +34,7 @@ COPY apps/backend-specification/src ./apps/backend-specification/src
 COPY specs/domains/specification/openapi.yaml ./apps/backend-specification/openapi.yaml
 
 # Install dependencies in production stage from workspace root
-RUN bun install --filter=backend-specification --production
+RUN bun install --filter=@magik/backend-specification --production
 
 # Set working directory for runtime
 WORKDIR /workspace/apps/backend-specification
