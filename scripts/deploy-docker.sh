@@ -31,25 +31,59 @@ if ! curl -s "http://$DOCKER_REGISTRY/v2/" > /dev/null 2>&1; then
     fi
 fi
 
+# Discover backend services from config.json
+if [ ! -f "$PROJECT_ROOT/config/config.json" ]; then
+    echo "❌ Error: config/config.json not found"
+    echo "Backend services must be defined in config/config.json"
+    exit 1
+fi
+
+BACKEND_SERVICES=()
+# Extract service names from config.json, convert BACKEND_* to backend-*
+while IFS= read -r service_key; do
+    # Convert BACKEND_AUDIO to backend-audio
+    service_name=$(echo "$service_key" | sed 's/BACKEND_/backend-/' | tr '[:upper:]' '[:lower:]')
+    BACKEND_SERVICES+=("$service_name")
+done < <(jq -r '.services | keys[]' "$PROJECT_ROOT/config/config.json" | grep '^BACKEND_')
+
+# Hardcoded UI and gateway services
+UI_SERVICES=("ui-decision" "ui-audio")
+GATEWAY_SERVICES=("gateway")
+
 # Push images to registry
-echo "→ Pushing images to registry..."
-docker push "$DOCKER_REGISTRY/magik-backend-socket:latest"
-docker push "$DOCKER_REGISTRY/magik-backend-decision:latest"
-docker push "$DOCKER_REGISTRY/magik-backend-audio:latest"
-docker push "$DOCKER_REGISTRY/magik-ui-decision:latest"
-docker push "$DOCKER_REGISTRY/magik-ui-audio:latest"
-docker push "$DOCKER_REGISTRY/magik-gateway:latest"
+echo "→ Pushing backend images to registry..."
+for service in "${BACKEND_SERVICES[@]}"; do
+    echo "  Pushing magik-$service:latest..."
+    docker push "$DOCKER_REGISTRY/magik-$service:latest"
+done
+
+echo ""
+echo "→ Pushing UI images to registry..."
+for service in "${UI_SERVICES[@]}"; do
+    echo "  Pushing magik-$service:latest..."
+    docker push "$DOCKER_REGISTRY/magik-$service:latest"
+done
+
+echo ""
+echo "→ Pushing gateway image to registry..."
+for service in "${GATEWAY_SERVICES[@]}"; do
+    echo "  Pushing magik-$service:latest..."
+    docker push "$DOCKER_REGISTRY/magik-$service:latest"
+done
 
 echo ""
 echo "✓ Images deployed successfully!"
 echo ""
 echo "Deployed images:"
-echo "  - $DOCKER_REGISTRY/magik-backend-socket:latest"
-echo "  - $DOCKER_REGISTRY/magik-backend-decision:latest"
-echo "  - $DOCKER_REGISTRY/magik-backend-audio:latest"
-echo "  - $DOCKER_REGISTRY/magik-ui-decision:latest"
-echo "  - $DOCKER_REGISTRY/magik-ui-audio:latest"
-echo "  - $DOCKER_REGISTRY/magik-gateway:latest"
+for service in "${BACKEND_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
+for service in "${UI_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
+for service in "${GATEWAY_SERVICES[@]}"; do
+    echo "  - $DOCKER_REGISTRY/magik-$service:latest"
+done
 echo ""
 echo "Next steps:"
 echo "  1. Start services: bun run docker:start"
