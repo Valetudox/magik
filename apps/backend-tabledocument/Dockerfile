@@ -1,19 +1,46 @@
+FROM oven/bun:1.3.3 AS builder
+
+WORKDIR /workspace
+
+# Copy workspace root package files
+COPY package.json bun.lock ./
+
+# Copy workspace packages that backend-tabledocument depends on
+COPY packages/agents ./packages/agents/
+COPY packages/tabledocuments ./packages/tabledocuments/
+COPY config ./config/
+
+# Copy backend-tabledocument app
+COPY apps/backend-tabledocument ./apps/backend-tabledocument/
+
+# Install all dependencies (including workspace packages)
+RUN bun install --filter=backend-tabledocument
+
+# Production stage
 FROM oven/bun:1.3.3
 
-WORKDIR /app
+WORKDIR /workspace
 
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Copy package files from the app directory
-COPY apps/backend-tabledocument/package.json ./
+# Copy workspace root package.json for workspace configuration
+COPY package.json ./
 
-# Install dependencies
-RUN bun install --production
+# Copy workspace packages
+COPY --from=builder /workspace/packages ./packages
+COPY --from=builder /workspace/config ./config
 
-# Copy source code from the app directory
-COPY apps/backend-tabledocument/src ./src
-COPY specs/domains/tabledocument/openapi.yaml ./
+# Copy backend-tabledocument app source
+COPY apps/backend-tabledocument/package.json ./apps/backend-tabledocument/package.json
+COPY apps/backend-tabledocument/src ./apps/backend-tabledocument/src
+COPY specs/domains/tabledocument/openapi.yaml ./apps/backend-tabledocument/openapi.yaml
+
+# Install dependencies in production stage from workspace root
+RUN bun install --filter=backend-tabledocument --production
+
+# Set working directory for runtime
+WORKDIR /workspace/apps/backend-tabledocument
 
 # Create table-documents directory
 RUN mkdir -p /data/table-documents
