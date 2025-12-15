@@ -6,7 +6,7 @@ import { Command } from 'commander';
 import { LinterRunner } from '../runner/linter-runner';
 import { CIReporter } from '../reporters/ci-reporter';
 import { CLIReporter } from '../reporters/cli-reporter';
-import { createBackendTasks, BACKEND_TASK_NAMES } from '../configs/backend-tasks';
+import { createFrontendTasks, FRONTEND_TASK_NAMES } from '../configs/frontend-tasks';
 
 // Get root directory (3 levels up from this script)
 const scriptDir = resolve(dirname(fileURLToPath(import.meta.url)));
@@ -15,28 +15,28 @@ const rootDir = resolve(scriptDir, '..', '..', '..');
 const program = new Command();
 
 program
-  .name('lint-backend')
-  .description('Backend services linting tool')
+  .name('lint-frontend')
+  .description('Frontend services linting tool')
   .version('1.0.0');
 
 program
   .command('list')
-  .description('List all available backend services')
+  .description('List all available frontend services')
   .requiredOption('--mode <mode>', 'Output mode (ci or cli)', validateMode)
   .action(async (options) => {
     const mode = options.mode as 'ci' | 'cli';
-    const reporter = mode === 'ci' ? new CIReporter(BACKEND_TASK_NAMES) : new CLIReporter(BACKEND_TASK_NAMES);
+    const reporter = mode === 'ci' ? new CIReporter(FRONTEND_TASK_NAMES) : new CLIReporter(FRONTEND_TASK_NAMES);
     const runner = new LinterRunner(rootDir, reporter, {
-      serviceType: 'backend',
-      servicePrefix: 'backend-',
-      createTasks: createBackendTasks,
+      serviceType: 'frontend',
+      servicePrefix: 'ui-',
+      createTasks: createFrontendTasks,
     });
     const services = runner.getServices();
 
     if (services.length === 0) {
-      console.log('No backend services found');
+      console.log('No frontend services found');
     } else {
-      console.log('Available backend services:');
+      console.log('Available frontend services:');
       for (const service of services) {
         console.log(`  - ${service}`);
       }
@@ -45,17 +45,17 @@ program
 
 program
   .command('lint')
-  .description('Lint backend services')
+  .description('Lint frontend services')
   .requiredOption('--mode <mode>', 'Output mode (ci or cli)', validateMode)
   .argument('[services...]', 'Specific services to lint (optional)')
   .action(async (services: string[], options) => {
     const mode = options.mode as 'ci' | 'cli';
-    const reporter = mode === 'ci' ? new CIReporter(BACKEND_TASK_NAMES) : new CLIReporter(BACKEND_TASK_NAMES);
+    const reporter = mode === 'ci' ? new CIReporter(FRONTEND_TASK_NAMES) : new CLIReporter(FRONTEND_TASK_NAMES);
 
     // Header for CI mode
     if (mode === 'ci') {
       console.log('\x1b[0;34m========================================\x1b[0m');
-      console.log('\x1b[0;34m  Backend Services Linting\x1b[0m');
+      console.log('\x1b[0;34m  Frontend Services Linting\x1b[0m');
       console.log('\x1b[0;34m========================================\x1b[0m');
       console.log('');
 
@@ -70,9 +70,9 @@ program
       rootDir,
       reporter,
       {
-        serviceType: 'backend',
-        servicePrefix: 'backend-',
-        createTasks: createBackendTasks,
+        serviceType: 'frontend',
+        servicePrefix: 'ui-',
+        createTasks: createFrontendTasks,
       },
       services.length > 0 ? services : undefined
     );
