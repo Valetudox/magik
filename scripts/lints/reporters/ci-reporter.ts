@@ -11,26 +11,32 @@ const COLORS = {
 };
 
 export class CIReporter extends BaseReporter {
-  private currentService: string | null = null;
-  private serviceTaskCount: number = 0;
-  private totalTasks: number = 4; // Updated dynamically
   private taskNames: Record<string, string>;
+  // Track task counts per service for concurrent execution support
+  private serviceTaskCounts: Map<string, { current: number; total: number }> = new Map();
 
   constructor(taskNames?: Record<string, string>) {
     super();
     this.taskNames = taskNames || {};
   }
 
-  onProgress(event: ProgressEvent): void {
-    const timestamp = new Date().toISOString();
+  /**
+   * Updates the task names mapping (useful when combining multiple task configs)
+   */
+  addTaskNames(names: Record<string, string>): void {
+    this.taskNames = { ...this.taskNames, ...names };
+  }
 
+  onProgress(event: ProgressEvent): void {
     switch (event.type) {
       case 'service_started':
-        if (event.service) {
-          this.currentService = event.service;
-          this.serviceTaskCount = 0;
+        if (event.service && event.allServices) {
+          // Initialize task count tracking for this service
+          const serviceStatus = event.allServices.get(event.service);
+          const total = serviceStatus ? serviceStatus.tasks.size : 0;
+          this.serviceTaskCounts.set(event.service, { current: 0, total });
           console.log(`${COLORS.BLUE}========================================${COLORS.NC}`);
-          console.log(`${COLORS.BLUE}Service: ${event.service}${COLORS.NC}`);
+          console.log(`${COLORS.BLUE}LINT ${event.service}${COLORS.NC}`);
           console.log(`${COLORS.BLUE}========================================${COLORS.NC}`);
           console.log('');
         }
@@ -38,9 +44,12 @@ export class CIReporter extends BaseReporter {
 
       case 'task_started':
         if (event.taskId && event.service) {
-          this.serviceTaskCount++;
-          const taskName = this.getTaskDisplayName(event.taskId);
-          console.log(`${COLORS.YELLOW}  [${this.serviceTaskCount}/${this.totalTasks}] Running ${taskName}...${COLORS.NC}`);
+          const counts = this.serviceTaskCounts.get(event.service);
+          if (counts) {
+            counts.current++;
+            const taskName = this.getTaskDisplayName(event.taskId);
+            console.log(`${COLORS.YELLOW}  [${counts.current}/${counts.total}] Running ${taskName}...${COLORS.NC}`);
+          }
         }
         break;
 

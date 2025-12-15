@@ -20,6 +20,13 @@ export class CLIReporter extends BaseReporter {
     this.taskNames = taskNames || {};
   }
 
+  /**
+   * Updates the task names mapping (useful when combining multiple task configs)
+   */
+  addTaskNames(names: Record<string, string>): void {
+    this.taskNames = { ...this.taskNames, ...names };
+  }
+
   onProgress(event: ProgressEvent): void {
     if (this.isCompleted) return;
 
@@ -56,7 +63,7 @@ export class CLIReporter extends BaseReporter {
 
     // Services and tasks
     for (const [serviceName, serviceStatus] of this.services) {
-      console.log(`${COLORS.CYAN}${serviceName}${COLORS.NC}`);
+      console.log(`${COLORS.CYAN}LINT ${serviceName}${COLORS.NC}`);
 
       const tasks = Array.from(serviceStatus.tasks.entries());
       // Display tasks in single column
@@ -93,7 +100,7 @@ export class CLIReporter extends BaseReporter {
       const serviceFailed = this.isServiceFailed(serviceStatus);
       const serviceIcon = serviceFailed ? `${COLORS.RED}✗${COLORS.NC}` : `${COLORS.GREEN}✓${COLORS.NC}`;
 
-      console.log(`${serviceIcon} ${COLORS.CYAN}${serviceName}${COLORS.NC}`);
+      console.log(`${serviceIcon} ${COLORS.CYAN}LINT ${serviceName}${COLORS.NC}`);
 
       for (const [taskId, taskStatus] of serviceStatus.tasks) {
         const taskDisplay = this.formatTask(taskId, taskStatus);
