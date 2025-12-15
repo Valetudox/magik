@@ -24,6 +24,12 @@ COPY apps/backend-<%= serviceName %>/src ./apps/backend-<%= serviceName %>/src
 COPY specs/domains/<%= serviceName %>/openapi.yaml ./apps/backend-<%= serviceName %>/openapi.yaml
 
 RUN bun install --filter=@magik/backend-<%= serviceName %> --production
+<% if (dataFolders && dataFolders.length > 0) { -%>
+<% dataFolders.forEach(folder => { -%>
+
+RUN mkdir -p <%= folder %>
+<% }); -%>
+<% } -%>
 
 WORKDIR /workspace/apps/backend-<%= serviceName %>
 

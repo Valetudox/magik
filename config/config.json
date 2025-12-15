@@ -5,35 +5,40 @@
       "prod": 3000,
       "apiRoute": "/api/decisions",
       "containerName": "backend-decision",
-      "backendMode": "custom"
+      "backendMode": "custom",
+      "dataFolders": []
     },
     "BACKEND_SOCKET": {
       "dev": 4001,
       "prod": 3001,
       "apiRoute": "/socket.io/",
       "containerName": "backend-socket",
-      "backendMode": "custom"
+      "backendMode": "custom",
+      "dataFolders": []
     },
     "BACKEND_AUDIO": {
       "dev": 4002,
       "prod": 3002,
       "apiRoute": "/api/recordings",
       "containerName": "backend-audio",
-      "backendMode": "endpoint-only"
+      "backendMode": "endpoint-only",
+      "dataFolders": ["/data/recordings"]
     },
     "BACKEND_SPECIFICATION": {
       "dev": 4003,
       "prod": 3003,
       "apiRoute": "/api/specifications",
       "containerName": "backend-specification",
-      "backendMode": "endpoint-only"
+      "backendMode": "endpoint-only",
+      "dataFolders": []
     },
     "BACKEND_TABLEDOCUMENT": {
       "dev": 4004,
       "prod": 3004,
       "apiRoute": "/api/table-documents",
       "containerName": "backend-tabledocument",
-      "backendMode": "custom"
+      "backendMode": "custom",
+      "dataFolders": ["/data/table-documents"]
     }
   }
 }

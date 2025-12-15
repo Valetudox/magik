@@ -10,6 +10,7 @@ interface Config {
     apiRoute: string;
     containerName: string;
     backendMode: string;
+    dataFolders: string[];
   }>;
 }
 
@@ -56,9 +57,10 @@ export function validateDockerfile(
     }
 
     const port = serviceConfig.prod;
+    const dataFolders = serviceConfig.dataFolders || [];
 
-    // Render the template with the service name and port
-    const expectedDockerfile = ejs.render(template, { serviceName: domain, port });
+    // Render the template with the service name, port, and data folders
+    const expectedDockerfile = ejs.render(template, { serviceName: domain, port, dataFolders });
 
     // Normalize whitespace for comparison (trim each line and remove empty lines at start/end)
     const normalize = (content: string): string => {
