@@ -16,6 +16,7 @@
   "scripts": {
     "generate": "node generate.js",
     "generate:backend-service": "hygen backend-service new",
+    "generate:ui-service": "hygen ui-service new",
     "generate:api-action": "hygen api-action new",
     "start": "bun run apps/cli-audio/src/index.ts",
     "dev:audio": "bun run --filter='@magik/cli-audio' dev",
@@ -61,6 +62,7 @@
     "docker:refresh": "./scripts/refresh-docker.sh",
     "docker:start": "./scripts/start-docker.sh",
     "docker:stop": "./scripts/stop-docker.sh",
+    "docker:validate": "./scripts/validate-dockerfiles.sh",
     "docker:logs": "docker compose -f docker-compose.prod.yml logs -f",
     "docker:ps": "docker compose -f docker-compose.prod.yml ps",
     "systemd:install": "./scripts/install-systemd-service.sh",

@@ -16,12 +16,11 @@ services:
       <%= serviceName %>:
         condition: service_healthy
 <%_ }); _%>
-      ui-decision:
+<%_ Object.keys(uis).forEach(uiKey => { _%>
+<%_ const uiName = uiKey.replace('UI_', 'ui-').toLowerCase(); _%>
+      <%= uiName %>:
         condition: service_healthy
-      ui-audio:
-        condition: service_healthy
-      ui-specification:
-        condition: service_healthy
+<%_ }); _%>
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1/health']
@@ -107,20 +106,23 @@ services:
         max-file: '3'
 
 <%_ }); _%>
-  # UI Decision Frontend
-  ui-decision:
-    image: ${DOCKER_REGISTRY:-localhost:5000}/magik-ui-decision:latest
+<%_ Object.entries(uis).forEach(([uiKey, uiConfig]) => { _%>
+<%_ const uiName = uiKey.replace('UI_', 'ui-').toLowerCase(); _%>
+<%_ const domain = uiKey.replace('UI_', '').toLowerCase(); _%>
+  # UI <%= domain.charAt(0).toUpperCase() + domain.slice(1) %> Frontend
+  <%= uiName %>:
+    image: ${DOCKER_REGISTRY:-localhost:5000}/magik-<%= uiName %>:latest
     build:
       context: .
-      dockerfile: apps/ui-decision/Dockerfile
-    container_name: magik-ui-decision
+      dockerfile: apps/<%= uiName %>/Dockerfile
+    container_name: magik-<%= uiName %>
     networks:
       - magik-network
     depends_on:
-      backend-decision:
+<%_ uiConfig.dependsOn.forEach(dep => { _%>
+      <%= dep %>:
         condition: service_healthy
-      backend-socket:
-        condition: service_healthy
+<%_ }); _%>
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1/']
@@ -134,59 +136,7 @@ services:
         max-size: '10m'
         max-file: '3'
 
-  # UI Audio Frontend
-  ui-audio:
-    image: ${DOCKER_REGISTRY:-localhost:5000}/magik-ui-audio:latest
-    build:
-      context: .
-      dockerfile: apps/ui-audio/Dockerfile
-    container_name: magik-ui-audio
-    networks:
-      - magik-network
-    depends_on:
-      backend-audio:
-        condition: service_healthy
-      backend-socket:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1/']
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  # UI Specification Frontend
-  ui-specification:
-    image: ${DOCKER_REGISTRY:-localhost:5000}/magik-ui-specification:latest
-    build:
-      context: .
-      dockerfile: apps/ui-specification/Dockerfile
-    container_name: magik-ui-specification
-    networks:
-      - magik-network
-    depends_on:
-      backend-specification:
-        condition: service_healthy
-      backend-socket:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1/']
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
+<%_ }); _%>
 
 networks:
   magik-network:

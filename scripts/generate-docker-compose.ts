@@ -20,8 +20,19 @@ interface ServiceConfig {
   dataFolders: string[];
 }
 
+interface UIConfig {
+  basePath: string;
+  containerName: string;
+  dependsOn: string[];
+  port: number;
+  openapiSpec: string;
+  vitePort: number;
+  needsSpecs?: boolean;
+}
+
 interface Config {
   services: Record<string, ServiceConfig>;
+  uis: Record<string, UIConfig>;
 }
 
 try {
@@ -35,6 +46,7 @@ try {
   // Render template
   const rendered = ejs.render(template, {
     services: config.services,
+    uis: config.uis,
   });
 
   // Write output

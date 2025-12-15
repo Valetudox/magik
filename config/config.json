@@ -40,5 +40,40 @@
       "backendMode": "custom",
       "dataFolders": ["/data/table-documents"]
     }
+  },
+  "uis": {
+    "UI_DECISION": {
+      "basePath": "/decisions",
+      "containerName": "ui-decision",
+      "dependsOn": ["backend-decision", "backend-socket"],
+      "port": 80,
+      "openapiSpec": "specs/domains/decision/openapi.yaml",
+      "vitePort": 5173
+    },
+    "UI_AUDIO": {
+      "basePath": "/audio",
+      "containerName": "ui-audio",
+      "dependsOn": ["backend-audio", "backend-socket"],
+      "port": 80,
+      "openapiSpec": "specs/domains/audio/openapi.yaml",
+      "vitePort": 5174,
+      "needsSpecs": true
+    },
+    "UI_SPECIFICATION": {
+      "basePath": "/specifications",
+      "containerName": "ui-specification",
+      "dependsOn": ["backend-specification", "backend-socket"],
+      "port": 80,
+      "openapiSpec": "specs/domains/specification/openapi.yaml",
+      "vitePort": 5176
+    },
+    "UI_TABLEDOCUMENT": {
+      "basePath": "/table-documents",
+      "containerName": "ui-tabledocument",
+      "dependsOn": ["backend-tabledocument", "backend-socket"],
+      "port": 80,
+      "openapiSpec": "specs/domains/tabledocument/openapi.yaml",
+      "vitePort": 5175
+    }
   }
 }

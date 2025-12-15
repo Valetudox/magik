@@ -42,8 +42,14 @@ while IFS= read -r service_key; do
     BACKEND_SERVICES+=("$service_name")
 done < <(jq -r '.services | keys[]' "$PROJECT_ROOT/config/config.json" | grep '^BACKEND_')
 
-# Hardcoded UI and gateway services
-UI_SERVICES=("ui-decision" "ui-audio")
+# Discover UI services from config.json
+UI_SERVICES=()
+while IFS= read -r ui_key; do
+    ui_name=$(echo "$ui_key" | sed 's/UI_/ui-/' | tr '[:upper:]' '[:lower:]')
+    UI_SERVICES+=("$ui_name")
+done < <(jq -r '.uis | keys[]' "$PROJECT_ROOT/config/config.json" | grep '^UI_')
+
+# Gateway service (hardcoded - unique infrastructure)
 GATEWAY_SERVICES=("gateway")
 
 # Generate docker-compose dynamically to /tmp
