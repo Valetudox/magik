@@ -5,11 +5,14 @@ WORKDIR /workspace
 # Copy workspace root package files
 COPY package.json bun.lock ./
 
+# Copy config workspace
+COPY config ./config/
+
 # Copy backend-specification app
 COPY apps/backend-specification ./apps/backend-specification/
 
 # Install all dependencies
-RUN cd apps/backend-specification && bun install
+RUN bun install --filter=backend-specification
 
 # Production stage
 FROM oven/bun:1.3.3
@@ -22,14 +25,19 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy workspace root package.json for workspace configuration
 COPY package.json ./
 
+# Copy config workspace
+COPY --from=builder /workspace/config ./config
+
 # Copy backend-specification app source
 COPY apps/backend-specification/package.json ./apps/backend-specification/package.json
 COPY apps/backend-specification/src ./apps/backend-specification/src
 COPY specs/domains/specification/openapi.yaml ./apps/backend-specification/openapi.yaml
 
-# Install dependencies in production stage
+# Install dependencies in production stage from workspace root
+RUN bun install --filter=backend-specification --production
+
+# Set working directory for runtime
 WORKDIR /workspace/apps/backend-specification
-RUN bun install --production
 
 # Expose port
 EXPOSE 4002
