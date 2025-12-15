@@ -28,7 +28,7 @@ COPY package.json ./
 # Copy backend-<%= serviceName %> app source
 COPY apps/backend-<%= serviceName %>/package.json ./apps/backend-<%= serviceName %>/package.json
 COPY apps/backend-<%= serviceName %>/src ./apps/backend-<%= serviceName %>/src
-COPY apps/backend-<%= serviceName %>/openapi.yaml ./apps/backend-<%= serviceName %>/openapi.yaml
+COPY specs/domains/<%= serviceName %>/openapi.yaml ./apps/backend-<%= serviceName %>/openapi.yaml
 
 # Install dependencies in production stage
 WORKDIR /workspace/apps/backend-<%= serviceName %>

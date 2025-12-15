@@ -13,7 +13,7 @@ RUN bun install --production
 
 # Copy source code from the app directory
 COPY apps/backend-audio/src ./src
-COPY apps/backend-audio/openapi.yaml ./
+COPY specs/domains/audio/openapi.yaml ./
 
 # Create recordings directory
 RUN mkdir -p /data/recordings

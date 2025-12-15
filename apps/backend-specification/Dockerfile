@@ -25,7 +25,7 @@ COPY package.json ./
 # Copy backend-specification app source
 COPY apps/backend-specification/package.json ./apps/backend-specification/package.json
 COPY apps/backend-specification/src ./apps/backend-specification/src
-COPY apps/backend-specification/openapi.yaml ./apps/backend-specification/openapi.yaml
+COPY specs/domains/specification/openapi.yaml ./apps/backend-specification/openapi.yaml
 
 # Install dependencies in production stage
 WORKDIR /workspace/apps/backend-specification

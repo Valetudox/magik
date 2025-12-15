@@ -11,9 +11,9 @@ mkdir -p "$TMP_DIR/docs"
 
 # Copy and convert OpenAPI YAML files to JSON
 echo "Converting OpenAPI files to JSON..."
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('apps/backend-audio/openapi.yaml')), open('$TMP_DIR/docs/backend-audio.json', 'w'), indent=2)"
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('apps/backend-socket/openapi.yaml')), open('$TMP_DIR/docs/backend-socket.json', 'w'), indent=2)"
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('apps/backend-decision/openapi.yaml')), open('$TMP_DIR/docs/backend-decision.json', 'w'), indent=2)"
+python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/audio/openapi.yaml')), open('$TMP_DIR/docs/backend-audio.json', 'w'), indent=2)"
+python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/socket/openapi.yaml')), open('$TMP_DIR/docs/backend-socket.json', 'w'), indent=2)"
+python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/decision/openapi.yaml')), open('$TMP_DIR/docs/backend-decision.json', 'w'), indent=2)"
 
 # Create index.html with tabs for multiple APIs
 echo "Creating index.html..."

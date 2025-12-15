@@ -6,20 +6,17 @@ This directory contains all project specifications following the [Human+AI Hybri
 
 ```
 specs/
-├── projects/           # Project-specific specifications
-│   └── {project}/
-│       └── domains/    # Domain-driven organization
-│           ├── {domain}/
-│           │   ├── intent.md              # What we're building and why
-│           │   ├── behavioral-spec.md     # System behavior from user perspective
-│           │   ├── architecture-spec/     # Components, APIs, schemas
-│           │   ├── ui-spec/              # Screens, navigation, components
-│           │   ├── design.md             # Implementation decisions
-│           │   ├── tasks.md              # Ordered implementation tasks
-│           │   └── src/                  # Implementation code
-│           └── shared/                   # Cross-domain shared modules
-│               ├── socket-gateway/
-│               └── auth/
+├── domains/            # Domain-driven organization
+│   ├── {domain}/
+│   │   ├── intent.md              # What we're building and why
+│   │   ├── behavioral-spec.md     # System behavior from user perspective
+│   │   ├── architecture-spec/     # Components, APIs, schemas
+│   │   ├── ui-spec/              # Screens, navigation, components
+│   │   ├── design.md             # Implementation decisions
+│   │   ├── tasks.md              # Ordered implementation tasks
+│   └── shared/                   # Cross-domain shared modules
+│       ├── socket-gateway/
+│       └── auth/
 ├── standards/          # Static constraints (tech stack, design system)
 └── guards/            # Automated validation rules
 ```

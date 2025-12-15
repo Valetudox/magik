@@ -24,7 +24,7 @@ services:
       backend-decision:
         condition: service_healthy
     volumes:
-      - ../../../apps/backend-decision:/schema:ro
+      - ../../../specs/domains/decision/openapi.yaml:/schema/openapi.yaml:ro
       - ./schemathesis-tests:/tests:ro
       - ./validation-errors:/tmp
     working_dir: /tests

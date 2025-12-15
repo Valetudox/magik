@@ -13,7 +13,7 @@ RUN bun install --production
 
 # Copy source code from the app directory
 COPY apps/backend-socket/src ./src
-COPY apps/backend-socket/openapi.yaml ./
+COPY specs/domains/socket/openapi.yaml ./
 
 # Expose port
 EXPOSE 3001

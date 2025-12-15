@@ -18,10 +18,17 @@ Every backend service MUST include the following files at the root level:
 
 1. **Dockerfile** - Container configuration for the service
 2. **eslint.config.js** - ESLint configuration that extends the base config
-3. **openapi.yaml** - OpenAPI specification for the service API
-4. **package.json** - Node.js package configuration
-5. **tsconfig.json** - TypeScript configuration that extends the base config
-6. **src/** - Source code directory
+3. **package.json** - Node.js package configuration
+4. **tsconfig.json** - TypeScript configuration that extends the base config
+5. **src/** - Source code directory
+
+### OpenAPI Specification
+
+The OpenAPI specification MUST be located in:
+- `specs/domains/{domain}/openapi.yaml`
+
+Where `{domain}` matches the service name without the `backend-` prefix.
+For example: `backend-decision` → `specs/domains/decision/openapi.yaml`
 
 ### Optional Root Level Files
 

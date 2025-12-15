@@ -13,7 +13,7 @@ RUN bun install --production
 
 # Copy source code from the app directory
 COPY apps/backend-tabledocument/src ./src
-COPY apps/backend-tabledocument/openapi.yaml ./
+COPY specs/domains/tabledocument/openapi.yaml ./
 
 # Create table-documents directory
 RUN mkdir -p /data/table-documents

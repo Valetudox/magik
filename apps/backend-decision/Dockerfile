@@ -32,7 +32,7 @@ COPY --from=builder /workspace/packages ./packages
 # Copy backend-decision app source
 COPY apps/backend-decision/package.json ./apps/backend-decision/package.json
 COPY apps/backend-decision/src ./apps/backend-decision/src
-COPY apps/backend-decision/openapi.yaml ./apps/backend-decision/openapi.yaml
+COPY specs/domains/decision/openapi.yaml ./apps/backend-decision/openapi.yaml
 
 # Install dependencies in production stage
 WORKDIR /workspace/apps/backend-decision

@@ -1,5 +1,5 @@
 ---
-to: apps/backend-<%= serviceName %>/openapi.yaml
+to: specs/domains/<%= serviceName %>/openapi.yaml
 ---
 openapi: 3.0.0
 info:

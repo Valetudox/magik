@@ -2,7 +2,7 @@ services:
   schemathesis:
     image: python:3.11-slim
     volumes:
-      - ../../../apps/backend-specification/openapi.yaml:/schema/openapi.yaml:ro
+      - ../../../specs/domains/specification/openapi.yaml:/schema/openapi.yaml:ro
       - ./schemathesis-tests:/tests:ro
       - /tmp:/tmp:rw
     working_dir: /tests

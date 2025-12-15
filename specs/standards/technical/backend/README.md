@@ -29,7 +29,8 @@ This directory contains the standardized patterns and conventions for backend se
 
 All backend services MUST:
 - Be located in `apps/backend-{service-name}/`
-- Include: Dockerfile, eslint.config.js, openapi.yaml, package.json, tsconfig.json, src/
+- Include: Dockerfile, eslint.config.js, package.json, tsconfig.json, src/
+- Have their OpenAPI spec in `specs/domains/{domain}/openapi.yaml`
 - Have mandatory `src/` files: index.ts, config.ts, routes.ts, types.ts, actions/
 - Use Fastify as the web framework
 - Implement a `/health` endpoint

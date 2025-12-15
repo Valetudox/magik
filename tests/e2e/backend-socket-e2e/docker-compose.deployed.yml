@@ -4,7 +4,7 @@ services:
     image: python:3.12-slim
     container_name: schemathesis-tests-deployed
     volumes:
-      - ../../../apps/backend-socket:/schema:ro
+      - ../../../specs/domains/socket/openapi.yaml:/schema/openapi.yaml:ro
       - ./schemathesis-tests:/tests:ro
     working_dir: /tests
     environment:

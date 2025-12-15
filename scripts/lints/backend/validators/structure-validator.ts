@@ -1,11 +1,10 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { ValidationResult } from './types';
 
 const REQUIRED_FILES = [
   'Dockerfile',
   'eslint.config.js',
-  'openapi.yaml',
   'package.json',
   'tsconfig.json',
 ];
@@ -22,12 +21,22 @@ export function validateStructure(
 ): ValidationResult {
   const errors: string[] = [];
 
-  // Check required files
+  // Check required files in service directory
   for (const file of REQUIRED_FILES) {
     const filePath = join(servicePath, file);
     if (!existsSync(filePath) || !statSync(filePath).isFile()) {
       errors.push(`Missing file: ${file}`);
     }
+  }
+
+  // Check for openapi.yaml in specs/domains/{domain}/
+  // Extract domain name from service name (backend-{domain} -> {domain})
+  const domain = serviceName.replace(/^backend-/, '');
+  const rootDir = resolve(servicePath, '..', '..');
+  const openapiPath = join(rootDir, 'specs', 'domains', domain, 'openapi.yaml');
+
+  if (!existsSync(openapiPath) || !statSync(openapiPath).isFile()) {
+    errors.push(`Missing file: specs/domains/${domain}/openapi.yaml`);
   }
 
   // Check required directories
