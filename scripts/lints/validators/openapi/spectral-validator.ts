@@ -9,12 +9,12 @@ export interface SpectralValidationResult {
 
 /**
  * Validates OpenAPI specifications using Spectral linter.
- * Runs spectral against all backend service openapi.yaml files.
+ * Runs spectral against all openapi.yaml files in specs/domains/.
  */
 export function validateOpenAPISpecs(rootDir: string): SpectralValidationResult {
   try {
     const output = execSync(
-      'node node_modules/.bin/spectral lint "apps/backend-*/openapi.yaml" --format stylish',
+      'node node_modules/.bin/spectral lint "specs/domains/*/openapi.yaml" --format stylish',
       {
         cwd: rootDir,
         encoding: 'utf-8',
