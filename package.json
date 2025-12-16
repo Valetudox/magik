@@ -14,7 +14,7 @@
     "magik": "./apps/cli-audio/src/index.ts"
   },
   "scripts": {
-    "generate": "node generate.js",
+    "generate": "node scripts/generate.js",
     "generate:backend-service": "hygen backend-service new",
     "generate:ui-service": "hygen ui-service new",
     "generate:api-action": "hygen api-action new",
