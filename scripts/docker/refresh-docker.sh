@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 cd "$PROJECT_ROOT"
 
@@ -11,20 +11,20 @@ echo ""
 
 # Step 1: Build images
 echo "Step 1/3: Building Docker images..."
-./scripts/build-docker.sh
+./scripts/docker/build-docker.sh
 
 echo ""
 
 # Step 2: Deploy to registry
 echo "Step 2/3: Deploying to registry..."
-./scripts/deploy-docker.sh
+./scripts/docker/deploy-docker.sh
 
 echo ""
 
 # Step 3: Restart services with latest images
 echo "Step 3/3: Restarting services..."
-./scripts/stop-docker.sh
-./scripts/start-docker.sh
+./scripts/docker/stop-docker.sh
+./scripts/docker/start-docker.sh
 
 echo ""
 echo "✓ Refresh complete!"

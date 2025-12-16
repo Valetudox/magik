@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 cd "$PROJECT_ROOT"
 
@@ -54,7 +54,7 @@ GATEWAY_SERVICES=("gateway")
 
 # Generate docker-compose dynamically to /tmp
 echo "→ Generating docker-compose.prod.yml..."
-COMPOSE_FILE=$(./scripts/generate-docker-compose.ts)
+COMPOSE_FILE=$(./scripts/docker/generate-docker-compose.ts)
 echo "   Using: $COMPOSE_FILE"
 
 # Build Docker images
