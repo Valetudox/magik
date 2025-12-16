@@ -61,10 +61,10 @@ program
       await generateActions(domain, parsed.operations)
       console.log(`✅ Generated ${parsed.operations.length} action files\n`)
 
-      // Step 5: Generate types from OpenAPI
-      console.log('📝 Step 5: Generating types.ts from OpenAPI schemas...')
-      await generateTypes(serviceName, parsed.schemas)
-      console.log('✅ Types generated\n')
+      // Step 5: Generate Zod schemas using @hey-api/openapi-ts
+      console.log('📝 Step 5: Generating Zod schemas from OpenAPI...')
+      await generateSchemas(serviceName, openapiPath)
+      console.log('✅ Zod schemas generated\n')
 
       // Step 6: Update routes.ts
       console.log('🔗 Step 6: Updating routes.ts with all operations...')
@@ -186,20 +186,31 @@ async function generateActions(domain: string, operations: any[]) {
   }
 }
 
-async function generateTypes(serviceName: string, schemas: Record<string, any>) {
-  // Encode schemas as Base64 to avoid shell escaping issues
-  const schemasJson = JSON.stringify(schemas)
-  const schemasBase64 = Buffer.from(schemasJson).toString('base64')
+async function generateSchemas(serviceName: string, openapiPath: string) {
+  const outputDir = join(rootDir, 'apps', serviceName, 'src', 'generated')
 
-  const args = ['openapi-types', 'new', '--serviceName', serviceName, '--schemasBase64', schemasBase64]
-
-  runHygen(args)
+  // Only generate types and Zod schemas, NOT the client SDK
+  // By not specifying --client, no client code is generated
+  console.log('  Running @hey-api/openapi-ts with Zod plugin...')
+  execSync(
+    `npx @hey-api/openapi-ts -i ${openapiPath} -o ${outputDir} --plugins @hey-api/typescript --plugins zod`,
+    {
+      cwd: rootDir,
+      stdio: 'inherit',
+    }
+  )
 }
 
 async function updateRoutes(serviceName: string, operations: any[]) {
   const routesPath = join(rootDir, 'apps', serviceName, 'src', 'routes.ts')
-  const typeImport = "import type { FastifyInstance } from 'fastify'"
+
+  const imports = [
+    "import type { FastifyInstance } from 'fastify'",
+    "import type { ZodTypeProvider } from 'fastify-type-provider-zod'",
+  ]
+
   const actionImports: Array<{ path: string; statement: string }> = []
+  const schemaImports = new Set<string>()
   const registrations: string[] = []
 
   for (const operation of operations) {
@@ -208,21 +219,50 @@ async function updateRoutes(serviceName: string, operations: any[]) {
     const handlerName = operation.operationId
     const fastifyPath = OpenAPIParser.openapiPathToFastifyPath(operation.path)
 
+    // Import action handler
     actionImports.push({
       path: importPath,
       statement: `import { ${handlerName} } from '${importPath}'`,
     })
-    registrations.push(`  fastify.${operation.method}('${fastifyPath}', ${handlerName})`)
+
+    // Import Data and Response schemas from generated zod.gen.ts
+    // Schema naming: z{OperationId}Data and z{OperationId}Response
+    const dataSchema = `z${operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1)}Data`
+    const responseSchema = `z${operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1)}Response`
+
+    schemaImports.add(dataSchema)
+    schemaImports.add(responseSchema)
+
+    // Build Fastify schema object - extract body, params, query from Data schema
+    // and use Response schema for 200 response
+    const schemaLines = []
+    schemaLines.push(`schema: {`)
+    schemaLines.push(`      body: ${dataSchema}.shape.body,`)
+    schemaLines.push(`      params: ${dataSchema}.shape.path,`)
+    schemaLines.push(`      querystring: ${dataSchema}.shape.query,`)
+    schemaLines.push(`      response: {`)
+    schemaLines.push(`        200: ${responseSchema}`)
+    schemaLines.push(`      }`)
+    schemaLines.push(`    }`)
+
+    // Register route with schema validation
+    registrations.push(`
+  typedFastify.${operation.method}('${fastifyPath}', {
+    ${schemaLines.join('\n    ')}
+  }, ${handlerName})`)
   }
 
   // Sort action imports by import path
   actionImports.sort((a, b) => a.path.localeCompare(b.path))
 
-  const content = `${typeImport}\n${actionImports.map(i => i.statement).join('\n')}
+  const content = `${imports.join('\n')}
+${actionImports.map(i => i.statement).join('\n')}
+import { ${Array.from(schemaImports).sort().join(', ')} } from './generated/zod.gen.js'
 
 export function registerRoutes(fastify: FastifyInstance) {
-  fastify.get('/health', () => ({ status: 'ok' }))
+  const typedFastify = fastify.withTypeProvider<ZodTypeProvider>()
 
+  typedFastify.get('/health', () => ({ status: 'ok' }))
 ${registrations.join('\n')}
 }
 `

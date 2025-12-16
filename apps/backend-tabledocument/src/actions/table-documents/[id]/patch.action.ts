@@ -1,15 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-
-interface UpdateTableDocumentParams {
-  id: string
-}
-
-type UpdateTableDocumentBody = Record<string, unknown>
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zUpdateTableDocumentData, zUpdateTableDocumentResponse } from '../../../generated/zod.gen.js'
 
 export function updateTableDocument(
-  request: FastifyRequest<{ Params: UpdateTableDocumentParams; Body: UpdateTableDocumentBody }>,
-  reply: FastifyReply
-) {
+  request: FastifyRequest<{
+    Params: z.infer<typeof zUpdateTableDocumentData.shape.path>; 
+    Body: z.infer<typeof zUpdateTableDocumentData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zUpdateTableDocumentResponse>> {
   try {
     const { id: _id } = request.params
     const _body = request.body

@@ -13,7 +13,7 @@ const REQUIRED_DIRS = ['src', 'src/actions'];
 
 const REQUIRED_SRC_FILES = ['config.ts', 'index.ts', 'routes.ts', 'types.ts'];
 
-const ALLOWED_SRC_FOLDERS = ['actions', 'services', 'utils'];
+const ALLOWED_SRC_FOLDERS = ['actions', 'services', 'utils', 'generated'];
 
 export function validateStructure(
   serviceName: string,

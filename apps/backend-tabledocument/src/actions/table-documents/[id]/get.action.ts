@@ -1,13 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-
-interface GetTableDocumentParams {
-  id: string
-}
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zGetTableDocumentData, zGetTableDocumentResponse } from '../../../generated/zod.gen.js'
 
 export function getTableDocument(
-  request: FastifyRequest<{ Params: GetTableDocumentParams }>,
-  reply: FastifyReply
-) {
+  request: FastifyRequest<{
+    Params: z.infer<typeof zGetTableDocumentData.shape.path>
+    
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zGetTableDocumentResponse>> {
   try {
     const { id: _id } = request.params
 

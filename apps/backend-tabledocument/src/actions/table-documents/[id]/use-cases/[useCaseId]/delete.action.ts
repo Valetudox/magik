@@ -1,14 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-
-interface DeleteUseCaseParams {
-  id: string
-  useCaseId: string
-}
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zDeleteUseCaseData, zDeleteUseCaseResponse } from '../../../../../generated/zod.gen.js'
 
 export function deleteUseCase(
-  request: FastifyRequest<{ Params: DeleteUseCaseParams }>,
-  reply: FastifyReply
-) {
+  request: FastifyRequest<{
+    Params: z.infer<typeof zDeleteUseCaseData.shape.path>
+    
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zDeleteUseCaseResponse>> {
   try {
     const { id: _id, useCaseId: _useCaseId } = request.params
 

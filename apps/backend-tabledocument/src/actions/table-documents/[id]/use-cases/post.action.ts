@@ -1,15 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-
-interface CreateUseCaseParams {
-  id: string
-}
-
-type CreateUseCaseBody = Record<string, unknown>
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zCreateUseCaseData, zCreateUseCaseResponse } from '../../../../generated/zod.gen.js'
 
 export function createUseCase(
-  request: FastifyRequest<{ Params: CreateUseCaseParams; Body: CreateUseCaseBody }>,
-  reply: FastifyReply
-) {
+  request: FastifyRequest<{
+    Params: z.infer<typeof zCreateUseCaseData.shape.path>; 
+    Body: z.infer<typeof zCreateUseCaseData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zCreateUseCaseResponse>> {
   try {
     const { id: _id } = request.params
     const _body = request.body

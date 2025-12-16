@@ -1,12 +1,15 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-
-
-type CreateTableDocumentBody = Record<string, unknown>
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zCreateTableDocumentData, zCreateTableDocumentResponse } from '../../generated/zod.gen.js'
 
 export function createTableDocument(
-  request: FastifyRequest<{ Body: CreateTableDocumentBody }>,
-  reply: FastifyReply
-) {
+  request: FastifyRequest<{
+    
+    Body: z.infer<typeof zCreateTableDocumentData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zCreateTableDocumentResponse>> {
   try {
     const _body = request.body
 
