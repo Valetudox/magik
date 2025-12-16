@@ -1,6 +1,3 @@
----
-to: apps/backend-<%= serviceName %>/tsconfig.json
----
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {

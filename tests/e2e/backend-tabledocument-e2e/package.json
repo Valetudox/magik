@@ -1,11 +1,11 @@
 {
-  "name": "backend-audio-e2e",
+  "name": "backend-tabledocument-e2e",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "npm run test:local",
-    "test:local": "bash -c 'set -o pipefail && docker compose up --build --abort-on-container-exit 2>&1 | grep -v \"backend-audio \"'",
+    "test:local": "bash -c 'set -o pipefail && docker compose up --build --abort-on-container-exit 2>&1 | grep -v \"backend-tabledocument \"'",
     "test:deployed": "docker compose -f docker-compose.deployed.yml up --build --abort-on-container-exit",
     "test:down": "docker compose down -v && docker compose -f docker-compose.deployed.yml down -v",
     "test:clean": "docker compose down -v --rmi all && docker compose -f docker-compose.deployed.yml down -v --rmi all"

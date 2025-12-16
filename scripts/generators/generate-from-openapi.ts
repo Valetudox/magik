@@ -53,7 +53,7 @@ program
       // Step 3: Generate backend service
       console.log('🏗️  Step 3: Generating backend service structure...')
       const description = parsed.info.description || `${domain} service`
-      await generateBackendService(domain, devPort, description, dataFolders)
+      await generateBackendService(domain, prodPort, description, dataFolders)
       console.log('✅ Backend service structure created\n')
 
       // Step 4: Generate actions for each operation
@@ -198,20 +198,27 @@ async function generateTypes(serviceName: string, schemas: Record<string, any>) 
 
 async function updateRoutes(serviceName: string, operations: any[]) {
   const routesPath = join(rootDir, 'apps', serviceName, 'src', 'routes.ts')
-  const imports: string[] = ["import type { FastifyInstance } from 'fastify'"]
+  const typeImport = "import type { FastifyInstance } from 'fastify'"
+  const actionImports: Array<{ path: string; statement: string }> = []
   const registrations: string[] = []
 
   for (const operation of operations) {
     const actionPath = OpenAPIParser.routeToActionPath(operation.method, operation.path)
-    const importPath = `./actions/${actionPath.replace('.action.ts', '.action')}`
-    const handlerName = `${operation.operationId}Handler`
+    const importPath = `./actions/${actionPath.replace('.action.ts', '.action.js')}`
+    const handlerName = operation.operationId
     const fastifyPath = OpenAPIParser.openapiPathToFastifyPath(operation.path)
 
-    imports.push(`import { ${handlerName} } from '${importPath}'`)
+    actionImports.push({
+      path: importPath,
+      statement: `import { ${handlerName} } from '${importPath}'`,
+    })
     registrations.push(`  fastify.${operation.method}('${fastifyPath}', ${handlerName})`)
   }
 
-  const content = `${imports.join('\n')}
+  // Sort action imports by import path
+  actionImports.sort((a, b) => a.path.localeCompare(b.path))
+
+  const content = `${typeImport}\n${actionImports.map(i => i.statement).join('\n')}
 
 export function registerRoutes(fastify: FastifyInstance) {
   fastify.get('/health', () => ({ status: 'ok' }))
@@ -253,6 +260,13 @@ async function generateE2ETests(domain: string, serviceName: string, port: numbe
 
 async function runLinters(serviceName: string) {
   try {
+    // Install dependencies first
+    console.log('  Installing dependencies...')
+    execSync('bun install', {
+      cwd: rootDir,
+      stdio: 'pipe',
+    })
+
     execSync(`bun run lint --backends ${serviceName}`, {
       cwd: rootDir,
       stdio: 'pipe',

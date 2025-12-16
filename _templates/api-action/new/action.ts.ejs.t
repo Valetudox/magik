@@ -11,31 +11,27 @@ interface <%= h.changeCase.pascalCase(functionName) %>Params {
 <% }) -%>
 }
 
-export async function <%= h.changeCase.camelCase(functionName) %>(
+export function <%= h.changeCase.camelCase(functionName) %>(
   request: FastifyRequest<{ Params: <%= h.changeCase.pascalCase(functionName) %>Params }>,
   reply: FastifyReply
 ) {
   try {
-    const { <%= params.join(', ') %> } = request.params
-
-    // TODO: Implement your logic here
+    const { <%= params.map(p => `${p}: _${p}`).join(', ') %> } = request.params
 
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
 <% } else { -%>
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest,
+export function <%= h.changeCase.camelCase(functionName) %>(
+  _request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    // TODO: Implement your logic here
-
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
 <% } -%>
@@ -48,25 +44,21 @@ interface <%= h.changeCase.pascalCase(functionName) %>Params {
 }
 <% } -%>
 
-interface <%= h.changeCase.pascalCase(functionName) %>Body {
-  // TODO: Define your request body interface
-}
+type <%= h.changeCase.pascalCase(functionName) %>Body = Record<string, unknown>
 
-export async function <%= h.changeCase.camelCase(functionName) %>(
+export function <%= h.changeCase.camelCase(functionName) %>(
   request: FastifyRequest<{ <% if (hasParams) { %>Params: <%= h.changeCase.pascalCase(functionName) %>Params; <% } %>Body: <%= h.changeCase.pascalCase(functionName) %>Body }>,
   reply: FastifyReply
 ) {
   try {
 <% if (hasParams) { -%>
-    const { <%= params.join(', ') %> } = request.params
+    const { <%= params.map(p => `${p}: _${p}`).join(', ') %> } = request.params
 <% } -%>
-    const body = request.body
-
-    // TODO: Implement your logic here
+    const _body = request.body
 
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
 <% } else if (method === 'delete') { -%>
@@ -77,31 +69,27 @@ interface <%= h.changeCase.pascalCase(functionName) %>Params {
 <% }) -%>
 }
 
-export async function <%= h.changeCase.camelCase(functionName) %>(
+export function <%= h.changeCase.camelCase(functionName) %>(
   request: FastifyRequest<{ Params: <%= h.changeCase.pascalCase(functionName) %>Params }>,
   reply: FastifyReply
 ) {
   try {
-    const { <%= params.join(', ') %> } = request.params
-
-    // TODO: Implement your delete logic here
+    const { <%= params.map(p => `${p}: _${p}`).join(', ') %> } = request.params
 
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
 <% } else { -%>
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest,
+export function <%= h.changeCase.camelCase(functionName) %>(
+  _request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    // TODO: Implement your delete logic here
-
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
 <% } -%>
