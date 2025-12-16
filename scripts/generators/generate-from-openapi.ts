@@ -53,12 +53,12 @@ program
       // Step 3: Generate backend service
       console.log('🏗️  Step 3: Generating backend service structure...')
       const description = parsed.info.description || `${domain} service`
-      await generateBackendService(serviceName, devPort, description, dataFolders)
+      await generateBackendService(domain, devPort, description, dataFolders)
       console.log('✅ Backend service structure created\n')
 
       // Step 4: Generate actions for each operation
       console.log('⚡ Step 4: Generating action files...')
-      await generateActions(serviceName, parsed.operations)
+      await generateActions(domain, parsed.operations)
       console.log(`✅ Generated ${parsed.operations.length} action files\n`)
 
       // Step 5: Generate types from OpenAPI
@@ -73,12 +73,13 @@ program
 
       // Step 7: Generate client package
       console.log('📦 Step 7: Generating client package...')
-      await generateClient(domain, openapiPath)
+      const relativeOpenapiPath = `specs/domains/${domain}/openapi.yaml`
+      await generateClient(domain, relativeOpenapiPath)
       console.log('✅ Client package generated\n')
 
       // Step 8: Generate E2E tests
       console.log('🧪 Step 8: Generating E2E tests...')
-      await generateE2ETests(domain, serviceName, prodPort, openapiPath)
+      await generateE2ETests(domain, serviceName, prodPort, relativeOpenapiPath)
       console.log('✅ E2E tests generated\n')
 
       // Step 9: Run linters
@@ -140,7 +141,7 @@ function validateInputs(serviceName: string, openapiPath: string) {
 }
 
 async function generateBackendService(
-  serviceName: string,
+  domain: string,
   port: number,
   description: string,
   dataFolders: string[]
@@ -149,7 +150,7 @@ async function generateBackendService(
     'backend-service',
     'new',
     '--serviceName',
-    serviceName,
+    domain,
     '--port',
     port.toString(),
     '--description',
@@ -163,7 +164,7 @@ async function generateBackendService(
   runHygen(args)
 }
 
-async function generateActions(serviceName: string, operations: any[]) {
+async function generateActions(domain: string, operations: any[]) {
   for (const operation of operations) {
     const route = OpenAPIParser.openapiPathToFastifyPath(operation.path)
     const functionName = operation.operationId || camelCase(`${operation.method} ${operation.path}`)
@@ -172,7 +173,7 @@ async function generateActions(serviceName: string, operations: any[]) {
       'api-action',
       'new',
       '--serviceName',
-      serviceName,
+      domain,
       '--route',
       route,
       '--method',
@@ -186,7 +187,11 @@ async function generateActions(serviceName: string, operations: any[]) {
 }
 
 async function generateTypes(serviceName: string, schemas: Record<string, any>) {
-  const args = ['openapi-types', 'new', '--serviceName', serviceName, '--schemas', JSON.stringify(schemas)]
+  // Encode schemas as Base64 to avoid shell escaping issues
+  const schemasJson = JSON.stringify(schemas)
+  const schemasBase64 = Buffer.from(schemasJson).toString('base64')
+
+  const args = ['openapi-types', 'new', '--serviceName', serviceName, '--schemasBase64', schemasBase64]
 
   runHygen(args)
 }

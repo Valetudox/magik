@@ -49,8 +49,10 @@ function generateInterface(name, schema, schemas) {
 module.exports = {
   prompt: ({ prompter, args }) => {
     // If arguments are provided, use them directly
-    if (args.serviceName && args.schemas) {
-      const schemas = JSON.parse(args.schemas)
+    if (args.serviceName && args.schemasBase64) {
+      // Decode Base64 schemas
+      const schemasJson = Buffer.from(args.schemasBase64, 'base64').toString('utf-8')
+      const schemas = JSON.parse(schemasJson)
 
       // Generate all interfaces
       const interfaces = []
@@ -65,6 +67,6 @@ module.exports = {
     }
 
     // Interactive mode not supported for this generator
-    throw new Error('This generator must be called with --serviceName and --schemas arguments')
+    throw new Error('This generator must be called with --serviceName and --schemasBase64 arguments')
   },
 }

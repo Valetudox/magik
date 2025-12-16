@@ -35,10 +35,17 @@ module.exports = {
         throw new Error(portValidation)
       }
 
+      // Parse dataFolders from comma-separated string to array
+      let dataFolders = []
+      if (args.dataFolders) {
+        dataFolders = args.dataFolders.split(',').map(f => f.trim()).filter(f => f !== '')
+      }
+
       return Promise.resolve({
         serviceName: args.serviceName,
         port: args.port,
-        description: args.description || `${args.serviceName} service`
+        description: args.description || `${args.serviceName} service`,
+        dataFolders: dataFolders
       })
     }
 
@@ -63,7 +70,25 @@ module.exports = {
           name: 'description',
           message: 'Service description:',
           initial: (prev) => `${prev.serviceName} service`
+        },
+        {
+          type: 'input',
+          name: 'dataFolders',
+          message: 'Data folders (comma-separated, leave empty for none):',
+          initial: ''
         }
       ])
+      .then(answers => {
+        // Parse dataFolders from comma-separated string to array
+        let dataFolders = []
+        if (answers.dataFolders) {
+          dataFolders = answers.dataFolders.split(',').map(f => f.trim()).filter(f => f !== '')
+        }
+
+        return {
+          ...answers,
+          dataFolders: dataFolders
+        }
+      })
   }
 }
