@@ -9,7 +9,6 @@ import { CIReporter } from './reporters/ci-reporter';
 import { CLIReporter } from './reporters/cli-reporter';
 import { createBackendTasks, BACKEND_TASK_NAMES } from './configs/backend-tasks';
 import { createFrontendTasks, FRONTEND_TASK_NAMES } from './configs/frontend-tasks';
-import { createOpenAPITasks, OPENAPI_TASK_NAMES } from './configs/openapi-tasks';
 import type { UnifiedTask } from './types';
 
 // Get root directory
@@ -54,7 +53,6 @@ function discoverServices(prefix: string): string[] {
 function buildUnifiedTasks(options: {
   lintBackends: boolean;
   lintFrontends: boolean;
-  lintOpenAPI: boolean;
   specificBackends?: string[];
   specificFrontends?: string[];
 }): UnifiedTask[] {
@@ -112,16 +110,6 @@ function buildUnifiedTasks(options: {
         subtasks: createFrontendTasks(service, rootDir),
       });
     }
-  }
-
-  // Build OpenAPI task
-  if (options.lintOpenAPI) {
-    tasks.push({
-      id: 'openapi',
-      name: 'openapi',
-      type: 'openapi',
-      subtasks: createOpenAPITasks(rootDir),
-    });
   }
 
   return tasks;
@@ -184,15 +172,12 @@ program
   .option('--concurrency <number>', 'Max concurrent services to lint', '5')
   .option('--backends [services...]', 'Lint only specified backend services (or all if no services specified)')
   .option('--frontends [services...]', 'Lint only specified frontend services (or all if no services specified)')
-  .option('--skip-openapi', 'Skip OpenAPI validation')
   .action(async (options) => {
     const isCIMode = options.ci || false;
-    const skipOpenAPI = options.skipOpenapi || false;
 
     // Determine what to lint
     const lintBackends = !options.frontends; // Lint backends unless only frontends specified
     const lintFrontends = !options.backends; // Lint frontends unless only backends specified
-    const lintOpenAPI = !skipOpenAPI && !options.frontends; // OpenAPI only with backends
     const specificBackends = Array.isArray(options.backends) ? options.backends : undefined;
     const specificFrontends = Array.isArray(options.frontends) ? options.frontends : undefined;
 
@@ -200,7 +185,6 @@ program
     const unifiedTasks = buildUnifiedTasks({
       lintBackends,
       lintFrontends,
-      lintOpenAPI,
       specificBackends,
       specificFrontends,
     });
@@ -214,7 +198,6 @@ program
     const allTaskNames: Record<string, string> = {
       ...BACKEND_TASK_NAMES,
       ...FRONTEND_TASK_NAMES,
-      ...OPENAPI_TASK_NAMES,
     };
 
     // Create reporter
@@ -238,7 +221,6 @@ program
     // Show what we're linting
     const backendTasks = unifiedTasks.filter(t => t.type === 'backend');
     const frontendTasks = unifiedTasks.filter(t => t.type === 'frontend');
-    const openapiTasks = unifiedTasks.filter(t => t.type === 'openapi');
 
     if (specificBackends && specificBackends.length > 0) {
       console.log(`\x1b[0;36mLinting specific backend(s): ${specificBackends.join(', ')}\x1b[0m`);
@@ -250,10 +232,6 @@ program
       console.log(`\x1b[0;36mLinting specific frontend(s): ${specificFrontends.join(', ')}\x1b[0m`);
     } else if (frontendTasks.length > 0) {
       console.log(`\x1b[0;36mDiscovered ${frontendTasks.length} frontend service(s)\x1b[0m`);
-    }
-
-    if (openapiTasks.length > 0) {
-      console.log(`\x1b[0;36mOpenAPI validation enabled\x1b[0m`);
     }
 
     console.log('');

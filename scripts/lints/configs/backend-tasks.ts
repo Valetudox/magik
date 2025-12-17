@@ -2,6 +2,7 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, TaskResult } from '../types';
 import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile } from '../validators/backend';
+import { validateBackendOpenAPI } from '../validators/openapi';
 
 export const BACKEND_TASK_NAMES: Record<string, string> = {
   eslint: 'ESLint',
@@ -10,6 +11,7 @@ export const BACKEND_TASK_NAMES: Record<string, string> = {
   'index-structure': 'Index.ts structure validation',
   config: 'Config extends validation',
   routes: 'Route-action alignment',
+  openapi: 'OpenAPI validation',
 };
 
 export function createBackendTasks(service: string, rootDir: string): LintTask[] {
@@ -129,6 +131,26 @@ export function createBackendTasks(service: string, rootDir: string): LintTask[]
           return {
             success: result.success,
             output: result.success ? 'Route-action validation passed' : undefined,
+            error: result.errors ? result.errors.join('\n') : undefined,
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || String(error),
+          };
+        }
+      },
+    },
+    {
+      id: 'openapi',
+      name: 'OpenAPI validation',
+      command: async (): Promise<TaskResult> => {
+        try {
+          const result = validateBackendOpenAPI(service, rootDir);
+
+          return {
+            success: result.success,
+            output: result.success ? result.output : undefined,
             error: result.errors ? result.errors.join('\n') : undefined,
           };
         } catch (error: any) {
