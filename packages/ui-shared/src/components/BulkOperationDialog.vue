@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
 import { ref, watch } from 'vue'
-import type { BulkOperationConfig, BulkOperationResult } from '../types/list-page.types'
+import type { BulkOperationConfig, BulkOperationResult } from '../types/list-page.schema'
 
 interface Props {
   modelValue: boolean

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BulkActionConfig } from '../../types/list-page.types'
+import type { BulkActionConfig } from '../../types/list-page.schema'
 
 interface Props {
   selectedCount: number

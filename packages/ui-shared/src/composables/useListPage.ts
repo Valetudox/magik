@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onUnmounted, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
-import type { ListPageConfig } from '../types/list-page.types'
+import type { ListPageConfig } from '../types/list-page.schema'
 
 export function useListPage<T extends Record<string, any>>(config: ListPageConfig<T>) {
   const router = useRouter()
@@ -61,7 +61,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
       }
 
       // Trigger onCreate callback
-      if (config.createAction?.onCreate) {
+      if (config.createAction?.enabled && 'onCreate' in config.createAction && config.createAction.onCreate) {
         await config.createAction.onCreate(result)
       }
     } catch (e) {

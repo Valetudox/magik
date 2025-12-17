@@ -27,9 +27,8 @@ export {
 
 // Export types
 export type { MenuItem } from './types'
-export * from './types/list-page.types'
 
-// Export Zod schemas (for runtime validation)
+// Export Zod schemas and types
 export {
   listPageConfigSchema,
   listFieldConfigSchema,
@@ -42,4 +41,15 @@ export {
   socketConfigSchema,
   bulkOperationConfigSchema,
   bulkOperationResultSchema,
+  type ListPageConfig,
+  type ListFieldConfig,
+  type RowActionConfig,
+  type BulkActionConfig,
+  type EndpointConfig,
+  type PageUrlConfig,
+  type CreateActionConfig,
+  type DeleteDialogConfig,
+  type SocketConfig,
+  type BulkOperationConfig,
+  type BulkOperationResult,
 } from './types/list-page.schema'

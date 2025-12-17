@@ -1,5 +1,4 @@
-import { listPageConfigSchema } from '../types/list-page.schema'
-import type { ListPageConfig } from '../types/list-page.types'
+import { listPageConfigSchema, type ListPageConfig } from '../types/list-page.schema'
 
 /**
  * Validation result type

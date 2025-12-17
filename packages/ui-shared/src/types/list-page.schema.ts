@@ -217,14 +217,104 @@ export const bulkOperationConfigSchema = z.object({
   resultsTitle: z.string().min(1).describe('Dialog title showing results'),
 }).describe('Bulk operation configuration for BulkOperationDialog')
 
-export type ListFieldConfig<T = any> = z.infer<typeof listFieldConfigSchema>
-export type RowActionConfig<T = any> = z.infer<typeof rowActionConfigSchema>
-export type BulkActionConfig<T = any> = z.infer<typeof bulkActionConfigSchema>
-export type EndpointConfig = z.infer<typeof endpointConfigSchema>
-export type PageUrlConfig<T = any> = z.infer<typeof pageUrlConfigSchema>
-export type CreateActionConfig = z.infer<typeof createActionConfigSchema>
-export type DeleteDialogConfig = z.infer<typeof deleteDialogConfigSchema>
-export type SocketConfig<T = any> = z.infer<typeof socketConfigSchema>
-export type ListPageConfig<T = any> = z.infer<typeof listPageConfigSchema>
-export type BulkOperationResult = z.infer<typeof bulkOperationResultSchema>
-export type BulkOperationConfig<T = any> = z.infer<typeof bulkOperationConfigSchema>
+export type ListFieldConfig<T = any> = {
+  key: string
+  title: string
+  sortable?: boolean
+  align?: 'start' | 'center' | 'end'
+  formatter?: (value: any, item: T) => string | number | boolean
+  renderer?: (value: any, item: T) => any
+  width?: string | number
+}
+
+export type RowActionConfig<T = any> = {
+  type: 'view' | 'delete' | 'custom'
+  icon: string
+  title: string
+  onClick?: (item: T) => void | Promise<void>
+  disabled?: (item: T) => boolean
+  color?: string
+}
+
+export type BulkActionConfig<T = any> = {
+  type: 'delete' | 'custom'
+  label: string
+  icon: string
+  onClick?: (selectedIds: string[], items: T[]) => void | Promise<void>
+  disabled?: (selectedIds: string[], items: T[]) => boolean
+  color?: string
+}
+
+export type EndpointConfig = {
+  list: () => Promise<any[]>
+  create?: (data: any) => Promise<{ id: string; [key: string]: any }>
+  delete?: (id: string) => Promise<void>
+}
+
+export type PageUrlConfig<T = any> = {
+  edit?: (item: T) => string
+  create?: string
+}
+
+export type CreateActionConfig =
+  | { enabled: false }
+  | {
+      enabled: true
+      label?: string
+      useDialog?: true
+      dialogTitle?: string
+      dialogComponent?: any
+      onCreate?: (data: any) => void | Promise<void>
+    }
+  | {
+      enabled: true
+      label?: string
+      useDialog: false
+      onCreate?: (data: any) => void | Promise<void>
+    }
+
+export type DeleteDialogConfig = {
+  confirmMessage?: (item: any) => string
+  bulkConfirmMessage?: (count: number) => string
+}
+
+export type SocketConfig<T = any> =
+  | { enabled: false }
+  | {
+      enabled: true
+      initSocket?: () => void
+      handlers: {
+        onUpdated?: (callback: (data: { id: string; [key: string]: any }) => void) => () => void
+        onAdded?: (callback: (data: { id: string; [key: string]: any }) => void) => () => void
+        onDeleted?: (callback: (data: { id: string }) => void) => () => void
+      }
+    }
+
+export type ListPageConfig<T = any> = {
+  entityId: string
+  entityName: string
+  entityNamePlural: string
+  fields: ListFieldConfig<T>[]
+  rowActions?: RowActionConfig<T>[]
+  createAction?: CreateActionConfig
+  endpoints: EndpointConfig
+  pageUrls?: PageUrlConfig<T>
+  deleteDialog?: DeleteDialogConfig
+  socket?: SocketConfig<T>
+  enableSearch?: boolean
+  itemsPerPage?: number
+  defaultSort?: { key: string; order: 'asc' | 'desc' }[]
+} & (
+  | { enableSelection?: false | undefined; bulkActions?: undefined }
+  | { enableSelection: true; bulkActions?: BulkActionConfig<T>[] }
+)
+
+export type BulkOperationResult =
+  | { success: true; id: string; name: string }
+  | { success: false; id: string; name: string; error: string }
+
+export type BulkOperationConfig<T = any> = {
+  operation: (item: T) => Promise<BulkOperationResult>
+  title: string
+  resultsTitle: string
+}
