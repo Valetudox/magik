@@ -1,8 +1,7 @@
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, TaskResult } from '../types';
-import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile, validateE2EExists } from '../validators/backend';
-import { validateBackendOpenAPI } from '../validators/openapi';
+import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile, validateE2EExists, validateBackendOpenAPI } from '../validators/backend';
 
 export const BACKEND_TASK_NAMES: Record<string, string> = {
   eslint: 'ESLint',
