@@ -259,7 +259,7 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
       :on-create="createItem"
     >
       <component
-        v-if="config.createAction?.dialogComponent"
+        v-if="config.createAction?.enabled && 'dialogComponent' in config.createAction && config.createAction.dialogComponent"
         :is="config.createAction.dialogComponent"
         v-model="showCreateDialog"
         @create="createItem"
