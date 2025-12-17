@@ -22,6 +22,7 @@
     "add:action": "bun run scripts/generators/add-action.ts",
     "start": "bun run apps/cli-audio/src/index.ts",
     "dev": "./scripts/dev.sh",
+    "storybook": "bun run --cwd packages/ui-shared storybook",
     "lint": "bun ./scripts/lints/lint-all.ts lint",
     "lint:ci": "bun ./scripts/lints/lint-all.ts lint --ci",
     "format": "prettier --write .",
