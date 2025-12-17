@@ -1,56 +1,33 @@
 import { z } from 'zod'
 
-/**
- * Zod schemas for list page configuration with discriminated unions
- * to prevent invalid states at runtime
- */
-
-// ============================================================================
-// Base Schemas
-// ============================================================================
-
-/**
- * Field formatter function schema
- * Note: Functions can't be fully validated by Zod, so we use z.function()
- */
 const fieldFormatterSchema = z.function()
+  .describe('Transforms raw field value to string, number, or boolean for display')
 
-/**
- * Field renderer function schema
- */
 const fieldRendererSchema = z.function()
+  .describe('Returns VNode or Component for custom field rendering')
 
-/**
- * Field configuration for table columns
- */
 export const listFieldConfigSchema = z.object({
-  key: z.string().min(1),
-  title: z.string().min(1),
-  sortable: z.boolean().optional(),
-  align: z.enum(['start', 'center', 'end']).optional(),
+  key: z.string().min(1).describe('Property key from entity data'),
+  title: z.string().min(1).describe('Column header text'),
+  sortable: z.boolean().optional().describe('Enable column sorting'),
+  align: z.enum(['start', 'center', 'end']).optional().describe('Column alignment'),
   formatter: fieldFormatterSchema.optional(),
   renderer: fieldRendererSchema.optional(),
-  width: z.union([z.string(), z.number()]).optional(),
-}).refine(
-  (data) => !(data.formatter && data.renderer),
-  {
-    message: 'Cannot use both formatter and renderer on the same field',
-    path: ['formatter'],
-  }
-)
-
-// ============================================================================
-// Row Actions (Discriminated Union)
-// ============================================================================
+  width: z.union([z.string(), z.number()]).optional().describe('Column width'),
+}).describe('Field configuration for table columns')
+  .refine(
+    (data) => !(data.formatter && data.renderer),
+    { message: 'Cannot use both formatter and renderer on the same field', path: ['formatter'] }
+  )
 
 const rowActionViewSchema = z.object({
   type: z.literal('view'),
-  icon: z.string().min(1),
-  title: z.string().min(1),
-  onClick: z.function().optional(),
-  disabled: z.function().optional(),
-  color: z.string().optional(),
-})
+  icon: z.string().min(1).describe('MDI icon name'),
+  title: z.string().min(1).describe('Action title/tooltip'),
+  onClick: z.function().optional().describe('Custom click handler'),
+  disabled: z.function().optional().describe('Function returning disabled state'),
+  color: z.string().optional().describe('Action color'),
+}).describe('View/edit action that navigates to detail page')
 
 const rowActionDeleteSchema = z.object({
   type: z.literal('delete'),
@@ -59,278 +36,186 @@ const rowActionDeleteSchema = z.object({
   onClick: z.function().optional(),
   disabled: z.function().optional(),
   color: z.string().optional(),
-})
+}).describe('Delete action that shows confirmation dialog')
 
 const rowActionCustomSchema = z.object({
   type: z.literal('custom'),
   icon: z.string().min(1),
   title: z.string().min(1),
-  onClick: z.function(),
+  onClick: z.function().describe('Required click handler for custom actions'),
   disabled: z.function().optional(),
   color: z.string().optional(),
-})
+}).describe('Custom action with user-defined onClick handler')
 
 export const rowActionConfigSchema = z.discriminatedUnion('type', [
   rowActionViewSchema,
   rowActionDeleteSchema,
   rowActionCustomSchema,
-])
-
-// ============================================================================
-// Bulk Actions (Discriminated Union)
-// ============================================================================
+]).describe('Row action configuration discriminated by type')
 
 const bulkActionDeleteSchema = z.object({
   type: z.literal('delete'),
-  label: z.string().min(1),
+  label: z.string().min(1).describe('Action button label'),
   icon: z.string().min(1),
   onClick: z.function().optional(),
   disabled: z.function().optional(),
   color: z.string().optional(),
-})
+}).describe('Bulk delete action for selected items')
 
 const bulkActionCustomSchema = z.object({
   type: z.literal('custom'),
   label: z.string().min(1),
   icon: z.string().min(1),
-  onClick: z.function(),
+  onClick: z.function().describe('Required handler receiving selectedIds and items'),
   disabled: z.function().optional(),
   color: z.string().optional(),
-})
+}).describe('Custom bulk action with user-defined onClick handler')
 
 export const bulkActionConfigSchema = z.discriminatedUnion('type', [
   bulkActionDeleteSchema,
   bulkActionCustomSchema,
-])
-
-// ============================================================================
-// Endpoints
-// ============================================================================
+]).describe('Bulk action configuration discriminated by type')
 
 export const endpointConfigSchema = z.object({
-  list: z.function(),
-  create: z.function().optional(),
-  delete: z.function().optional(),
-})
-
-// ============================================================================
-// Page URLs
-// ============================================================================
+  list: z.function().describe('Function returning Promise<T[]> to fetch all items'),
+  create: z.function().optional().describe('Function to create new item, returns Promise<{id: string}>'),
+  delete: z.function().optional().describe('Function to delete item by id, returns Promise<void>'),
+}).describe('API endpoint functions for CRUD operations')
 
 export const pageUrlConfigSchema = z.object({
-  edit: z.function().optional(),
-  create: z.string().optional(),
-})
-
-// ============================================================================
-// Create Action (Discriminated Union)
-// ============================================================================
+  edit: z.function().optional().describe('Function generating detail/edit page URL from item'),
+  create: z.string().optional().describe('URL for create page (when not using dialog)'),
+}).describe('Navigation URLs for pages')
 
 const createActionDisabledSchema = z.object({
   enabled: z.literal(false),
-})
+}).describe('Create action disabled')
 
 const createActionWithDialogSchema = z.object({
   enabled: z.literal(true),
-  label: z.string().optional(),
-  useDialog: z.literal(true).optional().default(true),
+  label: z.string().optional().describe('Button label'),
+  useDialog: z.literal(true).optional().default(true).describe('Use dialog for creation'),
   dialogTitle: z.string().optional(),
-  dialogComponent: z.any().optional(), // Vue Component
-  onCreate: z.function().optional(),
-})
+  dialogComponent: z.any().optional().describe('Custom Vue component for dialog'),
+  onCreate: z.function().optional().describe('Callback when item is created'),
+}).describe('Create action using dialog')
 
 const createActionWithUrlSchema = z.object({
   enabled: z.literal(true),
   label: z.string().optional(),
-  useDialog: z.literal(false),
+  useDialog: z.literal(false).describe('Navigate to URL instead of dialog'),
   onCreate: z.function().optional(),
-})
+}).describe('Create action navigating to URL (requires pageUrls.create)')
 
 export const createActionConfigSchema = z.discriminatedUnion('enabled', [
   createActionDisabledSchema,
   createActionWithDialogSchema,
   createActionWithUrlSchema,
-])
-
-// ============================================================================
-// Delete Dialog
-// ============================================================================
+]).describe('Create action configuration discriminated by enabled state')
 
 export const deleteDialogConfigSchema = z.object({
-  confirmMessage: z.function().optional(),
-  bulkConfirmMessage: z.function().optional(),
-})
-
-// ============================================================================
-// Socket Configuration (Discriminated Union)
-// ============================================================================
+  confirmMessage: z.function().optional().describe('Custom confirmation message for single delete'),
+  bulkConfirmMessage: z.function().optional().describe('Custom confirmation message for bulk delete'),
+}).describe('Delete dialog customization')
 
 const socketDisabledSchema = z.object({
   enabled: z.literal(false),
-})
+}).describe('Socket.IO disabled')
 
 const socketHandlersSchema = z.object({
-  onUpdated: z.function().optional(),
-  onAdded: z.function().optional(),
-  onDeleted: z.function().optional(),
-})
+  onUpdated: z.function().optional().describe('Handler for item update events'),
+  onAdded: z.function().optional().describe('Handler for item add events'),
+  onDeleted: z.function().optional().describe('Handler for item delete events'),
+}).describe('Socket.IO event handlers')
 
 const socketEnabledSchema = z.object({
   enabled: z.literal(true),
-  initSocket: z.function().optional(),
-  handlers: socketHandlersSchema,
-})
+  initSocket: z.function().optional().describe('Function to initialize socket connection'),
+  handlers: socketHandlersSchema.describe('Event handlers required when socket enabled'),
+}).describe('Socket.IO enabled with handlers')
 
 export const socketConfigSchema = z.discriminatedUnion('enabled', [
   socketDisabledSchema,
   socketEnabledSchema,
-])
+]).describe('Socket.IO configuration discriminated by enabled state')
 
-// ============================================================================
-// Selection Configuration (Discriminated Union)
-// ============================================================================
-
-/**
- * When selection is disabled, bulk actions must not be defined
- */
-const selectionDisabledSchema = z.object({
-  enableSelection: z.union([z.literal(false), z.undefined()]),
-  bulkActions: z.undefined(),
-})
-
-/**
- * When selection is enabled, bulk actions can be defined
- */
-const selectionEnabledSchema = z.object({
-  enableSelection: z.literal(true),
-  bulkActions: z.array(bulkActionConfigSchema).optional(),
-})
-
-export const selectionConfigSchema = z.discriminatedUnion('enableSelection', [
-  selectionDisabledSchema,
-  selectionEnabledSchema,
-])
-
-// ============================================================================
-// Main List Page Configuration
-// ============================================================================
-
-/**
- * Base configuration that all variants share
- */
 const baseConfigSchema = z.object({
-  entityId: z.string().min(1),
-  entityName: z.string().min(1),
-  entityNamePlural: z.string().min(1),
-  fields: z.array(listFieldConfigSchema).min(1),
-  rowActions: z.array(rowActionConfigSchema).optional(),
+  entityId: z.string().min(1).describe('Property name used as unique identifier'),
+  entityName: z.string().min(1).describe('Singular entity display name'),
+  entityNamePlural: z.string().min(1).describe('Plural entity display name'),
+  fields: z.array(listFieldConfigSchema).min(1).describe('Field/column configurations'),
+  rowActions: z.array(rowActionConfigSchema).optional().describe('Per-row action buttons'),
   createAction: createActionConfigSchema.optional(),
   endpoints: endpointConfigSchema,
   pageUrls: pageUrlConfigSchema.optional(),
   deleteDialog: deleteDialogConfigSchema.optional(),
   socket: socketConfigSchema.optional(),
-  enableSearch: z.boolean().optional(),
-  itemsPerPage: z.number().int().positive().optional(),
+  enableSearch: z.boolean().optional().describe('Show search field'),
+  itemsPerPage: z.number().int().positive().optional().describe('Rows per page'),
   defaultSort: z.array(z.object({
     key: z.string(),
     order: z.enum(['asc', 'desc']),
-  })).optional(),
-})
+  })).optional().describe('Default sort configuration'),
+}).describe('Base configuration shared by all list page variants')
 
-/**
- * Configuration without selection (no bulk actions allowed)
- */
 const listPageConfigWithoutSelectionSchema = baseConfigSchema.extend({
   enableSelection: z.union([z.literal(false), z.undefined()]),
   bulkActions: z.undefined(),
-})
+}).describe('List page without selection (bulk actions not allowed)')
 
-/**
- * Configuration with selection (bulk actions allowed)
- */
 const listPageConfigWithSelectionSchema = baseConfigSchema.extend({
   enableSelection: z.literal(true),
   bulkActions: z.array(bulkActionConfigSchema).optional(),
-})
+}).describe('List page with selection (bulk actions allowed)')
 
-/**
- * Main list page configuration schema (discriminated union)
- */
 export const listPageConfigSchema = z.discriminatedUnion('enableSelection', [
   listPageConfigWithoutSelectionSchema,
   listPageConfigWithSelectionSchema,
 ])
+  .describe('Main list page configuration discriminated by enableSelection')
   .refine(
     (data) => {
-      // If any row action is 'delete', endpoints.delete must be defined
       const hasDeleteRowAction = data.rowActions?.some(action => action.type === 'delete')
-      if (hasDeleteRowAction && !data.endpoints.delete) {
-        return false
-      }
-      return true
+      return !hasDeleteRowAction || !!data.endpoints.delete
     },
-    {
-      message: 'Row action type "delete" requires endpoints.delete to be defined',
-      path: ['endpoints', 'delete'],
-    }
+    { message: 'Row action type "delete" requires endpoints.delete to be defined', path: ['endpoints', 'delete'] }
   )
   .refine(
     (data) => {
-      // If any bulk action is 'delete', endpoints.delete must be defined
       const hasDeleteBulkAction = data.bulkActions?.some(action => action.type === 'delete')
-      if (hasDeleteBulkAction && !data.endpoints.delete) {
-        return false
-      }
-      return true
+      return !hasDeleteBulkAction || !!data.endpoints.delete
     },
-    {
-      message: 'Bulk action type "delete" requires endpoints.delete to be defined',
-      path: ['endpoints', 'delete'],
-    }
+    { message: 'Bulk action type "delete" requires endpoints.delete to be defined', path: ['endpoints', 'delete'] }
   )
   .refine(
     (data) => {
-      // If createAction uses dialog=false, pageUrls.create must be defined
       if (data.createAction?.enabled && 'useDialog' in data.createAction && data.createAction.useDialog === false) {
-        if (!data.pageUrls?.create) {
-          return false
-        }
+        return !!data.pageUrls?.create
       }
       return true
     },
-    {
-      message: 'createAction with useDialog=false requires pageUrls.create to be defined',
-      path: ['pageUrls', 'create'],
-    }
+    { message: 'createAction with useDialog=false requires pageUrls.create to be defined', path: ['pageUrls', 'create'] }
   )
-
-// ============================================================================
-// Bulk Operation (used separately, not part of ListPageConfig)
-// ============================================================================
 
 export const bulkOperationResultSchema = z.discriminatedUnion('success', [
   z.object({
     success: z.literal(true),
     id: z.string(),
     name: z.string(),
-  }),
+  }).describe('Successful bulk operation result'),
   z.object({
     success: z.literal(false),
     id: z.string(),
     name: z.string(),
-    error: z.string(),
-  }),
-])
+    error: z.string().describe('Error message'),
+  }).describe('Failed bulk operation result'),
+]).describe('Bulk operation result discriminated by success state')
 
 export const bulkOperationConfigSchema = z.object({
-  operation: z.function(),
-  title: z.string().min(1),
-  resultsTitle: z.string().min(1),
-})
-
-// ============================================================================
-// Exported Types (derived from Zod schemas)
-// ============================================================================
+  operation: z.function().describe('Function performing operation on single item, returns BulkOperationResult'),
+  title: z.string().min(1).describe('Dialog title during operation'),
+  resultsTitle: z.string().min(1).describe('Dialog title showing results'),
+}).describe('Bulk operation configuration for BulkOperationDialog')
 
 export type ListFieldConfig<T = any> = z.infer<typeof listFieldConfigSchema>
 export type RowActionConfig<T = any> = z.infer<typeof rowActionConfigSchema>

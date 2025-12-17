@@ -2,7 +2,7 @@
 
 ## Overview
 
-All list pages in frontend applications MUST use the `EntityListPage` component from `@magik/ui-shared`. This component provides a configuration-based approach for building consistent, feature-rich list views.
+All list pages MUST use `EntityListPage` from `@magik/ui-shared` with configuration validated by Zod schemas.
 
 ## Core Component
 
@@ -10,136 +10,87 @@ All list pages in frontend applications MUST use the `EntityListPage` component 
 import { EntityListPage, type ListPageConfig } from '@magik/ui-shared'
 ```
 
-The component accepts a single `config` prop of type `ListPageConfig<T>` where `T` is your entity type.
+## Validation
 
-## Runtime Validation with Zod
+### Why Validation?
 
-The configuration uses Zod schemas with **discriminated unions** to prevent invalid states at runtime. This ensures type safety and catches configuration errors early.
+Zod schemas with discriminated unions prevent invalid states:
 
-### Key Constraints Enforced
+1. `bulkActions` requires `enableSelection: true`
+2. `socket.enabled: true` requires `handlers`
+3. Delete actions require `endpoints.delete`
+4. Fields cannot have both `formatter` and `renderer`
+5. `createAction.useDialog: false` requires `pageUrls.create`
 
-1. **Bulk actions require selection**: `bulkActions` can only be defined when `enableSelection: true`
-2. **Socket handlers required**: `socket.enabled: true` requires `handlers` to be defined
-3. **Delete endpoints required**: Row/bulk delete actions require `endpoints.delete`
-4. **Formatter XOR renderer**: Fields cannot have both `formatter` and `renderer`
-5. **Create URL required**: `createAction.useDialog: false` requires `pageUrls.create`
+See full schemas: [`list-page.schema.ts`](../../../../packages/ui-shared/src/types/list-page.schema.ts)
 
-### Validation Utilities
+### Validation Usage
 
 ```typescript
-import {
-  validateListPageConfig,
-  validateListPageConfigOrThrow,
-  validateListPageConfigDev,
-} from '@magik/ui-shared'
+import { validateListPageConfig, validateListPageConfigOrThrow } from '@magik/ui-shared'
 
-// Option 1: Safe validation (returns result)
+// Safe validation
 const result = validateListPageConfig(config)
 if (!result.success) {
-  console.error('Invalid config:', result.errors)
+  console.error(result.errors)
 }
 
-// Option 2: Throw on invalid (fail fast)
-try {
-  validateListPageConfigOrThrow(config)
-} catch (error) {
-  console.error('Validation failed:', error)
-}
+// Fail fast
+validateListPageConfigOrThrow(config)
 
-// Option 3: Development-only warnings
-validateListPageConfigDev(config) // Only runs in dev mode
+// Dev-only (recommended)
+validateListPageConfigDev(config)
 ```
 
 ## Configuration Structure
 
-### Required Properties
+### Minimal Config
 
 ```typescript
-const config: ListPageConfig<YourEntity> = {
-  // Entity identification
-  entityId: 'id',              // Property name used as unique identifier
-  entityName: 'Item',          // Singular display name
-  entityNamePlural: 'Items',   // Plural display name
-
-  // Field definitions
-  fields: [/* ListFieldConfig[] */],
-
-  // API endpoints
+const config: ListPageConfig<T> = {
+  entityId: 'id',
+  entityName: 'Item',
+  entityNamePlural: 'Items',
+  fields: [
+    { key: 'name', title: 'Name', sortable: true }
+  ],
   endpoints: {
-    list: () => Promise<YourEntity[]>
+    list: () => api.getItems()
   },
 }
 ```
 
-### Field Configuration
-
-Each field in the `fields` array supports:
+### With Operations
 
 ```typescript
-{
-  key: string              // Property key from entity
-  title: string            // Column header text
-  sortable?: boolean       // Enable sorting (default: false)
-  align?: 'start' | 'center' | 'end'
-  width?: string | number  // Column width
+const config: ListPageConfig<T> = {
+  // ...base config
 
-  // Value transformation (choose one)
-  formatter?: (value: any, item: T) => string | number | boolean
-  renderer?: (value: any, item: T) => VNode | Component
-}
-```
+  enableSelection: true,  // Required for bulk actions
+  bulkActions: [
+    { type: 'delete', label: 'Delete', icon: 'mdi-delete' }
+  ],
 
-**Field rendering priority:**
-1. `renderer` - Custom VNode/Component (for chips, icons, etc.)
-2. `formatter` - Transform to string/number/boolean
-3. Raw value - Direct display
+  rowActions: [
+    { type: 'view', icon: 'mdi-pencil', title: 'Edit' },
+    { type: 'delete', icon: 'mdi-delete', title: 'Delete' }
+  ],
 
-### Optional Properties
+  createAction: {
+    enabled: true,
+    useDialog: true,  // or false with pageUrls.create
+  },
 
-```typescript
-{
-  // Actions
-  rowActions?: RowActionConfig<T>[]      // Actions per row
-  bulkActions?: BulkActionConfig<T>[]    // Actions for selected items
-  createAction?: CreateActionConfig       // Create new item action
-
-  // Additional endpoints
   endpoints: {
-    list: () => Promise<T[]>
-    create?: (data: any) => Promise<{ id: string }>
-    delete?: (id: string) => Promise<void>
+    list: () => api.getItems(),
+    delete: (id) => api.deleteItem(id),  // Required for delete actions
   },
-
-  // Navigation
-  pageUrls?: {
-    edit?: (item: T) => string  // Detail page URL generator
-    create?: string             // Create page URL (if not using dialog)
-  },
-
-  // Real-time updates
-  socket?: SocketConfig<T>,
-
-  // UI behavior
-  enableSelection?: boolean    // Enable row selection (default: false)
-  enableSearch?: boolean       // Enable search field (default: false)
-  itemsPerPage?: number        // Rows per page (default: 50)
-  defaultSort?: [{ key: string; order: 'asc' | 'desc' }]
-
-  // Dialog customization
-  deleteDialog?: {
-    confirmMessage?: (item: T) => string
-    bulkConfirmMessage?: (count: number) => string
-  }
 }
 ```
 
 ## Use Cases
 
-### Use Case 1: Read-Only List (No Operations)
-
-**Scenario:** Display data without create, edit, or delete capabilities.
-
-**Example:** Audio recordings list from file system.
+### Read-Only List
 
 ```typescript
 const config: ListPageConfig<Recording> = {
@@ -153,7 +104,7 @@ const config: ListPageConfig<Recording> = {
   ],
 
   rowActions: [
-    { type: 'view', icon: 'mdi-eye', title: 'View Details' }
+    { type: 'view', icon: 'mdi-eye', title: 'View' }
   ],
 
   endpoints: {
@@ -164,26 +115,12 @@ const config: ListPageConfig<Recording> = {
     edit: (item) => `/${item.id}`
   },
 
-  // No operations
-  bulkActions: undefined,
-  createAction: undefined,
-  enableSelection: false,
+  enableSelection: false,  // No bulk operations
   enableSearch: true,
 }
 ```
 
-**Key features:**
-- View-only row action
-- No bulk operations
-- No selection
-- No create/delete endpoints
-- Search enabled for filtering
-
-### Use Case 2: Full CRUD with Bulk Operations
-
-**Scenario:** Complete create, read, update, delete with bulk actions.
-
-**Example:** Decision documents with Confluence integration.
+### Full CRUD with Bulk Operations
 
 ```typescript
 const config: ListPageConfig<Decision> = {
@@ -195,7 +132,7 @@ const config: ListPageConfig<Decision> = {
     {
       key: 'status',
       title: 'Status',
-      renderer: (value) => h(VChip, { color: getStatusColor(value) }, value)
+      renderer: (value) => h(VChip, { color: getColor(value) }, value)
     },
     { key: 'name', title: 'Name', sortable: true },
     { key: 'createdAt', title: 'Created', formatter: formatDate },
@@ -206,9 +143,9 @@ const config: ListPageConfig<Decision> = {
     {
       type: 'custom',
       icon: 'mdi-open-in-new',
-      title: 'Open in Confluence',
-      onClick: (item) => window.open(item.confluenceLink, '_blank'),
-      disabled: (item) => !item.confluenceLink
+      title: 'Open',
+      onClick: (item) => window.open(item.url, '_blank'),
+      disabled: (item) => !item.url
     },
     { type: 'delete', icon: 'mdi-delete', title: 'Delete', color: 'error' },
   ],
@@ -217,10 +154,9 @@ const config: ListPageConfig<Decision> = {
     { type: 'delete', label: 'Delete', icon: 'mdi-delete', color: 'error' },
     {
       type: 'custom',
-      label: 'Push to Confluence',
-      icon: 'mdi-upload',
-      onClick: handleBulkPush,
-      disabled: (ids, items) => items.some(i => !i.confluenceLink)
+      label: 'Export',
+      icon: 'mdi-export',
+      onClick: (ids, items) => exportItems(items),
     },
   ],
 
@@ -244,20 +180,13 @@ const config: ListPageConfig<Decision> = {
 }
 ```
 
-**Key features:**
-- Multiple row actions (view, custom, delete)
-- Bulk delete and custom bulk actions
-- Create action with dialog
-- Row selection enabled
-- Conditional action disabling
+### With Socket.IO Real-Time Updates
 
-### Use Case 3: With Real-Time Updates (Socket.IO)
-
-**Scenario:** List that updates in real-time via WebSocket.
+Schema: [`socketConfigSchema`](../../../../packages/ui-shared/src/types/list-page.schema.ts)
 
 ```typescript
-const config: ListPageConfig<Decision> = {
-  // ... other config ...
+const config: ListPageConfig<T> = {
+  // ...base config
 
   socket: {
     enabled: true,
@@ -265,160 +194,189 @@ const config: ListPageConfig<Decision> = {
     handlers: {
       onUpdated: (callback) => {
         return onItemUpdated(({ id, data }) => {
-          callback({ id, ...data, updatedAt: new Date().toISOString() })
-        })
-      },
-      onAdded: (callback) => {
-        return onItemAdded(({ id, data }) => {
           callback({ id, ...data })
         })
       },
+      onAdded: (callback) => {
+        return onItemAdded(({ id, data }) => callback({ id, ...data }))
+      },
       onDeleted: (callback) => {
-        return onItemDeleted(({ id }) => {
-          callback({ id })
-        })
+        return onItemDeleted(({ id }) => callback({ id }))
       },
     },
   },
 }
 ```
 
-**Key features:**
-- Automatic list updates on server events
-- Cleanup handlers returned from event subscriptions
-- Transform server data to match entity shape
+### Custom Field Rendering
 
-### Use Case 4: Custom Field Rendering
-
-**Scenario:** Display complex data with chips, icons, and formatted values.
+Schema: [`listFieldConfigSchema`](../../../../packages/ui-shared/src/types/list-page.schema.ts)
 
 ```typescript
 import { h } from 'vue'
 import { VChip, VIcon } from 'vuetify/components'
 import { formatDate, formatFileSize, formatDuration } from '@magik/ui-shared'
 
-const config: ListPageConfig<Item> = {
-  // ... other config ...
+fields: [
+  // Formatter (simple transform)
+  { key: 'size', title: 'Size', formatter: (v) => formatFileSize(v) },
+  { key: 'date', title: 'Date', formatter: formatDate },
 
-  fields: [
-    // Chip rendering
-    {
-      key: 'format',
-      title: 'Format',
-      renderer: (value) => h(VChip, {
-        color: value === 'mp3' ? 'primary' : 'secondary',
-        size: 'small'
-      }, () => value.toUpperCase())
-    },
+  // Renderer (Vue component)
+  {
+    key: 'status',
+    title: 'Status',
+    renderer: (value) => h(VChip, { color: 'primary' }, value)
+  },
+  {
+    key: 'active',
+    title: 'Active',
+    renderer: (value) => h(VIcon, {
+      icon: value ? 'mdi-check' : 'mdi-close',
+      color: value ? 'success' : 'error'
+    })
+  },
 
-    // Icon rendering
-    {
-      key: 'hasTranscript',
-      title: 'Transcript',
-      renderer: (value) => h(VIcon, {
-        icon: value ? 'mdi-check-circle' : 'mdi-close-circle',
-        color: value ? 'success' : 'error'
-      })
-    },
-
-    // Formatter functions
-    {
-      key: 'size',
-      title: 'Size',
-      formatter: (value) => formatFileSize(value)
-    },
-
-    // Access nested properties
-    {
-      key: 'metadata',
-      title: 'Duration',
-      formatter: (_value, item) => formatDuration(item.metadata?.duration)
-    },
-  ],
-}
+  // Access nested props
+  {
+    key: 'metadata',
+    title: 'Duration',
+    formatter: (_value, item) => formatDuration(item.metadata?.duration)
+  },
+]
 ```
 
-**Available formatters:**
-- `formatDate(value)` - ISO date to localized format
-- `formatFileSize(bytes)` - Bytes to human-readable size
-- `formatDuration(seconds)` - Seconds to MM:SS format
-
-### Use Case 5: Custom Create Dialog
-
-**Scenario:** Use a custom component for item creation instead of default dialog.
+### Custom Create Dialog
 
 ```vue
 <template>
   <EntityListPage :config="config">
     <template #create-dialog="{ show, onClose }">
-      <CreateItemDialog
+      <MyCustomDialog
         :model-value="show"
-        @update:model-value="(value) => !value && onClose()"
-        @created="handleItemCreated"
+        @update:model-value="(v) => !v && onClose()"
+        @created="handleCreated"
       />
     </template>
   </EntityListPage>
 </template>
 
 <script setup lang="ts">
-const config: ListPageConfig<Item> = {
-  // ... other config ...
-
+const config: ListPageConfig<T> = {
+  // ...base config
   createAction: {
     enabled: true,
-    label: 'New Item',
     useDialog: true,
   },
 }
 
-const handleItemCreated = (result: { id: string }) => {
-  // Navigate to detail page or reload list
+const handleCreated = (result: { id: string }) => {
   router.push(`/${result.id}`)
 }
 </script>
 ```
 
+## Discriminated Union Schemas
+
+See [`list-page.schema.ts`](../../../../packages/ui-shared/src/types/list-page.schema.ts) for full definitions.
+
+### Socket Configuration
+
+Discriminates on `enabled`:
+
+```typescript
+// enabled: false - handlers not required
+socket: { enabled: false }
+
+// enabled: true - handlers required
+socket: {
+  enabled: true,
+  handlers: { onUpdated, onAdded, onDeleted }
+}
+```
+
+### Create Action
+
+Discriminates on `enabled`:
+
+```typescript
+// Disabled
+createAction: { enabled: false }
+
+// With dialog (default)
+createAction: {
+  enabled: true,
+  useDialog: true,
+  dialogComponent: MyDialog
+}
+
+// With URL navigation
+createAction: {
+  enabled: true,
+  useDialog: false,
+  // pageUrls.create required in main config
+}
+```
+
+### Selection & Bulk Actions
+
+Discriminates on `enableSelection`:
+
+```typescript
+// Without selection - bulkActions not allowed
+{
+  enableSelection: false,
+  bulkActions: undefined
+}
+
+// With selection - bulkActions allowed
+{
+  enableSelection: true,
+  bulkActions: [...]
+}
+```
+
 ## Action Types
+
+Schema: [`rowActionConfigSchema`](../../../../packages/ui-shared/src/types/list-page.schema.ts), [`bulkActionConfigSchema`](../../../../packages/ui-shared/src/types/list-page.schema.ts)
 
 ### Row Actions
 
 ```typescript
-// Built-in view action (navigates to pageUrls.edit)
+// View (navigates to pageUrls.edit)
 { type: 'view', icon: 'mdi-pencil', title: 'Edit' }
 
-// Built-in delete action (shows confirmation dialog)
+// Delete (shows confirmation)
 { type: 'delete', icon: 'mdi-delete', title: 'Delete', color: 'error' }
 
-// Custom action with callback
+// Custom (requires onClick)
 {
   type: 'custom',
   icon: 'mdi-download',
   title: 'Download',
-  onClick: async (item) => { /* custom logic */ },
-  disabled: (item) => !item.downloadUrl,
-  color: 'primary'
+  onClick: (item) => download(item),
+  disabled: (item) => !item.downloadUrl
 }
 ```
 
 ### Bulk Actions
 
 ```typescript
-// Built-in bulk delete (shows confirmation dialog)
+// Delete (shows confirmation)
 { type: 'delete', label: 'Delete', icon: 'mdi-delete', color: 'error' }
 
-// Custom bulk action
+// Custom (requires onClick)
 {
   type: 'custom',
-  label: 'Export Selected',
+  label: 'Export',
   icon: 'mdi-export',
-  onClick: async (selectedIds, items) => { /* custom logic */ },
-  disabled: (selectedIds, items) => items.length > 100
+  onClick: (ids, items) => exportItems(items),
+  disabled: (ids, items) => items.length > 100
 }
 ```
 
-## File Location Pattern
+## File Location
 
-List page views MUST be located in:
 ```
 apps/ui-{domain}/src/views/{Entity}List.vue
 ```
@@ -426,196 +384,60 @@ apps/ui-{domain}/src/views/{Entity}List.vue
 Examples:
 - `apps/ui-audio/src/views/RecordingList.vue`
 - `apps/ui-decision/src/views/DecisionList.vue`
-- `apps/ui-specification/src/views/SpecificationList.vue`
 
-## Quick Decision Matrix
+## Quick Reference
 
-| Feature | No Operations | Read + View | Full CRUD | With Bulk | With Socket |
-|---------|---------------|-------------|-----------|-----------|-------------|
-| `enableSelection` | `false` | `false` | `true` | `true` | any |
-| `enableSearch` | `true` | `true` | `true` | `true` | any |
-| `rowActions` | none | view only | view, delete | view, delete | any |
-| `bulkActions` | `undefined` | `undefined` | delete | delete, custom | any |
-| `createAction` | `undefined` | `undefined` | enabled | enabled | any |
-| `endpoints.delete` | `undefined` | `undefined` | defined | defined | any |
-| `socket` | `undefined` | `undefined` | optional | optional | required |
+| Feature | No Ops | Read+View | Full CRUD | With Bulk |
+|---------|--------|-----------|-----------|-----------|
+| `enableSelection` | `false` | `false` | `false` | `true` |
+| `bulkActions` | `undefined` | `undefined` | `undefined` | defined |
+| `rowActions` | none | view | view, delete | view, delete |
+| `createAction` | `undefined` | `undefined` | enabled | enabled |
+| `endpoints.delete` | `undefined` | `undefined` | defined | defined |
 
 ## Best Practices
 
-1. **Always use `formatter` for simple value transformation** (dates, numbers, booleans)
-2. **Use `renderer` for Vue components** (chips, icons, complex markup)
-3. **Enable selection only when bulk actions exist**
-4. **Provide meaningful entity names** (shown in dialogs and toolbar)
-5. **Use conditional `disabled` functions** for context-aware actions
-6. **Leverage type safety** with generic `ListPageConfig<YourEntity>`
-7. **Keep formatters pure** - no side effects
-8. **Return cleanup functions** from Socket.IO event handlers
+1. Use `formatter` for simple transforms (dates, numbers)
+2. Use `renderer` for Vue components (chips, icons)
+3. Enable selection only with bulk actions
+4. Validate in development with `validateListPageConfigDev()`
+5. Use discriminated unions for type safety
+6. Keep formatters pure (no side effects)
+7. Return cleanup functions from socket handlers
 
-## Anti-Patterns
+## Invalid States (Prevented)
 
-❌ **Don't** enable selection without bulk actions
-❌ **Don't** define unused endpoints (leave as `undefined`)
-❌ **Don't** mix formatter and renderer on same field
-❌ **Don't** forget to handle async errors in custom actions
-❌ **Don't** mutate items in formatters or renderers
-❌ **Don't** create custom list components - extend EntityListPage instead
-
-## Invalid States (Prevented by Zod)
-
-The Zod schemas use discriminated unions and refinements to prevent these invalid configurations:
-
-### ❌ Invalid: Bulk Actions Without Selection
+These will fail validation:
 
 ```typescript
-// WILL FAIL VALIDATION
-const config: ListPageConfig = {
-  // ...
-  enableSelection: false, // ❌ or undefined
-  bulkActions: [         // ❌ INVALID: requires enableSelection=true
-    { type: 'delete', label: 'Delete', icon: 'mdi-delete' }
-  ],
-}
+// ❌ Bulk actions without selection
+{ enableSelection: false, bulkActions: [...] }
+
+// ❌ Delete without endpoint
+{ rowActions: [{ type: 'delete', ... }], endpoints: { delete: undefined } }
+
+// ❌ Socket enabled without handlers
+{ socket: { enabled: true } }
+
+// ❌ Both formatter and renderer
+{ fields: [{ formatter: ..., renderer: ... }] }
+
+// ❌ useDialog=false without URL
+{ createAction: { useDialog: false }, pageUrls: { create: undefined } }
 ```
 
-**Error:** `bulkActions can only be defined when enableSelection: true`
-
-### ❌ Invalid: Delete Actions Without Endpoint
-
-```typescript
-// WILL FAIL VALIDATION
-const config: ListPageConfig = {
-  // ...
-  endpoints: {
-    list: () => api.getItems(),
-    // ❌ Missing delete endpoint
-  },
-  rowActions: [
-    { type: 'delete', icon: 'mdi-delete', title: 'Delete' } // ❌ INVALID
-  ],
-}
-```
-
-**Error:** `Row action type "delete" requires endpoints.delete to be defined`
-
-Same applies for bulk delete actions.
-
-### ❌ Invalid: Socket Enabled Without Handlers
-
-```typescript
-// WILL FAIL VALIDATION
-const config: ListPageConfig = {
-  // ...
-  socket: {
-    enabled: true,  // ❌ INVALID: requires handlers
-    // ❌ Missing handlers
-  },
-}
-```
-
-**Error:** Discriminated union validation error
-
-**Correct:**
-```typescript
-socket: {
-  enabled: true,
-  handlers: {
-    onUpdated: (callback) => onItemUpdated(callback),
-  },
-}
-```
-
-### ❌ Invalid: Field With Both Formatter and Renderer
-
-```typescript
-// WILL FAIL VALIDATION
-const config: ListPageConfig = {
-  // ...
-  fields: [
-    {
-      key: 'status',
-      title: 'Status',
-      formatter: (value) => String(value),  // ❌ Cannot use both
-      renderer: (value) => h(VChip, value), // ❌ Cannot use both
-    }
-  ],
-}
-```
-
-**Error:** `Cannot use both formatter and renderer on the same field`
-
-### ❌ Invalid: Create Without Dialog But No URL
-
-```typescript
-// WILL FAIL VALIDATION
-const config: ListPageConfig = {
-  // ...
-  createAction: {
-    enabled: true,
-    useDialog: false,  // ❌ INVALID: requires pageUrls.create
-  },
-  // ❌ Missing pageUrls.create
-}
-```
-
-**Error:** `createAction with useDialog=false requires pageUrls.create to be defined`
-
-## Using Discriminated Unions in Your Code
-
-The Zod schemas export proper discriminated union types:
-
-```typescript
-import type { SocketConfig, CreateActionConfig } from '@magik/ui-shared'
-
-// Socket config is a discriminated union on 'enabled'
-const socketDisabled: SocketConfig = {
-  enabled: false,
-  // handlers not required
-}
-
-const socketEnabled: SocketConfig = {
-  enabled: true,
-  handlers: {  // handlers required when enabled=true
-    onUpdated: (callback) => onItemUpdated(callback),
-  },
-}
-
-// Create action is a discriminated union on 'enabled'
-const createDisabled: CreateActionConfig = {
-  enabled: false,
-}
-
-const createWithDialog: CreateActionConfig = {
-  enabled: true,
-  useDialog: true,  // or undefined (defaults to true)
-  dialogComponent: MyDialog,
-}
-
-const createWithUrl: CreateActionConfig = {
-  enabled: true,
-  useDialog: false,
-  // pageUrls.create must be defined in main config
-}
-```
-
-## Validation in Development
-
-Add validation to your list page views during development:
+## Development Validation
 
 ```vue
 <script setup lang="ts">
 import { EntityListPage, validateListPageConfigDev } from '@magik/ui-shared'
 
-const config: ListPageConfig<MyEntity> = {
-  // ... your config
-}
+const config: ListPageConfig<T> = { /* ... */ }
 
-// Validate only in development
-validateListPageConfigDev(config)
+validateListPageConfigDev(config)  // Warns in dev mode only
 </script>
 
 <template>
   <EntityListPage :config="config" />
 </template>
 ```
-
-This will log warnings to the console if the configuration has any invalid states, helping catch errors early in development.
