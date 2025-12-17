@@ -60,15 +60,53 @@ const mockItems: MockItem[] = [
 const meta = {
   title: 'Components/EntityListPage',
   component: EntityListPage,
+  tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
+# EntityListPage
+
+A type-safe, configurable list page component with built-in search, sorting, filtering, bulk operations, and CRUD actions.
+
+## Overview
+
+EntityListPage provides a complete solution for displaying and managing lists of entities with minimal boilerplate. It uses Zod schemas for type-safe configuration and supports various patterns from simple read-only lists to complex data tables with bulk operations.
+
+## Configuration
+
+The component accepts a single \`config\` prop of type \`ListPageConfig<T>\` which provides type safety through discriminated unions:
+- Use \`enableSelection: true\` to enable bulk operations
+- Use \`createAction.enabled: true\` to add create functionality
+- Customize fields with formatters, renderers, alignment, and sorting
+
+See the variants below for specific use cases.
+        `,
+      },
+    },
   },
 } satisfies Meta<typeof EntityListPage>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
+/**
+ * Minimal read-only list page. Use this for simple data views where users only need to see information without any interactions.
+ *
+ * **When to use:**
+ * - Simple admin panels with read-only data
+ * - Dashboard lists
+ * - Reference data displays
+ */
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'The simplest configuration with just data display. No search, sorting, or actions.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -86,7 +124,22 @@ export const Minimal: Story = {
   },
 }
 
+/**
+ * List page with search and sortable columns. Use this when users need to find and organize data.
+ *
+ * **When to use:**
+ * - Large datasets where users need to find specific items
+ * - Tables where users need to sort by different criteria
+ * - Data exploration interfaces
+ */
 export const WithSearchAndSort: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Adds search functionality and sortable columns. Set `sortable: true` on fields and `enableSearch: true` in config.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -109,7 +162,22 @@ export const WithSearchAndSort: Story = {
   },
 }
 
+/**
+ * Custom formatters and renderers for rich data display. Use formatters for text transformation and renderers for Vue components.
+ *
+ * **When to use:**
+ * - Display file sizes, dates, currency in human-readable formats
+ * - Add visual indicators (chips, badges, icons)
+ * - Custom cell rendering with Vue components
+ */
 export const WithCustomFormatters: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates `formatter` (returns string) and `renderer` (returns VNode) for custom cell display. Use formatters for simple text transformations and renderers for Vue components.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -155,7 +223,27 @@ export const WithCustomFormatters: Story = {
   },
 }
 
+/**
+ * Row actions for individual item operations. Supports view, delete, and custom actions.
+ *
+ * **When to use:**
+ * - CRUD operations on individual items
+ * - Item-specific actions (duplicate, download, export)
+ * - Navigation to detail pages
+ *
+ * **Action types:**
+ * - `view`: Navigation to edit/detail page (uses pageUrls.edit)
+ * - `delete`: Delete operation (requires endpoints.delete)
+ * - `custom`: Custom action with onClick handler
+ */
 export const WithRowActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Adds action buttons to each row. Use `type: "view"` for navigation, `type: "delete"` for deletion, or `type: "custom"` with onClick handler for custom actions.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -215,7 +303,27 @@ export const WithRowActions: Story = {
   },
 }
 
+/**
+ * Bulk operations for multi-item actions. Requires `enableSelection: true`.
+ *
+ * **When to use:**
+ * - Mass operations on multiple items (delete, archive, export)
+ * - Batch processing workflows
+ * - Data cleanup or migration tasks
+ *
+ * **Important:**
+ * - Set `enableSelection: true` to enable checkboxes
+ * - Use `type: "delete"` for bulk delete (uses endpoints.delete)
+ * - Use `type: "custom"` with onClick handler for custom bulk actions
+ */
 export const WithBulkOperations: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Enables row selection and bulk actions toolbar. Set `enableSelection: true` and define `bulkActions` array. The onClick handler receives selectedIds and items arrays.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -284,7 +392,28 @@ export const WithBulkOperations: Story = {
   },
 }
 
+/**
+ * Create action for adding new items. Supports dialog or navigation modes.
+ *
+ * **When to use:**
+ * - Lists where users can create new items
+ * - Admin interfaces with data management
+ * - Form-based data entry
+ *
+ * **Configuration:**
+ * - Set `createAction.enabled: true` and `createAction.useDialog: true` for dialog mode
+ * - Set `createAction.enabled: true` and `createAction.useDialog: false` with `pageUrls.create` for navigation mode
+ * - Provide `endpoints.create` for API calls
+ * - Use `onCreate` callback for custom logic after creation
+ */
 export const WithCreateAction: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Adds a "Create" button in the header. Use `useDialog: true` with a custom `create-dialog` slot, or `useDialog: false` with `pageUrls.create` for navigation to a create page.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
@@ -339,7 +468,31 @@ export const WithCreateAction: Story = {
   },
 }
 
+/**
+ * Complete example combining all features. Demonstrates the full power of EntityListPage.
+ *
+ * **When to use:**
+ * - Full-featured admin panels
+ * - Complex data management interfaces
+ * - Production-ready list pages with all capabilities
+ *
+ * **Features included:**
+ * - Custom formatters and renderers for rich display
+ * - Row actions (view, duplicate, download, delete)
+ * - Bulk operations (delete, archive, export)
+ * - Create action with dialog
+ * - Search and sorting
+ * - Custom delete confirmation messages
+ * - Conditional action disabling
+ */
 export const CompleteExample: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'A full-featured example combining all capabilities: custom formatters, row actions, bulk operations, create dialog, search, sorting, and custom delete confirmations. Use this as a reference for complex implementations.',
+      },
+    },
+  },
   args: {
     config: {
       entityId: 'id',
