@@ -23,22 +23,22 @@
     "vuetify": "^3.10.0"
   },
   "devDependencies": {
-    "@mdi/font": "^7.4.47",
     "@storybook/addon-essentials": "8.6.15",
     "@storybook/addon-interactions": "8.6.15",
     "@storybook/addon-links": "8.6.15",
     "@storybook/vue3": "8.6.15",
     "@storybook/vue3-vite": "8.6.15",
     "@types/node": "^24.10.1",
-    "@vitejs/plugin-vue": "^6.0.3",
     "storybook": "8.6.15",
     "typescript": "~5.9.3",
-    "vite": "^7.3.0",
     "vue": "^3.5.24",
     "vue-router": "^4.6.3",
     "vuetify": "^3.10.11"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "vite": "^7.3.0",
     "zod": "^4.2.1"
   }
 }
