@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { execSync } from 'child_process';
 import type { LintTask, TaskResult } from '../types';
-import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile } from '../validators/backend';
+import { validateStructure, validateConfig, validateRouteActions, validateIndexStructure, validateDockerfile, validateE2EExists } from '../validators/backend';
 import { validateBackendOpenAPI } from '../validators/openapi';
 
 export const BACKEND_TASK_NAMES: Record<string, string> = {
@@ -12,6 +12,7 @@ export const BACKEND_TASK_NAMES: Record<string, string> = {
   config: 'Config extends validation',
   routes: 'Route-action alignment',
   openapi: 'OpenAPI validation',
+  'e2e-exists': 'E2E test existence',
 };
 
 export function createBackendTasks(service: string, rootDir: string): LintTask[] {
@@ -147,6 +148,26 @@ export function createBackendTasks(service: string, rootDir: string): LintTask[]
       command: async (): Promise<TaskResult> => {
         try {
           const result = validateBackendOpenAPI(service, rootDir);
+
+          return {
+            success: result.success,
+            output: result.success ? result.output : undefined,
+            error: result.errors ? result.errors.join('\n') : undefined,
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || String(error),
+          };
+        }
+      },
+    },
+    {
+      id: 'e2e-exists',
+      name: 'E2E test existence',
+      command: async (): Promise<TaskResult> => {
+        try {
+          const result = validateE2EExists(service, rootDir);
 
           return {
             success: result.success,
