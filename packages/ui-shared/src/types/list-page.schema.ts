@@ -1,10 +1,14 @@
 import { z } from 'zod'
 
-const fieldFormatterSchema = z.function()
-  .describe('Transforms raw field value to string, number, or boolean for display')
+const fieldFormatterSchema = z.function({
+  input: [z.any(), z.any()],
+  output: z.union([z.string(), z.number(), z.boolean()])
+}).describe('Transforms raw field value to string, number, or boolean for display')
 
-const fieldRendererSchema = z.function()
-  .describe('Returns VNode or Component for custom field rendering')
+const fieldRendererSchema = z.function({
+  input: [z.any(), z.any()],
+  output: z.any()
+}).describe('Returns VNode or Component for custom field rendering')
 
 export const listFieldConfigSchema = z.object({
   key: z.string().min(1).describe('Property key from entity data'),
@@ -24,8 +28,14 @@ const rowActionViewSchema = z.object({
   type: z.literal('view'),
   icon: z.string().min(1).describe('MDI icon name'),
   title: z.string().min(1).describe('Action title/tooltip'),
-  onClick: z.function().optional().describe('Custom click handler'),
-  disabled: z.function().optional().describe('Function returning disabled state'),
+  onClick: z.function({
+    input: [z.any()],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).optional().describe('Custom click handler'),
+  disabled: z.function({
+    input: [z.any()],
+    output: z.boolean()
+  }).optional().describe('Function returning disabled state'),
   color: z.string().optional().describe('Action color'),
 }).describe('View/edit action that navigates to detail page')
 
@@ -33,8 +43,14 @@ const rowActionDeleteSchema = z.object({
   type: z.literal('delete'),
   icon: z.string().min(1),
   title: z.string().min(1),
-  onClick: z.function().optional(),
-  disabled: z.function().optional(),
+  onClick: z.function({
+    input: [z.any()],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).optional(),
+  disabled: z.function({
+    input: [z.any()],
+    output: z.boolean()
+  }).optional(),
   color: z.string().optional(),
 }).describe('Delete action that shows confirmation dialog')
 
@@ -42,8 +58,14 @@ const rowActionCustomSchema = z.object({
   type: z.literal('custom'),
   icon: z.string().min(1),
   title: z.string().min(1),
-  onClick: z.function().describe('Required click handler for custom actions'),
-  disabled: z.function().optional(),
+  onClick: z.function({
+    input: [z.any()],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).describe('Required click handler for custom actions'),
+  disabled: z.function({
+    input: [z.any()],
+    output: z.boolean()
+  }).optional(),
   color: z.string().optional(),
 }).describe('Custom action with user-defined onClick handler')
 
@@ -57,8 +79,14 @@ const bulkActionDeleteSchema = z.object({
   type: z.literal('delete'),
   label: z.string().min(1).describe('Action button label'),
   icon: z.string().min(1),
-  onClick: z.function().optional(),
-  disabled: z.function().optional(),
+  onClick: z.function({
+    input: [z.array(z.string()), z.array(z.any())],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).optional(),
+  disabled: z.function({
+    input: [z.array(z.string()), z.array(z.any())],
+    output: z.boolean()
+  }).optional(),
   color: z.string().optional(),
 }).describe('Bulk delete action for selected items')
 
@@ -66,8 +94,14 @@ const bulkActionCustomSchema = z.object({
   type: z.literal('custom'),
   label: z.string().min(1),
   icon: z.string().min(1),
-  onClick: z.function().describe('Required handler receiving selectedIds and items'),
-  disabled: z.function().optional(),
+  onClick: z.function({
+    input: [z.array(z.string()), z.array(z.any())],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).describe('Required handler receiving selectedIds and items'),
+  disabled: z.function({
+    input: [z.array(z.string()), z.array(z.any())],
+    output: z.boolean()
+  }).optional(),
   color: z.string().optional(),
 }).describe('Custom bulk action with user-defined onClick handler')
 
@@ -77,13 +111,25 @@ export const bulkActionConfigSchema = z.discriminatedUnion('type', [
 ]).describe('Bulk action configuration discriminated by type')
 
 export const endpointConfigSchema = z.object({
-  list: z.function().describe('Function returning Promise<T[]> to fetch all items'),
-  create: z.function().optional().describe('Function to create new item, returns Promise<{id: string}>'),
-  delete: z.function().optional().describe('Function to delete item by id, returns Promise<void>'),
+  list: z.function({
+    input: [],
+    output: z.promise(z.array(z.any()))
+  }).describe('Function returning Promise<T[]> to fetch all items'),
+  create: z.function({
+    input: [z.any()],
+    output: z.promise(z.object({ id: z.string() }).passthrough())
+  }).optional().describe('Function to create new item, returns Promise<{id: string}>'),
+  delete: z.function({
+    input: [z.string()],
+    output: z.promise(z.void())
+  }).optional().describe('Function to delete item by id, returns Promise<void>'),
 }).describe('API endpoint functions for CRUD operations')
 
 export const pageUrlConfigSchema = z.object({
-  edit: z.function().optional().describe('Function generating detail/edit page URL from item'),
+  edit: z.function({
+    input: [z.any()],
+    output: z.string()
+  }).optional().describe('Function generating detail/edit page URL from item'),
   create: z.string().optional().describe('URL for create page (when not using dialog)'),
 }).describe('Navigation URLs for pages')
 
@@ -97,14 +143,20 @@ const createActionWithDialogSchema = z.object({
   useDialog: z.literal(true).optional().default(true).describe('Use dialog for creation'),
   dialogTitle: z.string().optional(),
   dialogComponent: z.any().optional().describe('Custom Vue component for dialog'),
-  onCreate: z.function().optional().describe('Callback when item is created'),
+  onCreate: z.function({
+    input: [z.any()],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).optional().describe('Callback when item is created'),
 }).describe('Create action using dialog')
 
 const createActionWithUrlSchema = z.object({
   enabled: z.literal(true),
   label: z.string().optional(),
   useDialog: z.literal(false).describe('Navigate to URL instead of dialog'),
-  onCreate: z.function().optional(),
+  onCreate: z.function({
+    input: [z.any()],
+    output: z.union([z.void(), z.promise(z.void())])
+  }).optional(),
 }).describe('Create action navigating to URL (requires pageUrls.create)')
 
 export const createActionConfigSchema = z.discriminatedUnion('enabled', [
@@ -114,8 +166,14 @@ export const createActionConfigSchema = z.discriminatedUnion('enabled', [
 ]).describe('Create action configuration discriminated by enabled state')
 
 export const deleteDialogConfigSchema = z.object({
-  confirmMessage: z.function().optional().describe('Custom confirmation message for single delete'),
-  bulkConfirmMessage: z.function().optional().describe('Custom confirmation message for bulk delete'),
+  confirmMessage: z.function({
+    input: [z.any()],
+    output: z.string()
+  }).optional().describe('Custom confirmation message for single delete'),
+  bulkConfirmMessage: z.function({
+    input: [z.number()],
+    output: z.string()
+  }).optional().describe('Custom confirmation message for bulk delete'),
 }).describe('Delete dialog customization')
 
 const socketDisabledSchema = z.object({
@@ -123,14 +181,35 @@ const socketDisabledSchema = z.object({
 }).describe('Socket.IO disabled')
 
 const socketHandlersSchema = z.object({
-  onUpdated: z.function().optional().describe('Handler for item update events'),
-  onAdded: z.function().optional().describe('Handler for item add events'),
-  onDeleted: z.function().optional().describe('Handler for item delete events'),
+  onUpdated: z.function({
+    input: [z.function({
+      input: [z.object({ id: z.string() }).passthrough()],
+      output: z.void()
+    })],
+    output: z.function({ input: [], output: z.void() })
+  }).optional().describe('Handler for item update events'),
+  onAdded: z.function({
+    input: [z.function({
+      input: [z.object({ id: z.string() }).passthrough()],
+      output: z.void()
+    })],
+    output: z.function({ input: [], output: z.void() })
+  }).optional().describe('Handler for item add events'),
+  onDeleted: z.function({
+    input: [z.function({
+      input: [z.object({ id: z.string() })],
+      output: z.void()
+    })],
+    output: z.function({ input: [], output: z.void() })
+  }).optional().describe('Handler for item delete events'),
 }).describe('Socket.IO event handlers')
 
 const socketEnabledSchema = z.object({
   enabled: z.literal(true),
-  initSocket: z.function().optional().describe('Function to initialize socket connection'),
+  initSocket: z.function({
+    input: [],
+    output: z.void()
+  }).optional().describe('Function to initialize socket connection'),
   handlers: socketHandlersSchema.describe('Event handlers required when socket enabled'),
 }).describe('Socket.IO enabled with handlers')
 
@@ -212,7 +291,10 @@ export const bulkOperationResultSchema = z.discriminatedUnion('success', [
 ]).describe('Bulk operation result discriminated by success state')
 
 export const bulkOperationConfigSchema = z.object({
-  operation: z.function().describe('Function performing operation on single item, returns BulkOperationResult'),
+  operation: z.function({
+    input: [z.any()],
+    output: z.promise(bulkOperationResultSchema)
+  }).describe('Function performing operation on single item, returns BulkOperationResult'),
   title: z.string().min(1).describe('Dialog title during operation'),
   resultsTitle: z.string().min(1).describe('Dialog title showing results'),
 }).describe('Bulk operation configuration for BulkOperationDialog')
