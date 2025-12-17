@@ -2,6 +2,13 @@ import baseConfig from './eslint.config.base.js'
 import checkFile from 'eslint-plugin-check-file'
 
 export default [
+  {
+    ignores: [
+      '**/generated/**',      // Ignore auto-generated Zod schemas
+      '**/node_modules/**',
+      '**/dist/**'
+    ]
+  },
   ...baseConfig,
   {
     plugins: {

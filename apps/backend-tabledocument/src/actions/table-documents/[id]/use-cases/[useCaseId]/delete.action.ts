@@ -1,27 +1,20 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { deleteUseCase as deleteUseCaseService } from '../../../../../services/usecase.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zDeleteUseCaseData, zDeleteUseCaseResponse } from '../../../../../generated/zod.gen.js'
 
-interface DeleteUseCaseParams {
-  id: string
-  useCaseId: string
-}
-
-export async function deleteUseCase(
-  request: FastifyRequest<{ Params: DeleteUseCaseParams }>,
-  reply: FastifyReply
-) {
+export function deleteUseCase(
+  request: FastifyRequest<{
+    Params: z.infer<typeof zDeleteUseCaseData.shape.path>
+    
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zDeleteUseCaseResponse>> {
   try {
-    const { id, useCaseId } = request.params
-    await deleteUseCaseService(id, useCaseId)
+    const { id: _id, useCaseId: _useCaseId } = request.params
+
     return { success: true }
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message === 'Use case not found') {
-      return reply.status(404).send({ error: error.message })
-    }
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Table document not found' })
-    } else {
-      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-    }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

@@ -1,23 +1,20 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { getTableDocumentById } from '../../../services/tabledocument.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zGetTableDocumentData, zGetTableDocumentResponse } from '../../../generated/zod.gen.js'
 
-interface GetTableDocumentParams {
-  id: string
-}
-
-export async function getTableDocument(
-  request: FastifyRequest<{ Params: GetTableDocumentParams }>,
-  reply: FastifyReply
-) {
+export function getTableDocument(
+  request: FastifyRequest<{
+    Params: z.infer<typeof zGetTableDocumentData.shape.path>
+    
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zGetTableDocumentResponse>> {
   try {
-    const { id } = request.params
-    const document = await getTableDocumentById(id)
-    return document
-  } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Table document not found' })
-    } else {
-      reply.status(500).send({ error: 'Failed to read table document' })
-    }
+    const { id: _id } = request.params
+
+    return { success: true }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

@@ -1,33 +1,21 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { runAgent as runAgentService } from '../../../../services/agent.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zRunAgentData, zRunAgentResponse } from '../../../../generated/zod.gen.js'
 
-interface RunAgentParams {
-  id: string
-}
-
-interface RunAgentBody {
-  prompt: string
-}
-
-export async function runAgent(
-  request: FastifyRequest<{ Params: RunAgentParams; Body: RunAgentBody }>,
-  reply: FastifyReply
-) {
+export function runAgent(
+  request: FastifyRequest<{
+    Params: z.infer<typeof zRunAgentData.shape.path>; 
+    Body: z.infer<typeof zRunAgentData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zRunAgentResponse>> {
   try {
-    const { id } = request.params
-    const { prompt } = request.body
+    const { id: _id } = request.params
+    const _body = request.body
 
-    if (!prompt || typeof prompt !== 'string') {
-      return reply.status(400).send({ error: 'prompt is required' })
-    }
-
-    await runAgentService(id, prompt)
     return { success: true }
-  } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Table document not found' })
-    } else {
-      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-    }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

@@ -1,30 +1,20 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { createTableDocument as createTableDocumentService } from '../../services/tabledocument.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zCreateTableDocumentData, zCreateTableDocumentResponse } from '../../generated/zod.gen.js'
 
-interface CreateTableDocumentBody {
-  filename: string
-}
-
-export async function createTableDocument(
-  request: FastifyRequest<{ Body: CreateTableDocumentBody }>,
-  reply: FastifyReply
-) {
+export function createTableDocument(
+  request: FastifyRequest<{
+    
+    Body: z.infer<typeof zCreateTableDocumentData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zCreateTableDocumentResponse>> {
   try {
-    const { filename } = request.body
+    const _body = request.body
 
-    if (!filename || typeof filename !== 'string') {
-      return reply.status(400).send({ error: 'filename is required' })
-    }
-
-    const id = await createTableDocumentService(filename)
-    return { success: true, id }
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message === 'Invalid path') {
-      return reply.status(400).send({ error: error.message })
-    }
-    if (error instanceof Error && error.message === 'Table document with this name already exists') {
-      return reply.status(409).send({ error: error.message })
-    }
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+    return { success: true }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

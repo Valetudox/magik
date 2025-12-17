@@ -148,6 +148,33 @@ rules:
       field: servers
       function: truthy
 
+  # Rule: All object schemas must set additionalProperties to false
+  magik-schema-additional-properties:
+    description: Object schemas must explicitly set additionalProperties to false for strict validation
+    message: "Schema '{{property}}' must set 'additionalProperties: false' to prevent unexpected fields in responses"
+    severity: error
+    given: "$.components.schemas[?(@.type == 'object' && @.additionalProperties !== false)]"
+    then:
+      function: falsy
+
+  # Rule: All inline object schemas must set additionalProperties to false
+  magik-inline-schema-additional-properties:
+    description: Inline object schemas in responses must explicitly set additionalProperties to false
+    message: "Inline schema at '{{path}}' must set 'additionalProperties: false' to prevent unexpected fields"
+    severity: error
+    given: "$.paths[*][*].responses[*].content[*].schema[?(@.type == 'object' && @.additionalProperties !== false)]"
+    then:
+      function: falsy
+
+  # Rule: Nested object properties must set additionalProperties to false
+  magik-nested-schema-additional-properties:
+    description: Nested object properties must explicitly set additionalProperties
+    message: "Nested object property '{{property}}' must set 'additionalProperties: false'"
+    severity: error
+    given: "$.components.schemas[*].properties[?(@.type == 'object' && @.additionalProperties !== false)]"
+    then:
+      function: falsy
+
   # ========================================
   # Override Built-in Rules
   # ========================================

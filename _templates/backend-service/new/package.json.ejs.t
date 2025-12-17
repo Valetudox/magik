@@ -8,6 +8,7 @@ to: apps/backend-<%= serviceName %>/package.json
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
+    "generate:schemas": "npx @hey-api/openapi-ts -i ../../specs/domains/<%= serviceName %>/openapi.yaml -o ./src/generated --plugins @hey-api/typescript --plugins zod",
     "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write src",
@@ -15,7 +16,9 @@ to: apps/backend-<%= serviceName %>/package.json
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
-    "fastify": "^5.2.0"
+    "fastify": "^5.2.0",
+    "fastify-type-provider-zod": "^6.1.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"

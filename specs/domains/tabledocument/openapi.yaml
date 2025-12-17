@@ -419,6 +419,7 @@ components:
   schemas:
     TableDocument:
       type: object
+      additionalProperties: false
       properties:
         success:
           type: boolean
@@ -447,6 +448,7 @@ components:
 
     UseCase:
       type: object
+      additionalProperties: false
       properties:
         success:
           type: boolean
@@ -478,6 +480,7 @@ components:
 
     CreateTableDocumentRequest:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string
@@ -488,6 +491,7 @@ components:
 
     UpdateTableDocumentRequest:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string
@@ -496,6 +500,7 @@ components:
 
     CreateUseCaseRequest:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string
@@ -522,6 +527,7 @@ components:
 
     UpdateUseCaseRequest:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string
@@ -546,6 +552,7 @@ components:
 
     Error:
       type: object
+      additionalProperties: false
       properties:
         error:
           type: string

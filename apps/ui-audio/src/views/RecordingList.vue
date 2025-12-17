@@ -1,172 +1,129 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { api, type Recording } from '../services/api'
+import { h } from 'vue'
+import { VChip, VIcon } from 'vuetify/components'
+import {
+  EntityListPage,
+  type ListPageConfig,
+  formatDate,
+  formatFileSize,
+  formatDuration,
+} from '@magik/ui-shared'
+import type { Recording } from '@magik/backend-audio-client'
+import { api } from '../services/api'
 
-const router = useRouter()
-const recordings = ref<Recording[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-const search = ref('')
+const config: ListPageConfig<Recording> = {
+  entityId: 'id',
+  entityName: 'Recording',
+  entityNamePlural: 'Audio Recordings',
 
-const headers = [
-  { title: 'Filename', key: 'filename', sortable: true },
-  { title: 'Format', key: 'format', sortable: true, align: 'center' as const },
-  { title: 'Size', key: 'size', sortable: true },
-  { title: 'Duration', key: 'duration', sortable: true },
-  { title: 'Language', key: 'language', sortable: true },
-  { title: 'Transcript', key: 'hasTranscript', sortable: true, align: 'center' as const },
-  { title: 'Modified', key: 'modifiedAt', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'center' as const },
-]
+  fields: [
+    {
+      key: 'filename',
+      title: 'Filename',
+      sortable: true,
+      align: 'start',
+    },
+    {
+      key: 'format',
+      title: 'Format',
+      sortable: true,
+      align: 'center',
+      renderer: (value: string) =>
+        h(
+          VChip,
+          {
+            color: value === 'mp3' ? 'primary' : 'secondary',
+            size: 'small',
+          },
+          () => value.toUpperCase()
+        ),
+    },
+    {
+      key: 'size',
+      title: 'Size',
+      sortable: true,
+      align: 'end',
+      formatter: (value: number) => formatFileSize(value),
+    },
+    {
+      key: 'transcriptMetadata',
+      title: 'Duration',
+      sortable: false,
+      align: 'end',
+      formatter: (_value, item: Recording) =>
+        formatDuration(item.transcriptMetadata?.duration),
+    },
+    {
+      key: 'transcriptMetadata',
+      title: 'Language',
+      sortable: false,
+      align: 'center',
+      formatter: (_value, item: Recording) =>
+        item.transcriptMetadata?.language?.toUpperCase() || '-',
+    },
+    {
+      key: 'hasTranscript',
+      title: 'Transcript',
+      sortable: true,
+      align: 'center',
+      renderer: (value: boolean) =>
+        h(VIcon, {
+          icon: value ? 'mdi-check-circle' : 'mdi-close-circle',
+          color: value ? 'success' : 'error',
+        }),
+    },
+    {
+      key: 'modifiedAt',
+      title: 'Modified',
+      sortable: true,
+      align: 'start',
+      formatter: (value: string) => formatDate(value),
+    },
+  ],
 
-const filteredRecordings = computed(() => {
-  if (!search.value) return recordings.value
+  rowActions: [
+    {
+      type: 'view',
+      icon: 'mdi-eye',
+      title: 'View Details',
+      color: 'primary',
+    },
+  ],
 
-  const searchLower = search.value.toLowerCase()
-  return recordings.value.filter(
-    (r) =>
-      r.filename.toLowerCase().includes(searchLower) ||
-      r.id.toLowerCase().includes(searchLower) ||
-      (r.transcriptMetadata?.language ?? '').toLowerCase().includes(searchLower)
-  )
-})
+  // No bulk actions for audio (read-only list)
+  bulkActions: undefined,
 
-async function loadRecordings() {
-  loading.value = true
-  error.value = null
+  // No create action for audio (recordings come from file system)
+  createAction: undefined,
 
-  try {
-    recordings.value = await api.getRecordings()
-  } catch (e: unknown) {
-    error.value = (e as Error).message ?? 'Failed to load recordings'
-  } finally {
-    loading.value = false
-  }
+  endpoints: {
+    list: async () => {
+      return await api.getRecordings()
+    },
+    // No create or delete endpoints
+    create: undefined,
+    delete: undefined,
+  },
+
+  pageUrls: {
+    edit: (item: Recording) => `/${encodeURIComponent(item.id)}`,
+  },
+
+  // No Socket.IO for audio
+  socket: undefined,
+
+  enableSelection: false, // No bulk operations
+  enableSearch: true,
+  itemsPerPage: 25,
+  defaultSort: [{ key: 'modifiedAt', order: 'desc' }],
 }
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
-}
-
-function formatDuration(seconds?: number): string {
-  if (!seconds) return '-'
-
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${secs}s`
-  }
-  return `${minutes}m ${secs}s`
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleString()
-}
-
-function viewRecording(recording: Recording) {
-  void router.push(`/${encodeURIComponent(recording.id)}`)
-}
-
-onMounted(() => {
-  void loadRecordings()
-})
 </script>
 
 <template>
-  <v-container fluid>
-    <v-row>
-      <v-col>
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon icon="mdi-music-box-multiple" class="mr-2" />
-            Audio Recordings
-            <v-spacer />
-            <v-btn
-              icon="mdi-refresh"
-              :loading="loading"
-              variant="text"
-              @click="loadRecordings"
-            />
-          </v-card-title>
-
-          <v-card-text>
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Search recordings"
-              single-line
-              hide-details
-              clearable
-              class="mb-4"
-            />
-
-            <v-alert v-if="error" type="error" class="mb-4">
-              {{ error }}
-            </v-alert>
-
-            <v-data-table
-              :headers="headers"
-              :items="filteredRecordings"
-              :loading="loading"
-              :items-per-page="25"
-              class="elevation-1"
-              hover
-              @click:row="(_event: Event, { item }: { item: Recording }) => viewRecording(item)"
-            >
-              <template #[`item.format`]="{ item }">
-                <v-chip size="small" :color="item.format === 'mp3' ? 'primary' : 'secondary'">
-                  {{ item.format.toUpperCase() }}
-                </v-chip>
-              </template>
-
-              <template #[`item.size`]="{ item }">
-                {{ formatSize(item.size) }}
-              </template>
-
-              <template #[`item.duration`]="{ item }">
-                {{ formatDuration(item.transcriptMetadata?.duration) }}
-              </template>
-
-              <template #[`item.language`]="{ item }">
-                {{ item.transcriptMetadata?.language ?? '-' }}
-              </template>
-
-              <template #[`item.hasTranscript`]="{ item }">
-                <v-icon
-                  :icon="item.hasTranscript ? 'mdi-check-circle' : 'mdi-close-circle'"
-                  :color="item.hasTranscript ? 'success' : 'error'"
-                />
-              </template>
-
-              <template #[`item.modifiedAt`]="{ item }">
-                {{ formatDate(item.modifiedAt) }}
-              </template>
-
-              <template #[`item.actions`]="{ item }">
-                <v-btn
-                  icon="mdi-eye"
-                  size="small"
-                  variant="text"
-                  @click.stop="viewRecording(item)"
-                />
-              </template>
-
-              <template #no-data>
-                <v-alert type="info" class="ma-4">
-                  No recordings found
-                </v-alert>
-              </template>
-            </v-data-table>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div>
+    <Teleport to="#header-title-slot">
+      <div>Audio Recordings</div>
+    </Teleport>
+    <EntityListPage :config="config" />
+  </div>
 </template>

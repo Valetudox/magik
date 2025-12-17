@@ -1,108 +1,34 @@
 ---
 to: apps/backend-<%= serviceName %>/src/actions/<%= actionPath %>/<%= method %>.action.ts
 ---
+<%
+// Calculate relative path to generated directory based on action path depth
+const pathDepth = actionPath.split('/').length + 1; // +1 for the method file itself
+const relativePath = '../'.repeat(pathDepth) + 'generated/zod.gen.js';
+-%>
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { <% if (hasParams || (method === 'post' || method === 'patch' || method === 'put')) { %>z<%= h.changeCase.pascalCase(functionName) %>Data, <% } %>z<%= h.changeCase.pascalCase(functionName) %>Response } from '<%= relativePath %>'
 
-<% if (method === 'get') { -%>
-<% if (hasParams) { -%>
-interface <%= h.changeCase.pascalCase(functionName) %>Params {
-<% params.forEach(param => { -%>
-  <%= param %>: string
-<% }) -%>
-}
-
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest<{ Params: <%= h.changeCase.pascalCase(functionName) %>Params }>,
-  reply: FastifyReply
-) {
-  try {
-    const { <%= params.join(', ') %> } = request.params
-
-    // TODO: Implement your logic here
-
-    return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-  }
-}
-<% } else { -%>
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  try {
-    // TODO: Implement your logic here
-
-    return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-  }
-}
-<% } -%>
-<% } else if (method === 'post' || method === 'patch' || method === 'put') { -%>
-<% if (hasParams) { -%>
-interface <%= h.changeCase.pascalCase(functionName) %>Params {
-<% params.forEach(param => { -%>
-  <%= param %>: string
-<% }) -%>
-}
-<% } -%>
-
-interface <%= h.changeCase.pascalCase(functionName) %>Body {
-  // TODO: Define your request body interface
-}
-
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest<{ <% if (hasParams) { %>Params: <%= h.changeCase.pascalCase(functionName) %>Params; <% } %>Body: <%= h.changeCase.pascalCase(functionName) %>Body }>,
-  reply: FastifyReply
-) {
+export function <%= h.changeCase.camelCase(functionName) %>(<% if (hasParams || (method === 'post' || method === 'patch' || method === 'put')) { %>
+  request: FastifyRequest<{
+    <% if (hasParams) { %>Params: z.infer<typeof z<%= h.changeCase.pascalCase(functionName) %>Data.shape.path><% if (method === 'post' || method === 'patch' || method === 'put') { %>; <% } %><% } %>
+    <% if (method === 'post' || method === 'patch' || method === 'put') { %>Body: z.infer<typeof z<%= h.changeCase.pascalCase(functionName) %>Data.shape.body><% } %>
+  }, ZodTypeProvider>,<% } else { %>
+  request: FastifyRequest<Record<string, never>, ZodTypeProvider>,<% } %>
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof z<%= h.changeCase.pascalCase(functionName) %>Response>> {
   try {
 <% if (hasParams) { -%>
-    const { <%= params.join(', ') %> } = request.params
+    const { <%= params.map(p => `${p}: _${p}`).join(', ') %> } = request.params
 <% } -%>
-    const body = request.body
-
-    // TODO: Implement your logic here
+<% if (method === 'post' || method === 'patch' || method === 'put') { -%>
+    const _body = request.body
+<% } -%>
 
     return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }
-<% } else if (method === 'delete') { -%>
-<% if (hasParams) { -%>
-interface <%= h.changeCase.pascalCase(functionName) %>Params {
-<% params.forEach(param => { -%>
-  <%= param %>: string
-<% }) -%>
-}
-
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest<{ Params: <%= h.changeCase.pascalCase(functionName) %>Params }>,
-  reply: FastifyReply
-) {
-  try {
-    const { <%= params.join(', ') %> } = request.params
-
-    // TODO: Implement your delete logic here
-
-    return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-  }
-}
-<% } else { -%>
-export async function <%= h.changeCase.camelCase(functionName) %>(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  try {
-    // TODO: Implement your delete logic here
-
-    return { success: true }
-  } catch (error: unknown) {
-    reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-  }
-}
-<% } -%>
-<% } -%>

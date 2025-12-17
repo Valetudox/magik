@@ -3,11 +3,19 @@ to: apps/backend-<%= serviceName %>/src/index.ts
 ---
 import cors from '@fastify/cors'
 import Fastify from 'fastify'
-import { registerRoutes } from './routes'
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod'
+import { registerRoutes } from './routes.js'
 
 const fastify = Fastify({
   logger: true,
-})
+}).withTypeProvider<ZodTypeProvider>()
+
+fastify.setValidatorCompiler(validatorCompiler)
+fastify.setSerializerCompiler(serializerCompiler)
 
 await fastify.register(cors, {
   origin: true,

@@ -101,6 +101,7 @@ components:
   schemas:
     SpecificationSummary:
       type: object
+      additionalProperties: false
       required:
         - id
         - title
@@ -125,6 +126,7 @@ components:
           example: /home/magic/repositories/magik/specs/projects/magik/specification-viewer.json
     SpecificationDetail:
       type: object
+      additionalProperties: false
       required:
         - id
         - title
@@ -150,6 +152,7 @@ components:
             $ref: '#/components/schemas/SpecificationSection'
     SpecificationSection:
       type: object
+      additionalProperties: false
       required:
         - sectionName
         - items
@@ -165,6 +168,7 @@ components:
             $ref: '#/components/schemas/SpecificationRequirementItem'
     SpecificationRequirementItem:
       type: object
+      additionalProperties: false
       required:
         - type
         - systemName
@@ -219,6 +223,7 @@ components:
             - a specification file cannot be parsed or is invalid JSON
     Error:
       type: object
+      additionalProperties: false
       required:
         - error
       properties:

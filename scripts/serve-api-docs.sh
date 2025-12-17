@@ -9,15 +9,55 @@ echo "Creating temporary directory: $TMP_DIR"
 # Create docs subdirectory
 mkdir -p "$TMP_DIR/docs"
 
-# Copy and convert OpenAPI YAML files to JSON
-echo "Converting OpenAPI files to JSON..."
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/audio/openapi.yaml')), open('$TMP_DIR/docs/backend-audio.json', 'w'), indent=2)"
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/socket/openapi.yaml')), open('$TMP_DIR/docs/backend-socket.json', 'w'), indent=2)"
-python3 -c "import json, yaml; json.dump(yaml.safe_load(open('specs/domains/decision/openapi.yaml')), open('$TMP_DIR/docs/backend-decision.json', 'w'), indent=2)"
+# Discover and convert all OpenAPI YAML files to JSON
+echo "Discovering OpenAPI files..."
+DOMAINS=()
+for domain_dir in specs/domains/*/; do
+    domain_name=$(basename "$domain_dir")
+    yaml_file="$domain_dir/openapi.yaml"
 
-# Create index.html with tabs for multiple APIs
+    if [ -f "$yaml_file" ]; then
+        echo "  Converting $domain_name..."
+        DOMAINS+=("$domain_name")
+        python3 -c "import json, yaml; json.dump(yaml.safe_load(open('$yaml_file')), open('$TMP_DIR/docs/backend-$domain_name.json', 'w'), indent=2)"
+    fi
+done
+
+echo "Found ${#DOMAINS[@]} API specs: ${DOMAINS[*]}"
+
+# Generate dynamic HTML parts
+BUTTONS_HTML=""
+APIS_JS="const apis = {"
+FIRST_DOMAIN="${DOMAINS[0]}"
+
+for i in "${!DOMAINS[@]}"; do
+    domain="${DOMAINS[$i]}"
+    # Capitalize first letter for display
+    display_name="Backend ${domain^}"
+
+    # Add active class to first button
+    active_class=""
+    if [ "$domain" = "$FIRST_DOMAIN" ]; then
+        active_class=" class=\"active\""
+    fi
+
+    BUTTONS_HTML="${BUTTONS_HTML}    <button onclick=\"loadAPI('$domain')\" id=\"btn-$domain\"$active_class>$display_name</button>
+"
+
+    # Build JavaScript object
+    if [ $i -gt 0 ]; then
+        APIS_JS="${APIS_JS},"
+    fi
+    APIS_JS="${APIS_JS}
+      $domain: '/docs/backend-$domain.json'"
+done
+
+APIS_JS="${APIS_JS}
+    };"
+
+# Create index.html with dynamically generated content
 echo "Creating index.html..."
-cat > "$TMP_DIR/index.html" << 'EOF'
+cat > "$TMP_DIR/index.html" << EOF
 <!DOCTYPE html>
 <html>
 <head>
@@ -75,21 +115,14 @@ cat > "$TMP_DIR/index.html" << 'EOF'
 <body>
   <div class="nav">
     <h1>Magik API Documentation</h1>
-    <button onclick="loadAPI('audio')" id="btn-audio">Backend Audio</button>
-    <button onclick="loadAPI('socket')" id="btn-socket">Backend Socket</button>
-    <button onclick="loadAPI('decision')" id="btn-decision" class="active">Backend Decision</button>
-  </div>
+$BUTTONS_HTML  </div>
   <div id="redoc"></div>
 
   <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
   <script>
-    const apis = {
-      audio: '/docs/backend-audio.json',
-      socket: '/docs/backend-socket.json',
-      decision: '/docs/backend-decision.json'
-    };
+    $APIS_JS
 
-    let currentAPI = 'decision';
+    let currentAPI = '$FIRST_DOMAIN';
 
     function loadAPI(apiName) {
       if (currentAPI === apiName) return;
@@ -117,7 +150,7 @@ cat > "$TMP_DIR/index.html" << 'EOF'
     }
 
     // Load default API
-    loadAPI('decision');
+    loadAPI('$FIRST_DOMAIN');
   </script>
 </body>
 </html>

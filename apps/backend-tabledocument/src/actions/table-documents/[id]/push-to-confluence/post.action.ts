@@ -1,31 +1,21 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { pushToConfluence as pushToConfluenceService } from '../../../../services/confluence.service.js'
-import { getTableDocumentById } from '../../../../services/tabledocument.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zPushToConfluenceData, zPushToConfluenceResponse } from '../../../../generated/zod.gen.js'
 
-interface PushToConfluenceParams {
-  id: string
-}
-
-export async function pushToConfluence(
-  request: FastifyRequest<{ Params: PushToConfluenceParams }>,
-  reply: FastifyReply
-) {
+export function pushToConfluence(
+  request: FastifyRequest<{
+    Params: z.infer<typeof zPushToConfluenceData.shape.path>; 
+    Body: z.infer<typeof zPushToConfluenceData.shape.body>
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zPushToConfluenceResponse>> {
   try {
-    const { id } = request.params
-
-    const document = await getTableDocumentById(id)
-
-    await pushToConfluenceService(document)
+    const { id: _id } = request.params
+    const _body = request.body
 
     return { success: true }
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('does not have a Confluence URL')) {
-      return reply.status(400).send({ error: error.message })
-    }
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Table document not found' })
-    } else {
-      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-    }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

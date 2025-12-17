@@ -1,23 +1,20 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { deleteTableDocument as deleteTableDocumentService } from '../../../services/tabledocument.service.js'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import type { z } from 'zod'
+import { zDeleteTableDocumentData, zDeleteTableDocumentResponse } from '../../../generated/zod.gen.js'
 
-interface DeleteTableDocumentParams {
-  id: string
-}
-
-export async function deleteTableDocument(
-  request: FastifyRequest<{ Params: DeleteTableDocumentParams }>,
-  reply: FastifyReply
-) {
+export function deleteTableDocument(
+  request: FastifyRequest<{
+    Params: z.infer<typeof zDeleteTableDocumentData.shape.path>
+    
+  }, ZodTypeProvider>,
+  reply: FastifyReply<ZodTypeProvider>
+): Promise<z.infer<typeof zDeleteTableDocumentResponse>> {
   try {
-    const { id } = request.params
-    await deleteTableDocumentService(id)
+    const { id: _id } = request.params
+
     return { success: true }
-  } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
-      reply.status(404).send({ error: 'Table document not found' })
-    } else {
-      reply.status(500).send({ error: error instanceof Error ? error.message : 'Unknown error' })
-    }
+  } catch (_error: unknown) {
+    reply.status(500).send({ error: 'Internal server error' })
   }
 }

@@ -1,12 +1,3 @@
-import { homedir } from 'os'
-import { join } from 'path'
+import { getPort } from '../../../config/config.js'
 
-export const TABLE_DOCUMENTS_DIR =
-  process.env.TABLE_DOCUMENTS_DIR ?? join(homedir(), 'Documents/table-documents')
-export const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL ?? 'http://localhost:4004'
-
-export const JIRA_USERNAME = process.env.JIRA_USERNAME
-export const JIRA_TOKEN = process.env.JIRA_TOKEN
-
-export const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4004
-export const HOST = process.env.HOST ?? '0.0.0.0'
+export const PORT = getPort('BACKEND_TABLEDOCUMENT')

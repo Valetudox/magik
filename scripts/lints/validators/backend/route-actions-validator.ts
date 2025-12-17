@@ -46,7 +46,7 @@ function extractRoutesFromFile(routesFilePath: string): RouteInfo[] {
     if (
       node.type === 'CallExpression' &&
       node.callee?.type === 'MemberExpression' &&
-      node.callee.object?.name === 'fastify' &&
+      (node.callee.object?.name === 'fastify' || node.callee.object?.name === 'typedFastify') &&
       node.callee.property?.name &&
       ['get', 'post', 'patch', 'delete', 'put'].includes(
         node.callee.property.name
