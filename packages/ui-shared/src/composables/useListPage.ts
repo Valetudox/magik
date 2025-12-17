@@ -101,15 +101,18 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
     let successCount = 0
 
     for (let i = 0; i < toDelete.length; i++) {
+      const id = toDelete[i]
+      if (!id) continue
+
       try {
-        await config.endpoints.delete(toDelete[i])
-        const index = items.value.findIndex(item => item[config.entityId] === toDelete[i])
+        await config.endpoints.delete(id)
+        const index = items.value.findIndex(item => item[config.entityId] === id)
         if (index !== -1) {
           items.value.splice(index, 1)
         }
         successCount++
       } catch {
-        console.error(`Failed to delete item ${toDelete[i]}`)
+        console.error(`Failed to delete item ${id}`)
       }
       bulkOperationProgress.value = Math.round(((i + 1) / toDelete.length) * 100)
     }
@@ -160,7 +163,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
       const unsubscribe = onUpdated((data) => {
         const index = items.value.findIndex(item => item[config.entityId] === data.id)
         if (index !== -1) {
-          items.value[index] = { ...items.value[index], ...data }
+          items.value[index] = { ...items.value[index], ...data } as unknown as T
         }
       })
       socketUnsubscribers.value.push(unsubscribe)

@@ -20,15 +20,21 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 
 /**
  * Health check endpoint
+ *
+ * Check if the service is running and healthy
  */
 export const healthCheck = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckData, ThrowOnError>) => (options?.client ?? client).get<HealthCheckResponses, unknown, ThrowOnError>({ url: '/health', ...options });
 
 /**
  * List all recordings
+ *
+ * Retrieve a list of all audio recordings stored in the system
  */
 export const listRecordings = <ThrowOnError extends boolean = false>(options?: Options<ListRecordingsData, ThrowOnError>) => (options?.client ?? client).get<ListRecordingsResponses, ListRecordingsErrors, ThrowOnError>({ url: '/api/recordings', ...options });
 
 /**
  * Get a specific recording
+ *
+ * Retrieve details of a specific audio recording by its ID
  */
 export const getRecording = <ThrowOnError extends boolean = false>(options: Options<GetRecordingData, ThrowOnError>) => (options.client ?? client).get<GetRecordingResponses, GetRecordingErrors, ThrowOnError>({ url: '/api/recordings/{id}', ...options });

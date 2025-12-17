@@ -61,3 +61,33 @@ export function formatRelativeTime(isoString: string): string {
     return formatDateShort(isoString)
   }
 }
+
+/**
+ * Format file size in bytes to human-readable string
+ * @param bytes - File size in bytes
+ * @returns Formatted size string (e.g., "1.50 MB", "250.00 KB")
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+}
+
+/**
+ * Format duration in seconds to human-readable time string
+ * @param seconds - Duration in seconds
+ * @returns Formatted duration string (e.g., "1:23:45", "5:30", "N/A")
+ */
+export function formatDuration(seconds: number | undefined): string {
+  if (!seconds) return 'N/A'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
+
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+  return `${m}:${s.toString().padStart(2, '0')}`
+}

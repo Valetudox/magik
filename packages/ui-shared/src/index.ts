@@ -10,7 +10,13 @@ export { default as BulkActionsToolbar } from './components/list-page/BulkAction
 export { useListPage } from './composables/useListPage'
 
 // Export utilities
-export { formatDate, formatDateShort, formatRelativeTime } from './utils/formatters'
+export {
+  formatDate,
+  formatDateShort,
+  formatRelativeTime,
+  formatFileSize,
+  formatDuration,
+} from './utils/formatters'
 
 // Export types
 export type { MenuItem } from './types'

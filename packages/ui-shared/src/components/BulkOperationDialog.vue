@@ -45,6 +45,7 @@ const startOperation = async () => {
 
   for (let i = 0; i < props.selectedItems.length; i++) {
     const item = props.selectedItems[i]
+    if (!item) continue
 
     try {
       const result = await props.config.operation(item)
@@ -53,8 +54,8 @@ const startOperation = async () => {
       // If operation throws, create a failed result
       operationResults.push({
         success: false,
-        id: item.id || String(i),
-        name: item.name || item.title || 'Unknown',
+        id: (item as any).id || String(i),
+        name: (item as any).name || (item as any).title || 'Unknown',
         error: (error as Error).message ?? 'Unknown error',
       })
     }
