@@ -18,6 +18,28 @@ export {
   formatDuration,
 } from './utils/formatters'
 
+export {
+  validateListPageConfig,
+  validateListPageConfigOrThrow,
+  validateListPageConfigDev,
+  type ValidationResult,
+} from './utils/validateListPageConfig'
+
 // Export types
 export type { MenuItem } from './types'
 export * from './types/list-page.types'
+
+// Export Zod schemas (for runtime validation)
+export {
+  listPageConfigSchema,
+  listFieldConfigSchema,
+  rowActionConfigSchema,
+  bulkActionConfigSchema,
+  endpointConfigSchema,
+  pageUrlConfigSchema,
+  createActionConfigSchema,
+  deleteDialogConfigSchema,
+  socketConfigSchema,
+  bulkOperationConfigSchema,
+  bulkOperationResultSchema,
+} from './types/list-page.schema'

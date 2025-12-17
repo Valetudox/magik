@@ -12,6 +12,44 @@ import { EntityListPage, type ListPageConfig } from '@magik/ui-shared'
 
 The component accepts a single `config` prop of type `ListPageConfig<T>` where `T` is your entity type.
 
+## Runtime Validation with Zod
+
+The configuration uses Zod schemas with **discriminated unions** to prevent invalid states at runtime. This ensures type safety and catches configuration errors early.
+
+### Key Constraints Enforced
+
+1. **Bulk actions require selection**: `bulkActions` can only be defined when `enableSelection: true`
+2. **Socket handlers required**: `socket.enabled: true` requires `handlers` to be defined
+3. **Delete endpoints required**: Row/bulk delete actions require `endpoints.delete`
+4. **Formatter XOR renderer**: Fields cannot have both `formatter` and `renderer`
+5. **Create URL required**: `createAction.useDialog: false` requires `pageUrls.create`
+
+### Validation Utilities
+
+```typescript
+import {
+  validateListPageConfig,
+  validateListPageConfigOrThrow,
+  validateListPageConfigDev,
+} from '@magik/ui-shared'
+
+// Option 1: Safe validation (returns result)
+const result = validateListPageConfig(config)
+if (!result.success) {
+  console.error('Invalid config:', result.errors)
+}
+
+// Option 2: Throw on invalid (fail fast)
+try {
+  validateListPageConfigOrThrow(config)
+} catch (error) {
+  console.error('Validation failed:', error)
+}
+
+// Option 3: Development-only warnings
+validateListPageConfigDev(config) // Only runs in dev mode
+```
+
 ## Configuration Structure
 
 ### Required Properties
@@ -421,3 +459,163 @@ Examples:
 ❌ **Don't** forget to handle async errors in custom actions
 ❌ **Don't** mutate items in formatters or renderers
 ❌ **Don't** create custom list components - extend EntityListPage instead
+
+## Invalid States (Prevented by Zod)
+
+The Zod schemas use discriminated unions and refinements to prevent these invalid configurations:
+
+### ❌ Invalid: Bulk Actions Without Selection
+
+```typescript
+// WILL FAIL VALIDATION
+const config: ListPageConfig = {
+  // ...
+  enableSelection: false, // ❌ or undefined
+  bulkActions: [         // ❌ INVALID: requires enableSelection=true
+    { type: 'delete', label: 'Delete', icon: 'mdi-delete' }
+  ],
+}
+```
+
+**Error:** `bulkActions can only be defined when enableSelection: true`
+
+### ❌ Invalid: Delete Actions Without Endpoint
+
+```typescript
+// WILL FAIL VALIDATION
+const config: ListPageConfig = {
+  // ...
+  endpoints: {
+    list: () => api.getItems(),
+    // ❌ Missing delete endpoint
+  },
+  rowActions: [
+    { type: 'delete', icon: 'mdi-delete', title: 'Delete' } // ❌ INVALID
+  ],
+}
+```
+
+**Error:** `Row action type "delete" requires endpoints.delete to be defined`
+
+Same applies for bulk delete actions.
+
+### ❌ Invalid: Socket Enabled Without Handlers
+
+```typescript
+// WILL FAIL VALIDATION
+const config: ListPageConfig = {
+  // ...
+  socket: {
+    enabled: true,  // ❌ INVALID: requires handlers
+    // ❌ Missing handlers
+  },
+}
+```
+
+**Error:** Discriminated union validation error
+
+**Correct:**
+```typescript
+socket: {
+  enabled: true,
+  handlers: {
+    onUpdated: (callback) => onItemUpdated(callback),
+  },
+}
+```
+
+### ❌ Invalid: Field With Both Formatter and Renderer
+
+```typescript
+// WILL FAIL VALIDATION
+const config: ListPageConfig = {
+  // ...
+  fields: [
+    {
+      key: 'status',
+      title: 'Status',
+      formatter: (value) => String(value),  // ❌ Cannot use both
+      renderer: (value) => h(VChip, value), // ❌ Cannot use both
+    }
+  ],
+}
+```
+
+**Error:** `Cannot use both formatter and renderer on the same field`
+
+### ❌ Invalid: Create Without Dialog But No URL
+
+```typescript
+// WILL FAIL VALIDATION
+const config: ListPageConfig = {
+  // ...
+  createAction: {
+    enabled: true,
+    useDialog: false,  // ❌ INVALID: requires pageUrls.create
+  },
+  // ❌ Missing pageUrls.create
+}
+```
+
+**Error:** `createAction with useDialog=false requires pageUrls.create to be defined`
+
+## Using Discriminated Unions in Your Code
+
+The Zod schemas export proper discriminated union types:
+
+```typescript
+import type { SocketConfig, CreateActionConfig } from '@magik/ui-shared'
+
+// Socket config is a discriminated union on 'enabled'
+const socketDisabled: SocketConfig = {
+  enabled: false,
+  // handlers not required
+}
+
+const socketEnabled: SocketConfig = {
+  enabled: true,
+  handlers: {  // handlers required when enabled=true
+    onUpdated: (callback) => onItemUpdated(callback),
+  },
+}
+
+// Create action is a discriminated union on 'enabled'
+const createDisabled: CreateActionConfig = {
+  enabled: false,
+}
+
+const createWithDialog: CreateActionConfig = {
+  enabled: true,
+  useDialog: true,  // or undefined (defaults to true)
+  dialogComponent: MyDialog,
+}
+
+const createWithUrl: CreateActionConfig = {
+  enabled: true,
+  useDialog: false,
+  // pageUrls.create must be defined in main config
+}
+```
+
+## Validation in Development
+
+Add validation to your list page views during development:
+
+```vue
+<script setup lang="ts">
+import { EntityListPage, validateListPageConfigDev } from '@magik/ui-shared'
+
+const config: ListPageConfig<MyEntity> = {
+  // ... your config
+}
+
+// Validate only in development
+validateListPageConfigDev(config)
+</script>
+
+<template>
+  <EntityListPage :config="config" />
+</template>
+```
+
+This will log warnings to the console if the configuration has any invalid states, helping catch errors early in development.
