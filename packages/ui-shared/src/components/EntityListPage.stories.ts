@@ -63,7 +63,6 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-  tags: ['autodocs'],
 } satisfies Meta<typeof EntityListPage>
 
 export default meta
@@ -80,7 +79,7 @@ export const Minimal: Story = {
         { key: 'status', title: 'Status' },
       ],
       endpoints: {
-        list: async () => mockItems,
+        list: async () => [...mockItems],
       },
       enableSelection: false,
     } satisfies ListPageConfig<MockItem>,
@@ -100,7 +99,7 @@ export const WithSearchAndSort: Story = {
         { key: 'createdAt', title: 'Created', sortable: true },
       ],
       endpoints: {
-        list: async () => mockItems,
+        list: async () => [...mockItems],
       },
       enableSelection: false,
       enableSearch: true,
@@ -148,7 +147,7 @@ export const WithCustomFormatters: Story = {
         },
       ],
       endpoints: {
-        list: async () => mockItems,
+        list: async () => [...mockItems],
       },
       enableSelection: false,
       enableSearch: true,

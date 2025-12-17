@@ -109,11 +109,6 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
 
 <template>
   <div class="entity-list-page">
-    <!-- Teleport header title only -->
-    <Teleport to="#header-title-slot">
-      <div>{{ config.entityNamePlural }}</div>
-    </Teleport>
-
     <!-- Main content -->
     <v-container fluid>
       <!-- Loading state -->

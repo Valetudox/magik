@@ -1,6 +1,5 @@
 import type { Preview } from '@storybook/vue3'
 import { setup } from '@storybook/vue3'
-import { h } from 'vue'
 import { createVuetify } from 'vuetify'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import * as components from 'vuetify/components'
@@ -8,29 +7,40 @@ import * as directives from 'vuetify/directives'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 
-// Create fresh instances for each app
+// Create instances once as singletons
+const vuetify = createVuetify({
+  components,
+  directives,
+})
+
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: { template: '<div></div>' } },
+  ],
+})
+
+// Install once globally
 setup((app) => {
-  const vuetify = createVuetify({
-    components,
-    directives,
-  })
-
-  const router = createRouter({
-    history: createMemoryHistory(),
-    routes: [
-      { path: '/:pathMatch(.*)*', name: 'NotFound', component: { template: '<div></div>' } },
-    ],
-  })
-
   app.use(vuetify)
   app.use(router)
 })
 
 const preview: Preview = {
   decorators: [
-    (story) => ({
+    (story, context) => ({
       components: { story },
-      template: '<v-app><v-main><story /></v-main></v-app>',
+      setup() {
+        const key = `${context.id}-${context.viewMode}`
+        return { key }
+      },
+      template: `
+        <v-app :key="key">
+          <v-main>
+            <story />
+          </v-main>
+        </v-app>
+      `,
     }),
   ],
   parameters: {

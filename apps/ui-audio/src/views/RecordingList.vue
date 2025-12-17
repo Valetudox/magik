@@ -120,5 +120,10 @@ const config: ListPageConfig<Recording> = {
 </script>
 
 <template>
-  <EntityListPage :config="config" />
+  <div>
+    <Teleport to="#header-title-slot">
+      <div>Audio Recordings</div>
+    </Teleport>
+    <EntityListPage :config="config" />
+  </div>
 </template>

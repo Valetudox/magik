@@ -240,21 +240,27 @@ const config: ListPageConfig<DecisionSummary> = {
 </script>
 
 <template>
-  <EntityListPage :config="config">
-    <!-- Custom create dialog using slot -->
-    <template #create-dialog="{ show, onClose }">
-      <CreateDecisionDialog
-        :model-value="show"
-        @update:model-value="(value) => !value && onClose()"
-        @created="handleDecisionCreated"
-      />
-    </template>
-  </EntityListPage>
+  <div>
+    <Teleport to="#header-title-slot">
+      <div>Decision Documents</div>
+    </Teleport>
 
-  <!-- Bulk push to Confluence dialog -->
-  <BulkOperationDialog
-    v-model="showBulkPushDialog"
-    :selected-items="bulkPushItems"
-    :config="bulkPushConfig"
-  />
+    <EntityListPage :config="config">
+      <!-- Custom create dialog using slot -->
+      <template #create-dialog="{ show, onClose }">
+        <CreateDecisionDialog
+          :model-value="show"
+          @update:model-value="(value) => !value && onClose()"
+          @created="handleDecisionCreated"
+        />
+      </template>
+    </EntityListPage>
+
+    <!-- Bulk push to Confluence dialog -->
+    <BulkOperationDialog
+      v-model="showBulkPushDialog"
+      :selected-items="bulkPushItems"
+      :config="bulkPushConfig"
+    />
+  </div>
 </template>

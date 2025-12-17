@@ -12,7 +12,6 @@ const config: StorybookConfig = {
     name: '@storybook/vue3-vite',
     options: {},
   },
-  docs: {},
   async viteFinal(config) {
     return mergeConfig(config, {
       plugins: [vue()],
