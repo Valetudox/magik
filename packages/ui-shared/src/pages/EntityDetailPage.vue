@@ -17,13 +17,13 @@ const breadcrumbItems = computed(() => [
 </script>
 
 <template>
-  <div class="entity-detail-page">
+  <div>
     <AppHeader>
       <template #title>
-        <v-breadcrumbs :items="breadcrumbItems" class="pa-0" />
+        <v-breadcrumbs :items="breadcrumbItems" density="compact" class="pa-0" />
       </template>
-      <template #actions>
-        <slot name="headerActions" />
+      <template #title-actions>
+        <slot name="title-actions" />
       </template>
     </AppHeader>
 
@@ -39,17 +39,3 @@ const breadcrumbItems = computed(() => [
     </v-container>
   </div>
 </template>
-
-<style scoped>
-.entity-detail-page :deep(.v-breadcrumbs) {
-  font-size: inherit;
-}
-
-.entity-detail-page :deep(.v-breadcrumbs-item--link) {
-  text-decoration: underline;
-}
-
-.entity-detail-page :deep(.v-breadcrumbs-item--link:hover) {
-  opacity: 0.8;
-}
-</style>

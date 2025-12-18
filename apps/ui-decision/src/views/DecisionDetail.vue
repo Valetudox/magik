@@ -119,39 +119,44 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
     :subtitle="decision?.id.replace(/-/g, ' ') || 'Loading...'"
     go-back-url="/"
   >
-    <template #headerActions>
+    <template #title-actions>
       <v-btn
-        variant="outlined"
+        variant="text"
         icon="mdi-pencil"
-        class="mr-2"
+        size="small"
         @click="showEditConfluenceUrlDialog = true"
       />
       <v-btn
-        variant="outlined"
+        variant="text"
         icon="mdi-content-copy"
-        class="mr-2"
+        size="small"
         :disabled="!decision?.confluenceLink"
         @click="copyConfluenceUrl"
       />
       <v-btn
-        variant="outlined"
+        variant="text"
         icon="mdi-open-in-new"
-        class="mr-2"
+        size="small"
         :disabled="!decision?.confluenceLink"
         @click="openInConfluence"
       />
       <v-btn
-        variant="outlined"
+        variant="text"
         prepend-icon="mdi-upload"
-        class="mr-2"
+        size="small"
         :loading="mutations.pushingToConfluence.value"
         :disabled="!decision?.confluenceLink || mutations.pushingToConfluence.value"
         @click="mutations.pushToConfluence"
       >
-        Push to Confluence
+        Push
       </v-btn>
-      <v-btn variant="outlined" prepend-icon="mdi-download" @click="pullFromConfluence">
-        Pull from Confluence
+      <v-btn
+        variant="text"
+        prepend-icon="mdi-download"
+        size="small"
+        @click="pullFromConfluence"
+      >
+        Pull
       </v-btn>
     </template>
 

@@ -2,20 +2,32 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-export interface HeaderMenuItem {
+export interface HeaderSubMenuItem {
   title: string
   to: string
   icon?: string
   external?: boolean
 }
 
+export interface HeaderMenuItem {
+  title: string
+  to?: string
+  icon?: string
+  external?: boolean
+  children?: HeaderSubMenuItem[]
+}
+
 interface Props {
   appTitle?: string
   menuItems?: HeaderMenuItem[]
+  userName?: string
+  userAvatar?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   appTitle: 'Magik',
+  userName: 'User',
+  userAvatar: '',
   menuItems: () => {
     const isDev = import.meta.env.DEV
     const devUrls = {
@@ -32,28 +44,40 @@ const props = withDefaults(defineProps<Props>(), {
     }
     return [
       {
-        title: 'Decisions',
-        to: isDev ? devUrls.decisions : prodUrls.decisions,
-        icon: 'mdi-file-document-multiple',
-        external: true,
+        title: 'Architect',
+        icon: 'mdi-drawing',
+        children: [
+          {
+            title: 'Decisions',
+            to: isDev ? devUrls.decisions : prodUrls.decisions,
+            icon: 'mdi-file-document-multiple',
+            external: true,
+          },
+          {
+            title: 'Specifications',
+            to: isDev ? devUrls.specifications : prodUrls.specifications,
+            icon: 'mdi-file-document-outline',
+            external: true,
+          },
+        ],
       },
       {
-        title: 'Audio',
-        to: isDev ? devUrls.audio : prodUrls.audio,
-        icon: 'mdi-microphone',
-        external: true,
-      },
-      {
-        title: 'Table Documents',
-        to: isDev ? devUrls.tableDocuments : prodUrls.tableDocuments,
-        icon: 'mdi-table-large',
-        external: true,
-      },
-      {
-        title: 'Specifications',
-        to: isDev ? devUrls.specifications : prodUrls.specifications,
-        icon: 'mdi-file-document-outline',
-        external: true,
+        title: 'Tools',
+        icon: 'mdi-tools',
+        children: [
+          {
+            title: 'Audio',
+            to: isDev ? devUrls.audio : prodUrls.audio,
+            icon: 'mdi-microphone',
+            external: true,
+          },
+          {
+            title: 'Table Documents',
+            to: isDev ? devUrls.tableDocuments : prodUrls.tableDocuments,
+            icon: 'mdi-table-large',
+            external: true,
+          },
+        ],
       },
     ]
   },
@@ -64,66 +88,123 @@ const isDev = import.meta.env.DEV
 
 const route = useRoute()
 
-// Determine which tab is active based on current route
-const activeTab = computed(() => {
+// Compute active tab index based on current URL
+const activeTabIndex = computed(() => {
   const currentUrl = window.location.href
   const currentPath = window.location.pathname
 
-  const index = props.menuItems.findIndex((item) => {
-    if (item.external) {
-      // In dev mode, check full URL including port
-      if (isDev) {
-        // Match by checking if current URL starts with the item URL
-        // e.g., http://localhost:5173/ matches http://localhost:5173/anything
-        return currentUrl.startsWith(item.to)
+  return props.menuItems.findIndex((item) => {
+    // Check if main item is active
+    if (item.to) {
+      if (item.external) {
+        return isDev ? currentUrl.startsWith(item.to) : currentPath.startsWith(item.to)
       }
-      // In prod mode, check pathname
-      return currentPath.startsWith(item.to)
+      return route.path.startsWith(item.to)
     }
-    return route.path.startsWith(item.to)
+
+    // Check if any child is active
+    if (item.children) {
+      return item.children.some((child) => {
+        if (child.external) {
+          return isDev ? currentUrl.startsWith(child.to) : currentPath.startsWith(child.to)
+        }
+        return route.path.startsWith(child.to)
+      })
+    }
+
+    return false
   })
-  return index >= 0 ? index : null
 })
 
-function navigateToItem(item: HeaderMenuItem) {
-  if (item.external) {
-    // External link - use full page navigation
-    window.location.href = item.to
+function navigateToItem(item: HeaderMenuItem | HeaderSubMenuItem) {
+  if (item.to) {
+    if (item.external) {
+      window.location.href = item.to
+    }
   }
 }
+
+// Get user initials for avatar fallback
+const userInitials = computed(() => {
+  return props.userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+})
 </script>
 
 <template>
-  <v-app-bar color="primary" prominent>
-    <v-app-bar-title>
-      <div id="header-title-slot">
-        <slot name="title">
-          {{ appTitle }}
-        </slot>
-      </div>
-    </v-app-bar-title>
+  <div>
+    <!-- Top bar with menu, actions, and user avatar -->
+    <v-app-bar color="primary" density="compact" flat>
+      <v-tabs :model-value="activeTabIndex" color="white">
+        <template v-for="(item, index) in menuItems" :key="index">
+          <!-- Tab with dropdown submenu -->
+          <v-menu v-if="item.children && item.children.length > 0" open-on-hover>
+            <template #activator="{ props: menuProps }">
+              <v-tab :value="index" v-bind="menuProps">
+                <v-icon v-if="item.icon" start>{{ item.icon }}</v-icon>
+                {{ item.title }}
+                <v-icon end size="small">mdi-chevron-down</v-icon>
+              </v-tab>
+            </template>
+            <v-list density="compact">
+              <v-list-item
+                v-for="(child, childIndex) in item.children"
+                :key="childIndex"
+                :prepend-icon="child.icon"
+                :title="child.title"
+                @click="navigateToItem(child)"
+              />
+            </v-list>
+          </v-menu>
 
-    <v-spacer />
+          <!-- Simple tab without dropdown -->
+          <v-tab v-else :value="index" @click="navigateToItem(item)">
+            <v-icon v-if="item.icon" start>{{ item.icon }}</v-icon>
+            {{ item.title }}
+          </v-tab>
+        </template>
+      </v-tabs>
 
-    <div id="header-actions-slot">
-      <slot name="actions" />
-    </div>
+      <v-spacer />
 
-    <v-tabs :model-value="activeTab" color="white" align-tabs="end" class="mr-4">
-      <v-tab
-        v-for="(item, index) in menuItems"
-        :key="index"
-        :prepend-icon="item.icon"
-        @click="navigateToItem(item)"
-      >
-        {{ item.title }}
-      </v-tab>
-    </v-tabs>
-  </v-app-bar>
+      <!-- Action buttons slot with 2 dummy buttons as default -->
+      <slot name="actions">
+        <v-btn icon variant="text" size="small">
+          <v-icon>mdi-bell-outline</v-icon>
+        </v-btn>
+        <v-btn icon variant="text" size="small">
+          <v-icon>mdi-cog-outline</v-icon>
+        </v-btn>
+      </slot>
+
+      <!-- User avatar -->
+      <v-menu>
+        <template #activator="{ props: menuProps }">
+          <v-btn icon variant="text" class="ml-2" v-bind="menuProps">
+            <v-avatar size="32" color="white">
+              <v-img v-if="userAvatar" :src="userAvatar" :alt="userName" />
+              <span v-else class="text-primary text-caption font-weight-bold">{{ userInitials }}</span>
+            </v-avatar>
+          </v-btn>
+        </template>
+        <v-list density="compact">
+          <v-list-item prepend-icon="mdi-account" title="Profile" />
+          <v-list-item prepend-icon="mdi-logout" title="Logout" />
+        </v-list>
+      </v-menu>
+    </v-app-bar>
+
+    <!-- Title bar with breadcrumbs and actions -->
+    <v-toolbar color="surface" density="compact" border>
+      <v-toolbar-title class="ml-4">
+        <slot name="title" />
+      </v-toolbar-title>
+      <v-spacer />
+      <slot name="title-actions" />
+    </v-toolbar>
+  </div>
 </template>
-
-<style scoped>
-.v-app-bar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-</style>

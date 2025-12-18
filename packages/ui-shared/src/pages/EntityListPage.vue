@@ -113,7 +113,7 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
     <!-- App header with page title -->
     <AppHeader>
       <template #title>
-        {{ config.pageTitle }}
+        <v-breadcrumbs :items="[{ title: config.pageTitle, disabled: true }]" density="compact" class="pa-0" />
       </template>
     </AppHeader>
 

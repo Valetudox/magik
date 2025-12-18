@@ -26,7 +26,6 @@ EntityDetailPage provides a consistent layout for detail/edit pages with:
 - A header with breadcrumb-style navigation (title / subtitle)
 - Clickable title for navigation back
 - A 2-column layout with sidebar (2 cols) and main content (10 cols)
-- Slots for header actions, sidebar, and main content
 
 ## Props
 
@@ -36,7 +35,6 @@ EntityDetailPage provides a consistent layout for detail/edit pages with:
 
 ## Slots
 
-- \`headerActions\`: Action buttons in the header
 - \`sidebar\`: Left sidebar content (2 columns wide)
 - \`default\`: Main content area (10 columns wide)
         `,
@@ -74,50 +72,6 @@ export const Basic: Story = {
       <EntityDetailPage v-bind="args">
         <SimpleBox
           title="Main Content"
-          :value="content"
-          @update="content = $event"
-        />
-      </EntityDetailPage>
-    `,
-  }),
-}
-
-/**
- * Header actions for common operations like save, delete, and navigation.
- */
-export const WithHeaderActions: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Add action buttons to the header using the `headerActions` slot.',
-      },
-    },
-  },
-  args: {
-    title: 'Items',
-    subtitle: 'Edit Item',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
-    components: { EntityDetailPage, VBtn, SimpleBox },
-    setup() {
-      const content = ref('Header actions appear on the right side of the header bar.')
-      return { args, content }
-    },
-    template: `
-      <EntityDetailPage v-bind="args">
-        <template #headerActions>
-          <VBtn variant="outlined" icon="mdi-content-copy" class="mr-2" />
-          <VBtn variant="outlined" icon="mdi-open-in-new" class="mr-2" />
-          <VBtn variant="outlined" prepend-icon="mdi-content-save" class="mr-2">
-            Save
-          </VBtn>
-          <VBtn variant="outlined" prepend-icon="mdi-delete" color="error">
-            Delete
-          </VBtn>
-        </template>
-        <SimpleBox
-          title="Item Editor"
           :value="content"
           @update="content = $event"
         />
@@ -260,7 +214,7 @@ export const CompleteExample: Story = {
     docs: {
       description: {
         story:
-          'A full-featured example demonstrating all props and slots with Box components: title with subtitle and goBackUrl, header actions, sidebar with SimpleBox, ListBox, and SectionedBox, plus rich main content.',
+          'A full-featured example demonstrating all props and slots with Box components: title with subtitle and goBackUrl, sidebar with SimpleBox, ListBox, and SectionedBox, plus rich main content with action toolbar.',
       },
     },
   },
@@ -317,18 +271,6 @@ export const CompleteExample: Story = {
     },
     template: `
       <EntityDetailPage v-bind="args">
-        <template #headerActions>
-          <VBtn variant="outlined" icon="mdi-pencil" class="mr-2" title="Edit" />
-          <VBtn variant="outlined" icon="mdi-content-copy" class="mr-2" title="Copy URL" />
-          <VBtn variant="outlined" icon="mdi-open-in-new" class="mr-2" title="Open in new tab" />
-          <VBtn variant="outlined" prepend-icon="mdi-upload" class="mr-2">
-            Push to Confluence
-          </VBtn>
-          <VBtn variant="outlined" prepend-icon="mdi-download">
-            Pull from Confluence
-          </VBtn>
-        </template>
-
         <template #sidebar>
           <SimpleBox
             title="Problem Definition"
@@ -364,6 +306,19 @@ export const CompleteExample: Story = {
             />
           </SectionedBox>
         </template>
+
+        <!-- Actions toolbar -->
+        <div class="d-flex align-center mb-4">
+          <VBtn variant="outlined" icon="mdi-pencil" class="mr-2" title="Edit" />
+          <VBtn variant="outlined" icon="mdi-content-copy" class="mr-2" title="Copy URL" />
+          <VBtn variant="outlined" icon="mdi-open-in-new" class="mr-2" title="Open in new tab" />
+          <VBtn variant="outlined" prepend-icon="mdi-upload" class="mr-2">
+            Push to Confluence
+          </VBtn>
+          <VBtn variant="outlined" prepend-icon="mdi-download">
+            Pull from Confluence
+          </VBtn>
+        </div>
 
         <VAlert type="info" variant="tonal" class="mb-4">
           This decision document is linked to Confluence and will sync changes automatically.
