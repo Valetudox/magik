@@ -1,12 +1,28 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 
-const props = defineProps<{
-  editUseCase?: { id: string; name: string; description: string } | null
-}>()
+interface EditItem {
+  id: string
+  name: string
+  description: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    entityName: string
+    editItem?: EditItem | null
+    descriptionMaxLength?: number
+    descriptionRows?: number
+  }>(),
+  {
+    editItem: null,
+    descriptionMaxLength: 0,
+    descriptionRows: 4,
+  }
+)
 
 const emit = defineEmits<{
-  save: [useCase: { name: string; description: string }]
+  save: [data: { name: string; description: string }]
 }>()
 
 const modelValue = defineModel<boolean>()
@@ -15,19 +31,31 @@ const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const name = ref('')
 const description = ref('')
 
-const isEditMode = computed(() => !!props.editUseCase)
-const dialogTitle = computed(() => (isEditMode.value ? 'Edit Use Case' : 'Add Use Case'))
+const isEditMode = computed(() => !!props.editItem)
+const dialogTitle = computed(() =>
+  isEditMode.value ? `Edit ${props.entityName}` : `Add ${props.entityName}`
+)
 const saveButtonText = computed(() => (isEditMode.value ? 'Save' : 'Add'))
 
 const rules = {
   required: (v: string) => !!v?.trim() || 'Required',
+  maxLength: (max: number) => (v: string) =>
+    !v || v.length <= max || `Max ${max} characters`,
 }
+
+const descriptionRules = computed(() => {
+  const r: Array<(v: string) => boolean | string> = [rules.required]
+  if (props.descriptionMaxLength > 0) {
+    r.push(rules.maxLength(props.descriptionMaxLength))
+  }
+  return r
+})
 
 watch(modelValue, (open) => {
   if (open) {
-    if (props.editUseCase) {
-      name.value = props.editUseCase.name
-      description.value = props.editUseCase.description
+    if (props.editItem) {
+      name.value = props.editItem.name
+      description.value = props.editItem.description
     } else {
       name.value = ''
       description.value = ''
@@ -36,6 +64,7 @@ watch(modelValue, (open) => {
 })
 
 const handleSave = async () => {
+  if (!form.value) return
   const { valid } = await form.value.validate()
   if (!valid) return
 
@@ -67,9 +96,10 @@ const handleCancel = () => {
           <v-textarea
             v-model="description"
             label="Description"
-            :rules="[rules.required]"
+            :rules="descriptionRules"
             variant="outlined"
-            rows="4"
+            :rows="props.descriptionRows"
+            :counter="props.descriptionMaxLength > 0 ? props.descriptionMaxLength : undefined"
           />
         </v-form>
       </v-card-text>

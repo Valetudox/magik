@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { EntityDetailPage, SimpleBox, ListBox, SectionedBox, BoxSection } from '@magik/ui-shared'
+import {
+  EntityDetailPage,
+  SimpleBox,
+  ListBox,
+  SectionedBox,
+  BoxSection,
+  NameDescriptionDialog,
+  TextEditDialog,
+  ListEditDialog,
+} from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
 import RatingDialog from '../components/RatingDialog.vue'
 import OptionDialog from '../components/OptionDialog.vue'
-import DriverDialog from '../components/DriverDialog.vue'
-import ComponentDialog from '../components/ComponentDialog.vue'
-import UseCaseDialog from '../components/UseCaseDialog.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import EditDescriptionDialog from '../components/EditDescriptionDialog.vue'
-import EditEvaluationDetailDialog from '../components/EditEvaluationDetailDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -589,28 +594,21 @@ const appendAIPromptForEvaluationDetail = (
 
 // Problem Definition edit dialog state
 const showEditProblemDialog = ref(false)
-const editedProblemDefinition = ref('')
 
 // Proposal description edit dialog state
 const showEditProposalDescDialog = ref(false)
-const editedProposalDescription = ref('')
 
 // Proposal reasoning edit dialog state
 const showEditProposalReasoningDialog = ref(false)
-const editedProposalReasoning = ref<string[]>([])
 
 const openEditProblemDialog = () => {
-  editedProblemDefinition.value = decision.value?.problemDefinition ?? ''
   showEditProblemDialog.value = true
 }
 
-const handleSaveProblemDefinition = async () => {
+const handleSaveProblemDefinition = async (value: string) => {
   try {
     const decisionId = route.params.id as string
-    await api.updateDecision(decisionId, {
-      problemDefinition: editedProblemDefinition.value.trim(),
-    })
-    showEditProblemDialog.value = false
+    await api.updateDecision(decisionId, { problemDefinition: value })
   } catch (err: unknown) {
     agentNotification.value = {
       show: true,
@@ -621,20 +619,18 @@ const handleSaveProblemDefinition = async () => {
 }
 
 const openEditProposalDescDialog = () => {
-  editedProposalDescription.value = decision.value?.proposal.description ?? ''
   showEditProposalDescDialog.value = true
 }
 
-const handleSaveProposalDesc = async () => {
+const handleSaveProposalDesc = async (value: string) => {
   try {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, {
       proposal: {
-        description: editedProposalDescription.value.trim(),
+        description: value,
         reasoning: decision.value?.proposal.reasoning ?? [],
       },
     })
-    showEditProposalDescDialog.value = false
   } catch (err: unknown) {
     agentNotification.value = {
       show: true,
@@ -645,20 +641,18 @@ const handleSaveProposalDesc = async () => {
 }
 
 const openEditProposalReasoningDialog = () => {
-  editedProposalReasoning.value = [...(decision.value?.proposal.reasoning ?? [])]
   showEditProposalReasoningDialog.value = true
 }
 
-const handleSaveProposalReasoning = async (newReasoning: string[]) => {
+const handleSaveProposalReasoning = async (items: string[]) => {
   try {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, {
       proposal: {
         description: decision.value?.proposal.description ?? '',
-        reasoning: newReasoning,
+        reasoning: items,
       },
     })
-    showEditProposalReasoningDialog.value = false
   } catch (err: unknown) {
     agentNotification.value = {
       show: true,
@@ -695,18 +689,15 @@ const appendAIPromptForUseCase = (useCase: { id: string; name: string }) => {
 
 // Confluence URL edit dialog state
 const showEditConfluenceUrlDialog = ref(false)
-const editedConfluenceUrl = ref('')
 
 const openEditConfluenceUrlDialog = () => {
-  editedConfluenceUrl.value = decision.value?.confluenceLink ?? ''
   showEditConfluenceUrlDialog.value = true
 }
 
-const handleSaveConfluenceUrl = async () => {
+const handleSaveConfluenceUrl = async (value: string) => {
   try {
     const decisionId = route.params.id as string
-    await api.updateDecision(decisionId, { confluenceLink: editedConfluenceUrl.value.trim() })
-    showEditConfluenceUrlDialog.value = false
+    await api.updateDecision(decisionId, { confluenceLink: value })
   } catch (err: unknown) {
     agentNotification.value = {
       show: true,
@@ -1259,23 +1250,27 @@ const handleSaveConfluenceUrl = async () => {
     />
 
     <!-- Driver Dialog -->
-    <DriverDialog
+    <NameDescriptionDialog
       v-model="showDriverDialog"
-      :edit-driver="editingDriver"
+      entity-name="Decision Driver"
+      :edit-item="editingDriver"
+      :description-max-length="500"
       @save="handleSaveDriver"
     />
 
     <!-- Component Dialog -->
-    <ComponentDialog
+    <NameDescriptionDialog
       v-model="showComponentDialog"
-      :edit-component="editingComponent"
+      entity-name="Component"
+      :edit-item="editingComponent"
       @save="handleSaveComponent"
     />
 
     <!-- Use Case Dialog -->
-    <UseCaseDialog
+    <NameDescriptionDialog
       v-model="showUseCaseDialog"
-      :edit-use-case="editingUseCase"
+      entity-name="Use Case"
+      :edit-item="editingUseCase"
       @save="handleSaveUseCase"
     />
 
@@ -1298,99 +1293,59 @@ const handleSaveConfluenceUrl = async () => {
     />
 
     <!-- Edit Evaluation Detail Dialog -->
-    <EditEvaluationDetailDialog
+    <ListEditDialog
       v-if="editEvaluationDetailData"
       v-model="showEditEvaluationDetailDialog"
-      :option-name="editEvaluationDetailData.optionName"
-      :driver-name="editEvaluationDetailData.driverName"
-      :details="editEvaluationDetailData.details"
+      title="Edit Evaluation"
+      :subtitle="`${editEvaluationDetailData.optionName} - ${editEvaluationDetailData.driverName}`"
+      :items="editEvaluationDetailData.details"
+      label="Evaluation details (one per line)"
+      hint="Each line becomes a bullet point"
+      :rows="12"
+      :max-width="1200"
       @save="handleSaveEvaluationDetail"
     />
 
     <!-- Edit Problem Definition Dialog -->
-    <v-dialog v-model="showEditProblemDialog" max-width="600">
-      <v-card>
-        <v-card-title>Edit Problem Definition</v-card-title>
-        <v-card-text>
-          <v-textarea
-            v-model="editedProblemDefinition"
-            label="Problem Definition"
-            variant="outlined"
-            rows="6"
-            auto-grow
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showEditProblemDialog = false">
-            Cancel
-          </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveProblemDefinition">
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <TextEditDialog
+      v-model="showEditProblemDialog"
+      title="Edit Problem Definition"
+      label="Problem Definition"
+      :value="decision?.problemDefinition ?? ''"
+      @save="handleSaveProblemDefinition"
+    />
 
     <!-- Edit Proposal Description Dialog -->
-    <v-dialog v-model="showEditProposalDescDialog" max-width="600">
-      <v-card>
-        <v-card-title>Edit Proposal</v-card-title>
-        <v-card-text>
-          <v-textarea
-            v-model="editedProposalDescription"
-            label="Proposal Description"
-            variant="outlined"
-            rows="6"
-            auto-grow
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showEditProposalDescDialog = false">
-            Cancel
-          </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveProposalDesc">
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <TextEditDialog
+      v-model="showEditProposalDescDialog"
+      title="Edit Proposal"
+      label="Proposal Description"
+      :value="decision?.proposal.description ?? ''"
+      @save="handleSaveProposalDesc"
+    />
 
     <!-- Edit Proposal Reasoning Dialog -->
-    <EditEvaluationDetailDialog
+    <ListEditDialog
       v-model="showEditProposalReasoningDialog"
-      option-name="Proposal"
-      driver-name="Reasoning"
-      :details="editedProposalReasoning"
+      title="Edit Proposal Reasoning"
+      :items="decision?.proposal.reasoning ?? []"
+      label="Reasoning (one per line)"
+      hint="Each line becomes a bullet point"
       @save="handleSaveProposalReasoning"
     />
 
     <!-- Edit Confluence URL Dialog -->
-    <v-dialog v-model="showEditConfluenceUrlDialog" max-width="600">
-      <v-card>
-        <v-card-title>Edit Confluence URL</v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="editedConfluenceUrl"
-            label="Confluence URL"
-            variant="outlined"
-            placeholder="https://..."
-            hint="Leave empty to remove the Confluence link"
-            persistent-hint
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showEditConfluenceUrlDialog = false">
-            Cancel
-          </v-btn>
-          <v-btn color="primary" variant="flat" @click="handleSaveConfluenceUrl">
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <TextEditDialog
+      v-model="showEditConfluenceUrlDialog"
+      title="Edit Confluence URL"
+      label="Confluence URL"
+      :value="decision?.confluenceLink ?? ''"
+      :multiline="false"
+      placeholder="https://..."
+      hint="Leave empty to remove the Confluence link"
+      :required="false"
+      @save="handleSaveConfluenceUrl"
+    />
   </EntityDetailPage>
 </template>
 
