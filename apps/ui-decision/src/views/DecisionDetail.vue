@@ -21,6 +21,7 @@ const decision = ref<DecisionDetail | null>(null)
 const decisionVersion = ref(0)
 
 // Reference to EntityDetailPage for agent prompt
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 const detailPageRef = ref<InstanceType<typeof EntityDetailPage> | null>(null)
 
 // Dialog state

@@ -10,7 +10,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'created': [result: { id: string; [key: string]: any }]
+  'created': [result: { id: string; [key: string]: unknown }]
 }>()
 
 const newDecisionName = ref('')

@@ -60,7 +60,7 @@ const config: ListPageConfig<Recording> = {
       sortable: false,
       align: 'center',
       formatter: (_value, item: Recording) =>
-        item.transcriptMetadata?.language?.toUpperCase() || '-',
+        item.transcriptMetadata?.language?.toUpperCase() ?? '-',
     },
     {
       key: 'hasTranscript',

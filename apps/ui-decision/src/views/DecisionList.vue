@@ -57,7 +57,7 @@ const handleBulkPush = (_selectedIds: string[], items: DecisionSummary[]) => {
 }
 
 // Handle decision created
-const handleDecisionCreated = (result: { id: string; [key: string]: any }) => {
+const handleDecisionCreated = (result: { id: string; [key: string]: unknown }) => {
   // Navigate to the new decision detail page
   void router.push(`/${result.id}`)
 }
@@ -93,8 +93,8 @@ const config: ListPageConfig<DecisionSummary> = {
       key: 'directory',
       title: 'Directory',
       sortable: true,
-      formatter: (value) => value || '(root)',
-      renderer: (value) => h('span', { class: 'text-grey' }, value || '(root)'),
+      formatter: (value) => value ?? '(root)',
+      renderer: (value) => h('span', { class: 'text-grey' }, value ?? '(root)'),
     },
     {
       key: 'problemDefinition',

@@ -18,15 +18,15 @@ export function useDecisionMutations(
     type: 'success',
   })
 
-  const showError = (err: unknown, fallbackMessage: string) => {
+  function showError(err: unknown, fallbackMessage: string) {
     notification.value = {
       show: true,
-      message: (err as Error).message ?? fallbackMessage,
+      message: err instanceof Error ? err.message : fallbackMessage,
       type: 'error',
     }
   }
 
-  const showSuccess = (message: string) => {
+  function showSuccess(message: string) {
     notification.value = {
       show: true,
       message,
@@ -35,7 +35,7 @@ export function useDecisionMutations(
   }
 
   // Problem Definition
-  const updateProblemDefinition = async (value: string) => {
+  async function updateProblemDefinition(value: string) {
     try {
       await api.updateDecision(decisionId, { problemDefinition: value })
     } catch (err) {
@@ -44,7 +44,7 @@ export function useDecisionMutations(
   }
 
   // Proposal
-  const updateProposalDescription = async (value: string) => {
+  async function updateProposalDescription(value: string) {
     try {
       await api.updateDecision(decisionId, {
         proposal: {
@@ -57,7 +57,7 @@ export function useDecisionMutations(
     }
   }
 
-  const updateProposalReasoning = async (value: string[]) => {
+  async function updateProposalReasoning(value: string[]) {
     try {
       await api.updateDecision(decisionId, {
         proposal: {
@@ -71,7 +71,7 @@ export function useDecisionMutations(
   }
 
   // Components
-  const createComponent = async (data: { name: string; description: string }) => {
+  async function createComponent(data: { name: string; description: string }) {
     try {
       await api.createComponent(decisionId, data)
     } catch (err) {
@@ -79,7 +79,7 @@ export function useDecisionMutations(
     }
   }
 
-  const updateComponent = async (id: string, data: { name: string; description: string }) => {
+  async function updateComponent(id: string, data: { name: string; description: string }) {
     try {
       await api.updateComponent(decisionId, id, data)
     } catch (err) {
@@ -87,7 +87,7 @@ export function useDecisionMutations(
     }
   }
 
-  const deleteComponent = async (id: string) => {
+  async function deleteComponent(id: string) {
     try {
       await api.deleteComponent(decisionId, id)
     } catch (err) {
@@ -96,7 +96,7 @@ export function useDecisionMutations(
   }
 
   // Use Cases
-  const createUseCase = async (data: { name: string; description: string }) => {
+  async function createUseCase(data: { name: string; description: string }) {
     try {
       await api.createUseCase(decisionId, data)
     } catch (err) {
@@ -104,7 +104,7 @@ export function useDecisionMutations(
     }
   }
 
-  const updateUseCase = async (id: string, data: { name: string; description: string }) => {
+  async function updateUseCase(id: string, data: { name: string; description: string }) {
     try {
       await api.updateUseCase(decisionId, id, data)
     } catch (err) {
@@ -112,7 +112,7 @@ export function useDecisionMutations(
     }
   }
 
-  const deleteUseCase = async (id: string) => {
+  async function deleteUseCase(id: string) {
     try {
       await api.deleteUseCase(decisionId, id)
     } catch (err) {
@@ -121,7 +121,7 @@ export function useDecisionMutations(
   }
 
   // Options
-  const createOption = async (data: { name: string; description: string; moreLink?: string }) => {
+  async function createOption(data: { name: string; description: string; moreLink?: string }) {
     try {
       await api.createOption(decisionId, data)
     } catch (err) {
@@ -129,7 +129,7 @@ export function useDecisionMutations(
     }
   }
 
-  const updateOption = async (id: string, data: { name: string; description: string; moreLink?: string }) => {
+  async function updateOption(id: string, data: { name: string; description: string; moreLink?: string }) {
     try {
       await api.updateOption(decisionId, id, data)
     } catch (err) {
@@ -137,7 +137,7 @@ export function useDecisionMutations(
     }
   }
 
-  const deleteOption = async (id: string) => {
+  async function deleteOption(id: string) {
     try {
       await api.deleteOption(decisionId, id)
     } catch (err) {
@@ -145,7 +145,7 @@ export function useDecisionMutations(
     }
   }
 
-  const setSelectedOption = async (optionId: string | null) => {
+  async function setSelectedOption(optionId: string | null) {
     try {
       await api.setSelectedOption(decisionId, optionId)
     } catch (err) {
@@ -153,9 +153,11 @@ export function useDecisionMutations(
     }
   }
 
-  const updateOptionDescription = async (optionId: string, description: string) => {
+  async function updateOptionDescription(optionId: string, description: string) {
     const option = decision.value?.options.find((o) => o.id === optionId)
-    if (!option) return
+    if (!option) {
+      return
+    }
 
     try {
       await api.updateOption(decisionId, optionId, {
@@ -168,13 +170,13 @@ export function useDecisionMutations(
     }
   }
 
-  const updateOptionDiagram = async (_optionId: string, _diagram: string) => {
+  function updateOptionDiagram(_optionId: string, _diagram: string) {
     // TODO: Add API method to update architecture diagram
     showError(new Error('Not implemented'), 'Diagram update not yet implemented')
   }
 
   // Drivers
-  const createDriver = async (data: { name: string; description: string }) => {
+  async function createDriver(data: { name: string; description: string }) {
     try {
       await api.createDriver(decisionId, data)
     } catch (err) {
@@ -182,7 +184,7 @@ export function useDecisionMutations(
     }
   }
 
-  const updateDriver = async (id: string, data: { name: string; description: string }) => {
+  async function updateDriver(id: string, data: { name: string; description: string }) {
     try {
       await api.updateDriver(decisionId, id, data)
     } catch (err) {
@@ -190,7 +192,7 @@ export function useDecisionMutations(
     }
   }
 
-  const deleteDriver = async (id: string) => {
+  async function deleteDriver(id: string) {
     try {
       await api.deleteDriver(decisionId, id)
     } catch (err) {
@@ -199,24 +201,24 @@ export function useDecisionMutations(
   }
 
   // Evaluations
-  const updateEvaluationRating = async (
+  async function updateEvaluationRating(
     optionId: string,
     driverId: string,
     rating: 'high' | 'medium' | 'low' | null
-  ) => {
+  ) {
     try {
       // API expects rating without null, but we handle null as clearing the rating
-      await api.updateEvaluationRating(decisionId, optionId, driverId, rating as 'high' | 'medium' | 'low')
+      await api.updateEvaluationRating(decisionId, optionId, driverId, rating!)
     } catch (err) {
       showError(err, 'Failed to update rating')
     }
   }
 
-  const updateEvaluationDetails = async (
+  async function updateEvaluationDetails(
     optionId: string,
     driverId: string,
     details: string[]
-  ) => {
+  ) {
     try {
       await api.updateEvaluationDetails(decisionId, optionId, driverId, details)
     } catch (err) {
@@ -225,7 +227,7 @@ export function useDecisionMutations(
   }
 
   // Confluence
-  const updateConfluenceUrl = async (value: string) => {
+  async function updateConfluenceUrl(value: string) {
     try {
       await api.updateDecision(decisionId, { confluenceLink: value })
     } catch (err) {
@@ -235,7 +237,7 @@ export function useDecisionMutations(
 
   const pushingToConfluence = ref(false)
 
-  const pushToConfluence = async () => {
+  async function pushToConfluence() {
     if (!decision.value?.confluenceLink) {
       showError(new Error('No link'), 'No Confluence link found for this decision')
       return
@@ -299,4 +301,3 @@ export function useDecisionMutations(
     pushToConfluence,
   }
 }
-
