@@ -12,6 +12,8 @@ export { default as DeleteConfirmDialog } from './components/DeleteConfirmDialog
 export { default as NameDescriptionDialog } from './components/NameDescriptionDialog.vue'
 export { default as TextEditDialog } from './components/TextEditDialog.vue'
 export { default as ListEditDialog } from './components/ListEditDialog.vue'
+export { default as RatingDialog } from './components/RatingDialog.vue'
+export { default as EntityDetailTable } from './components/EntityDetailTable.vue'
 export { default as BulkOperationProgress } from './components/BulkOperationProgress.vue'
 export { default as BulkOperationDialog } from './components/BulkOperationDialog.vue'
 export { default as BulkActionsToolbar } from './components/list-page/BulkActionsToolbar.vue'
@@ -34,9 +36,6 @@ export {
   validateListPageConfigDev,
   type ValidationResult,
 } from './utils/validateListPageConfig'
-
-// Export types
-export type { MenuItem } from './types'
 
 // Export Zod schemas and types
 export {
@@ -63,3 +62,45 @@ export {
   type BulkOperationConfig,
   type BulkOperationResult,
 } from './types/list-page.schema'
+
+// Export detail table schemas and types
+export {
+  detailTableConfigSchema,
+  cellConfigSchema,
+  ratingDecoratorSchema,
+  ratingLevelSchema,
+  textCellConfigSchema,
+  listCellConfigSchema,
+  mermaidCellConfigSchema,
+  customCellConfigSchema,
+  rowHeaderConfigSchema,
+  menuItemSchema,
+  headerBadgeSchema,
+  specialRowSchema,
+  type DetailTableConfig,
+  type DetailTableConfigInput,
+  type CellConfig,
+  type CellConfigInput,
+  type RatingDecorator,
+  type RatingDecoratorInput,
+  type RatingLevel,
+  type TextCellConfig,
+  type TextCellConfigInput,
+  type ListCellConfig,
+  type ListCellConfigInput,
+  type MermaidCellConfig,
+  type MermaidCellConfigInput,
+  type CustomCellConfig,
+  type CustomCellConfigInput,
+  type RowHeaderConfig,
+  type RowHeaderConfigInput,
+  type MenuItem,
+  type HeaderBadge,
+  type SpecialRow,
+  type CellUpdatePayload,
+  type EditAiPayload,
+  type RowHeaderMenuPayload,
+  type ColumnHeaderMenuPayload,
+  type SpecialRowUpdatePayload,
+  type SpecialRowEditAiPayload,
+} from './types/detail-table.schema'

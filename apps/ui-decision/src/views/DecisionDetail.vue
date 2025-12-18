@@ -13,11 +13,12 @@ import {
   NameDescriptionDialog,
   TextEditDialog,
   ListEditDialog,
+  RatingDialog,
+  type RatingConfigInput,
 } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
-import RatingDialog from '../components/RatingDialog.vue'
 import OptionDialog from '../components/OptionDialog.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import EditDescriptionDialog from '../components/EditDescriptionDialog.vue'
@@ -49,8 +50,20 @@ const ratingDialogData = ref<{
   optionName: string
   driverId: string
   driverName: string
-  currentRating: 'high' | 'medium' | 'low'
+  currentRating: 'high' | 'medium' | 'low' | null
 } | null>(null)
+
+// Rating configuration for evaluation matrix
+const evaluationRatingConfig: RatingConfigInput = {
+  key: 'evaluation',
+  levels: [
+    { key: 'high', label: 'High', color: 'success' },
+    { key: 'medium', label: 'Medium', color: 'warning' },
+    { key: 'low', label: 'Low', color: 'error' },
+  ],
+  allowEmpty: true,
+  emptyLabel: 'Not rated',
+}
 
 // Option, Driver, Component, and UseCase dialog state
 const showOptionDialog = ref(false)
@@ -247,13 +260,13 @@ const openRatingDialog = (
   optionName: string,
   driverId: string,
   driverName: string,
-  currentRating: 'high' | 'medium' | 'low'
+  currentRating: 'high' | 'medium' | 'low' | null
 ) => {
   ratingDialogData.value = { optionId, optionName, driverId, driverName, currentRating }
   showRatingDialog.value = true
 }
 
-const handleRatingSave = async (newRating: 'high' | 'medium' | 'low') => {
+const handleRatingSave = async (newRating: string | null) => {
   if (!ratingDialogData.value) return
 
   try {
@@ -262,7 +275,7 @@ const handleRatingSave = async (newRating: 'high' | 'medium' | 'low') => {
       decisionId,
       ratingDialogData.value.optionId,
       ratingDialogData.value.driverId,
-      newRating
+      newRating as 'high' | 'medium' | 'low'
     )
   } catch (err: unknown) {
     agentNotification.value = {
@@ -1199,9 +1212,10 @@ const handleSaveConfluenceUrl = async (value: string) => {
     <RatingDialog
       v-if="ratingDialogData"
       v-model="showRatingDialog"
-      :option-name="ratingDialogData.optionName"
-      :driver-name="ratingDialogData.driverName"
+      title="Change Rating"
+      :subtitle="`${ratingDialogData.optionName} / ${ratingDialogData.driverName}`"
       :current-rating="ratingDialogData.currentRating"
+      :config="evaluationRatingConfig"
       @save="handleRatingSave"
     />
 
