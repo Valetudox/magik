@@ -28,7 +28,7 @@ export async function broadcastHandler(
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    request.log.error('Broadcast error:', errorMessage)
+    request.log.error(`Broadcast error: ${errorMessage}`)
     return reply.status(500).send({ error: 'Failed to broadcast message' })
   }
 }

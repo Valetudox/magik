@@ -70,7 +70,7 @@ export function setupFileWatcher(baseDir: string): Observable<FileChangeEvent> {
           await observer({
             type: 'updated',
             id,
-            decision: { id, ...decisionData },
+            decision: decisionData,
           })
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error'

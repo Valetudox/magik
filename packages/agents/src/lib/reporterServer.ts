@@ -1,4 +1,5 @@
 import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk'
+import { z } from 'zod'
 
 export const TOOL_NAME = 'report'
 
@@ -18,11 +19,7 @@ export interface ReporterServerConfig {
 
 /** Schema for jq operations */
 const jqOperationsSchema = {
-  operations: {
-    type: 'array',
-    items: { type: 'string' },
-    description: 'Array of jq filter expressions to apply sequentially',
-  },
+  operations: z.array(z.string()).describe('Array of jq filter expressions to apply sequentially'),
 }
 
 /**
