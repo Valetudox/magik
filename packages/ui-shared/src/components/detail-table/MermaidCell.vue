@@ -5,6 +5,26 @@ import ClickMenu, { type ClickMenuItem } from '../ClickMenu.vue'
 import TextEditDialog from '../TextEditDialog.vue'
 import { VueMermaidRender } from 'vue-mermaid-render'
 
+// Mermaid configuration - white nodes, black borders
+const mermaidConfig = {
+  theme: 'base' as const,
+  themeVariables: {
+    primaryColor: '#ffffff',
+    primaryTextColor: '#000000',
+    primaryBorderColor: '#000000',
+    secondaryColor: '#ffffff',
+    secondaryTextColor: '#000000',
+    secondaryBorderColor: '#000000',
+    tertiaryColor: '#ffffff',
+    tertiaryTextColor: '#000000',
+    tertiaryBorderColor: '#000000',
+    lineColor: '#000000',
+    nodeBkg: '#ffffff',
+    nodeBorder: '#000000',
+    mainBkg: '#ffffff',
+  },
+}
+
 const props = defineProps<{
   value: string | null | undefined
   config: MermaidCellConfigInput
@@ -45,7 +65,7 @@ const handleSave = (newValue: string) => {
     <div class="mermaid-cell">
       <template v-if="value">
         <div class="diagram-container">
-          <VueMermaidRender :content="value" />
+          <VueMermaidRender :content="value" :config="mermaidConfig" />
         </div>
       </template>
       <span v-else class="text-grey text-caption">No diagram</span>
@@ -54,7 +74,7 @@ const handleSave = (newValue: string) => {
   <div v-else class="mermaid-cell">
     <template v-if="value">
       <div class="diagram-container">
-        <VueMermaidRender :content="value" />
+        <VueMermaidRender :content="value" :config="mermaidConfig" />
       </div>
     </template>
     <span v-else class="text-grey text-caption">No diagram</span>
@@ -88,4 +108,5 @@ const handleSave = (newValue: string) => {
   max-width: 100%;
   height: auto;
 }
+
 </style>
