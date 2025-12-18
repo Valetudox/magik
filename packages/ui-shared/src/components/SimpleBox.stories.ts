@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
+import { ref } from 'vue'
 import SimpleBox from './SimpleBox.vue'
 
 const meta = {
@@ -48,14 +49,15 @@ export const Default: Story = {
   render: (args) => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = () => alert('Edit clicked!')
-      const onEditAi = () => alert('Edit with AI clicked!')
-      return { args, onEdit, onEditAi }
+      const content = ref('This is the content of the box. Double-click to see the edit menu.')
+      return { args, content }
     },
     template: `
-      <SimpleBox v-bind="args" @edit="onEdit" @edit-ai="onEditAi">
-        <p>This is the content of the box. Double-click to see the edit menu.</p>
-      </SimpleBox>
+      <SimpleBox
+        v-bind="args"
+        :value="content"
+        @update="content = $event"
+      />
     `,
   }),
 }
@@ -67,15 +69,12 @@ export const ReadOnly: Story = {
   args: {
     title: 'Read-Only Box',
     editable: false,
+    value: 'This box cannot be edited. Double-click is disabled.',
   },
   render: (args) => ({
     components: { SimpleBox },
     setup: () => ({ args }),
-    template: `
-      <SimpleBox v-bind="args">
-        <p>This box cannot be edited. Double-click is disabled.</p>
-      </SimpleBox>
-    `,
+    template: `<SimpleBox v-bind="args" />`,
   }),
 }
 
@@ -89,18 +88,23 @@ export const Stacked: Story = {
   render: () => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = (section: string) => alert(`Edit ${section}!`)
-      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
-      return { onEdit, onEditAi }
+      const problem = ref('What problem are we trying to solve?')
+      const notes = ref('Additional context and notes.')
+      return { problem, notes }
     },
     template: `
       <div>
-        <SimpleBox title="Problem Definition" class="mb-4" @edit="onEdit('problem')" @edit-ai="onEditAi('problem')">
-          <p>What problem are we trying to solve?</p>
-        </SimpleBox>
-        <SimpleBox title="Notes" @edit="onEdit('notes')" @edit-ai="onEditAi('notes')">
-          <p>Additional context and notes.</p>
-        </SimpleBox>
+        <SimpleBox
+          title="Problem Definition"
+          class="mb-4"
+          :value="problem"
+          @update="problem = $event"
+        />
+        <SimpleBox
+          title="Notes"
+          :value="notes"
+          @update="notes = $event"
+        />
       </div>
     `,
   }),

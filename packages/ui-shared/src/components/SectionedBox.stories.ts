@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
+import { ref } from 'vue'
 import SectionedBox from './SectionedBox.vue'
 import BoxSection from './BoxSection.vue'
 
@@ -49,23 +50,31 @@ export const Default: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEditDesc = () => alert('Edit description!')
-      const onEditDescAi = () => alert('Edit description with AI!')
-      const onEditReasoning = () => alert('Edit reasoning!')
-      const onEditReasoningAi = () => alert('Edit reasoning with AI!')
-      return { args, onEditDesc, onEditDescAi, onEditReasoning, onEditReasoningAi }
+      const description = ref('This is the main description. Double-click to edit.')
+      const reasoning = ref(['First reason for this proposal', 'Second reason with more details'])
+
+      const handleDescUpdate = (value: string) => {
+        description.value = value
+      }
+      const handleReasoningUpdate = (value: string[]) => {
+        reasoning.value = value
+      }
+
+      return { args, description, reasoning, handleDescUpdate, handleReasoningUpdate }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEditDesc" @edit-ai="onEditDescAi">
-          <p>This is the main description. Double-click to see the edit menu.</p>
-        </BoxSection>
-        <BoxSection title="Reasoning" @edit="onEditReasoning" @edit-ai="onEditReasoningAi">
-          <ul>
-            <li>First reason for this proposal</li>
-            <li>Second reason with more details</li>
-          </ul>
-        </BoxSection>
+        <BoxSection
+          type="text"
+          :value="description"
+          @update="handleDescUpdate"
+        />
+        <BoxSection
+          title="Reasoning"
+          type="list"
+          :items="reasoning"
+          @update="handleReasoningUpdate"
+        />
       </SectionedBox>
     `,
   }),
@@ -81,21 +90,24 @@ export const WithFooter: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEdit = (section: string) => alert(`Edit ${section}!`)
-      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
-      return { args, onEdit, onEditAi }
+      const description = ref('Our recommended approach is to use the new architecture pattern.')
+      const reasoning = ref(['Better scalability', 'Easier maintenance'])
+
+      return { args, description, reasoning }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEdit('description')" @edit-ai="onEditAi('description')">
-          <p>Our recommended approach is to use the new architecture pattern.</p>
-        </BoxSection>
-        <BoxSection title="Reasoning" @edit="onEdit('reasoning')" @edit-ai="onEditAi('reasoning')">
-          <ul>
-            <li>Better scalability</li>
-            <li>Easier maintenance</li>
-          </ul>
-        </BoxSection>
+        <BoxSection
+          type="text"
+          :value="description"
+          @update="description = $event"
+        />
+        <BoxSection
+          title="Reasoning"
+          type="list"
+          :items="reasoning"
+          @update="reasoning = $event"
+        />
         <template #footer>
           <v-chip color="success" variant="tonal">
             <v-icon start>mdi-check-circle</v-icon>
@@ -119,12 +131,17 @@ export const ReadOnly: Story = {
     setup: () => ({ args }),
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection :editable="false">
-          <p>This content cannot be edited.</p>
-        </BoxSection>
-        <BoxSection title="Details" :editable="false">
-          <p>This section is also read-only.</p>
-        </BoxSection>
+        <BoxSection
+          type="text"
+          value="This content cannot be edited."
+          :editable="false"
+        />
+        <BoxSection
+          title="Details"
+          type="text"
+          value="This section is also read-only."
+          :editable="false"
+        />
       </SectionedBox>
     `,
   }),
@@ -140,24 +157,31 @@ export const MultipleSections: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEdit = (section: string) => alert(`Edit ${section}!`)
-      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
-      return { args, onEdit, onEditAi }
+      const summary = ref('A brief summary of the project goals.')
+      const features = ref(['Feature one', 'Feature two'])
+      const timeline = ref('Q1 2025 - Q3 2025')
+
+      return { args, summary, features, timeline }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEdit('summary')" @edit-ai="onEditAi('summary')">
-          <p>A brief summary of the project goals.</p>
-        </BoxSection>
-        <BoxSection title="Key Features" @edit="onEdit('features')" @edit-ai="onEditAi('features')">
-          <ul>
-            <li>Feature one</li>
-            <li>Feature two</li>
-          </ul>
-        </BoxSection>
-        <BoxSection title="Timeline" @edit="onEdit('timeline')" @edit-ai="onEditAi('timeline')">
-          <p>Q1 2025 - Q3 2025</p>
-        </BoxSection>
+        <BoxSection
+          type="text"
+          :value="summary"
+          @update="summary = $event"
+        />
+        <BoxSection
+          title="Key Features"
+          type="list"
+          :items="features"
+          @update="features = $event"
+        />
+        <BoxSection
+          title="Timeline"
+          type="text"
+          :value="timeline"
+          @update="timeline = $event"
+        />
       </SectionedBox>
     `,
   }),
