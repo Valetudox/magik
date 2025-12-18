@@ -19,12 +19,10 @@ interface BuildResult {
   duration: number
 }
 
-type ProjectType = 'frontend' | 'backend' | 'all'
-
 /**
  * Discovers buildable projects in apps directory.
  */
-function discoverProjects(type: ProjectType = 'all'): string[] {
+function discoverProjects(): string[] {
   const appsDir = resolve(rootDir, 'apps')
   const projects: string[] = []
 
@@ -39,14 +37,7 @@ function discoverProjects(type: ProjectType = 'all'): string[] {
         // Check if package.json has a build script
         const packageJson = require(packageJsonPath)
         if (packageJson.scripts?.build) {
-          // Filter by type
-          if (type === 'all') {
-            projects.push(entry)
-          } else if (type === 'frontend' && entry.startsWith('ui-')) {
-            projects.push(entry)
-          } else if (type === 'backend' && entry.startsWith('backend-')) {
-            projects.push(entry)
-          }
+          projects.push(entry)
         }
       }
     }
@@ -189,13 +180,10 @@ program
 program
   .command('list')
   .description('List all buildable projects')
-  .option('--frontend', 'List only frontend projects (ui-*)')
-  .option('--backend', 'List only backend projects (backend-*)')
-  .action((options) => {
-    const type: ProjectType = options.frontend ? 'frontend' : options.backend ? 'backend' : 'all'
-    const projects = discoverProjects(type)
+  .action(() => {
+    const projects = discoverProjects()
 
-    console.log(`Buildable projects (${type}):\n`)
+    console.log('Buildable projects:\n')
 
     if (projects.length > 0) {
       projects.forEach((project) => {
@@ -211,14 +199,11 @@ program
 // Build command
 program
   .command('build')
-  .description('Build projects (all by default)')
+  .description('Build all projects')
   .option('--concurrency <number>', 'Max concurrent builds', '2')
   .option('--projects <projects...>', 'Build only specified projects')
-  .option('--frontend', 'Build only frontend projects (ui-*)')
-  .option('--backend', 'Build only backend projects (backend-*)')
   .action(async (options) => {
-    const type: ProjectType = options.frontend ? 'frontend' : options.backend ? 'backend' : 'all'
-    const allProjects = discoverProjects(type)
+    const allProjects = discoverProjects()
     const requestedProjects = options.projects
 
     // Determine which projects to build

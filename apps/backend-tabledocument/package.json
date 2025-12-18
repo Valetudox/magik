@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
+    "build": "bunx tsc --noEmit",
     "generate:schemas": "npx @hey-api/openapi-ts -i ../../specs/domains/tabledocument/openapi.yaml -o ./src/generated --plugins @hey-api/typescript --plugins zod",
     "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint src --fix",
