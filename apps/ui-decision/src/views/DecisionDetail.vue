@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { EntityDetailPage, SimpleBox, ListBox } from '@magik/ui-shared'
+import { EntityDetailPage, SimpleBox, ListBox, SectionedBox, BoxSection } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
@@ -217,12 +217,6 @@ const hasAnyDiagram = computed(() => {
   return decision.value?.options.some(
     (option) => option.architectureDiagramMermaid ?? option.architectureDiagramLink
   )
-})
-
-const selectedOptionName = computed(() => {
-  if (!decision.value?.selectedOption) return null
-  const option = decision.value.options.find((opt) => opt.id === decision.value.selectedOption)
-  return option?.name ?? decision.value.selectedOption
 })
 
 const _firstColumnWidthPercent = computed(() => {
@@ -674,16 +668,6 @@ const handleSaveProposalReasoning = async (newReasoning: string[]) => {
   }
 }
 
-const appendAIPromptForProposalDesc = () => {
-  const prompt = 'Edit the proposal description: '
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-}
-
-const appendAIPromptForProposalReasoning = () => {
-  const prompt = 'Edit the proposal reasoning: '
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-}
-
 const appendAIPromptForComponent = (component: { id: string; name: string }) => {
   const prompt = `Edit the component "${component.name}": `
   agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
@@ -870,84 +854,23 @@ const handleSaveConfluenceUrl = async () => {
           </ListBox>
 
           <!-- Proposal -->
-          <v-card>
-            <v-card-title>
-              <v-menu>
-                <template #activator="{ props }">
-                  <span
-                    v-bind="props"
-                    class="clickable-header"
-                    @dblclick.stop="openEditProposalDescDialog"
-                  >Proposal</span>
-                </template>
-                <v-list density="compact">
-                  <v-list-item
-                    prepend-icon="mdi-pencil"
-                    title="Edit"
-                    @click="openEditProposalDescDialog"
-                  />
-                  <v-list-item
-                    prepend-icon="mdi-robot"
-                    title="Edit with AI"
-                    @click="appendAIPromptForProposalDesc"
-                  />
-                </v-list>
-              </v-menu>
-            </v-card-title>
-            <v-card-text>
-              <p class="mb-4" :class="{ 'empty-placeholder': !decision.proposal.description }">
-                {{ decision.proposal.description || 'Click header to add proposal description...' }}
-              </p>
-
-              <v-divider class="my-4" />
-
-              <v-menu>
-                <template #activator="{ props }">
-                  <p
-                    v-bind="props"
-                    class="font-weight-bold mb-2 clickable-header"
-                    @dblclick.stop="openEditProposalReasoningDialog"
-                  >
-                    Reasoning:
-                  </p>
-                </template>
-                <v-list density="compact">
-                  <v-list-item
-                    prepend-icon="mdi-pencil"
-                    title="Edit"
-                    @click="openEditProposalReasoningDialog"
-                  />
-                  <v-list-item
-                    prepend-icon="mdi-robot"
-                    title="Edit with AI"
-                    @click="appendAIPromptForProposalReasoning"
-                  />
-                </v-list>
-              </v-menu>
+          <SectionedBox title="Proposal">
+            <BoxSection @edit="openEditProposalDescDialog">
+              <span :class="{ 'empty-placeholder': !decision.proposal.description }">
+                {{ decision.proposal.description || 'Click edit to add proposal description...' }}
+              </span>
+            </BoxSection>
+            <BoxSection title="Reasoning" @edit="openEditProposalReasoningDialog">
               <ul v-if="decision.proposal.reasoning.length > 0" class="reasoning-list">
                 <li v-for="(reason, index) in decision.proposal.reasoning" :key="index">
                   {{ reason }}
                 </li>
               </ul>
-              <p v-else class="empty-placeholder">
-                Click Reasoning to add...
-              </p>
-
-              <v-divider class="my-4" />
-
-              <v-chip
-                v-if="decision.selectedOption"
-                color="success"
-                variant="tonal"
-                class="mt-2"
-              >
-                <v-icon start>
-                  mdi-check-circle
-                </v-icon>
-                Selected: {{ selectedOptionName }}
-              </v-chip>
-            </v-card-text>
-          </v-card>
+              <span v-else class="empty-placeholder">
+                Click edit to add reasoning...
+              </span>
+            </BoxSection>
+          </SectionedBox>
       </template>
     </template>
 
