@@ -300,14 +300,14 @@ export const bulkOperationConfigSchema = z.object({
   resultsTitle: z.string().min(1).describe('Dialog title showing results'),
 }).describe('Bulk operation configuration for BulkOperationDialog')
 
-export type ListFieldConfig<T = any> = z.infer<typeof listFieldConfigSchema>
-export type RowActionConfig<T = any> = z.infer<typeof rowActionConfigSchema>
-export type BulkActionConfig<T = any> = z.infer<typeof bulkActionConfigSchema>
+export type ListFieldConfig<_T = any> = z.infer<typeof listFieldConfigSchema>
+export type RowActionConfig<_T = any> = z.infer<typeof rowActionConfigSchema>
+export type BulkActionConfig<_T = any> = z.infer<typeof bulkActionConfigSchema>
 export type EndpointConfig = z.infer<typeof endpointConfigSchema>
-export type PageUrlConfig<T = any> = z.infer<typeof pageUrlConfigSchema>
+export type PageUrlConfig<_T = any> = z.infer<typeof pageUrlConfigSchema>
 export type CreateActionConfig = z.infer<typeof createActionConfigSchema>
 export type DeleteDialogConfig = z.infer<typeof deleteDialogConfigSchema>
-export type SocketConfig<T = any> = z.infer<typeof socketConfigSchema>
-export type ListPageConfig<T = any> = z.infer<typeof listPageConfigSchema>
+export type SocketConfig<_T = any> = z.infer<typeof socketConfigSchema>
+export type ListPageConfig<_T = any> = z.infer<typeof listPageConfigSchema>
 export type BulkOperationResult = z.infer<typeof bulkOperationResultSchema>
-export type BulkOperationConfig<T = any> = z.infer<typeof bulkOperationConfigSchema>
+export type BulkOperationConfig<_T = any> = z.infer<typeof bulkOperationConfigSchema>

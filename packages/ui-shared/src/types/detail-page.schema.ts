@@ -77,4 +77,4 @@ export const detailPageConfigSchema = z.object({
 
 export type DetailSocketConfig = z.infer<typeof detailSocketConfigSchema>
 export type DetailAgentConfig = z.infer<typeof detailAgentConfigSchema>
-export type DetailPageConfig<T = any> = z.infer<typeof detailPageConfigSchema>
+export type DetailPageConfig<_T = any> = z.infer<typeof detailPageConfigSchema>

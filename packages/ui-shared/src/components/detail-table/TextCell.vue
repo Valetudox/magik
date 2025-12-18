@@ -4,7 +4,7 @@ import type { TextCellConfigInput } from '../../types/detail-table.schema'
 import ClickMenu, { type ClickMenuItem } from '../ClickMenu.vue'
 import TextEditDialog from '../TextEditDialog.vue'
 
-const props = defineProps<{
+defineProps<{
   value: string | null | undefined
   config: TextCellConfigInput
   editable?: boolean

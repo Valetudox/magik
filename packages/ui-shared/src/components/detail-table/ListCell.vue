@@ -4,7 +4,7 @@ import type { ListCellConfigInput } from '../../types/detail-table.schema'
 import ClickMenu, { type ClickMenuItem } from '../ClickMenu.vue'
 import ListEditDialog from '../ListEditDialog.vue'
 
-const props = defineProps<{
+defineProps<{
   value: string[] | null | undefined
   config: ListCellConfigInput
   editable?: boolean

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import { useListPage } from '../composables/useListPage'
 import type { ListPageConfig, RowActionConfig, BulkActionConfig } from '../types/list-page.schema'
 import AppHeader from '../components/AppHeader.vue'
@@ -27,7 +27,6 @@ const {
   deleting,
   bulkOperationInProgress,
   bulkOperationProgress,
-  loadItems,
   createItem,
   confirmDelete,
   handleDelete,

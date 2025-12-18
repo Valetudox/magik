@@ -25,7 +25,7 @@ const mermaidConfig = {
   },
 }
 
-const props = defineProps<{
+defineProps<{
   value: string | null | undefined
   config: MermaidCellConfigInput
   editable?: boolean

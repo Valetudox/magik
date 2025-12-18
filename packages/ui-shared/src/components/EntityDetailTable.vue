@@ -2,14 +2,12 @@
 import { computed, useSlots } from 'vue'
 import type {
   DetailTableConfigInput,
-  CellConfigInput,
   CellUpdatePayload,
   EditAiPayload,
   RowHeaderMenuPayload,
   ColumnHeaderMenuPayload,
   SpecialRowUpdatePayload,
   SpecialRowEditAiPayload,
-  SpecialRow,
 } from '../types/detail-table.schema'
 import TextCell from './detail-table/TextCell.vue'
 import ListCell from './detail-table/ListCell.vue'
