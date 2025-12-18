@@ -1,3 +1,6 @@
+import { existsSync, readdirSync } from 'fs'
+import { homedir } from 'os'
+import { join } from 'path'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import { decision } from '@magik/decisions'
 import { z } from 'zod'
@@ -16,14 +19,16 @@ export async function runDecisionAgent(
   sessionId?: string
 ): Promise<{ decision: Decision; sessionId?: string }> {
   const schemaJson = JSON.stringify(zodToJsonSchema(decisionChange, 'DecisionChange'), null, 2)
-
   const decisionJson = JSON.stringify(inputDecision, null, 2)
+
+  // Only resume if session exists
+  const shouldResume = sessionId && sessionExists(sessionId)
 
   const stream = query({
     prompt: createUserPrompt(decisionJson, userAsk, schemaJson),
     options: {
       model: 'claude-haiku-4-5',
-      resume: sessionId,
+      ...(shouldResume && { resume: sessionId }),
       mcpServers: {
         [SERVER_NAME]: createDecisionReporterServer(),
       },
@@ -67,4 +72,22 @@ export async function runDecisionAgent(
     decision: updatedDecision,
     sessionId: newSessionId,
   }
+}
+
+function sessionExists(sessionId: string): boolean {
+  const projectsDir = join(homedir(), '.claude', 'projects')
+  if (!existsSync(projectsDir)) return false
+
+  const projectFolders = readdirSync(projectsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+
+  for (const folder of projectFolders) {
+    const sessionFile = join(projectsDir, folder, `${sessionId}.jsonl`)
+    if (existsSync(sessionFile)) {
+      return true
+    }
+  }
+
+  return false
 }
