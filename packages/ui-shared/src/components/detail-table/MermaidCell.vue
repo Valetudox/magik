@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { MermaidCellConfigInput } from '../../types/detail-table.schema'
 import ClickMenu, { type ClickMenuItem } from '../ClickMenu.vue'
 import TextEditDialog from '../TextEditDialog.vue'
+import { VueMermaidRender } from 'vue-mermaid-render'
 
 const props = defineProps<{
   value: string | null | undefined
@@ -43,14 +44,18 @@ const handleSave = (newValue: string) => {
   >
     <div class="mermaid-cell">
       <template v-if="value">
-        <pre class="mermaid-code">{{ value }}</pre>
+        <div class="diagram-container">
+          <VueMermaidRender :content="value" />
+        </div>
       </template>
       <span v-else class="text-grey text-caption">No diagram</span>
     </div>
   </ClickMenu>
   <div v-else class="mermaid-cell">
     <template v-if="value">
-      <pre class="mermaid-code">{{ value }}</pre>
+      <div class="diagram-container">
+        <VueMermaidRender :content="value" />
+      </div>
     </template>
     <span v-else class="text-grey text-caption">No diagram</span>
   </div>
@@ -58,7 +63,7 @@ const handleSave = (newValue: string) => {
   <TextEditDialog
     v-model="dialogOpen"
     :title="`Edit ${config.header}`"
-    :initial-value="value ?? ''"
+    :value="value ?? ''"
     :multiline="true"
     @save="handleSave"
   />
@@ -71,13 +76,16 @@ const handleSave = (newValue: string) => {
   cursor: pointer;
 }
 
-.mermaid-code {
-  font-size: 0.75em;
-  background: rgba(0, 0, 0, 0.1);
-  padding: 8px;
-  border-radius: 4px;
+.diagram-container {
+  max-width: 100%;
   overflow: auto;
-  max-height: 200px;
-  margin: 0;
+  padding: 8px;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.diagram-container :deep(svg) {
+  max-width: 100%;
+  height: auto;
 }
 </style>
