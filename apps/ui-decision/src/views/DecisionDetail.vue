@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { EntityDetailPage, ListBox } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
@@ -723,76 +724,51 @@ const handleSaveConfluenceUrl = async () => {
 </script>
 
 <template>
-  <div>
-    <!-- Teleport breadcrumb to header title -->
-    <Teleport to="#header-title-slot">
-      <div>
-        <span class="clickable" @click="goBack">Decision Documents</span>
-        <span class="mx-2">/</span>
-        <span>{{ decision?.id.replace(/-/g, ' ') || 'Loading...' }}</span>
-      </div>
-    </Teleport>
+  <EntityDetailPage page-title="Decision Documents">
+    <template #title>
+      <span class="clickable" @click="goBack">Decision Documents</span>
+      <span class="mx-2">/</span>
+      <span>{{ decision?.id.replace(/-/g, ' ') || 'Loading...' }}</span>
+    </template>
 
-    <!-- Teleport action buttons to header -->
-    <Teleport to="#header-actions-slot">
-      <div class="d-flex">
-        <v-btn
-          variant="outlined"
-          icon="mdi-pencil"
-          class="mr-2"
-          @click="openEditConfluenceUrlDialog"
-        />
-        <v-btn
-          variant="outlined"
-          icon="mdi-content-copy"
-          class="mr-2"
-          :disabled="!decision?.confluenceLink"
-          @click="copyConfluenceUrl"
-        />
-        <v-btn
-          variant="outlined"
-          icon="mdi-open-in-new"
-          class="mr-2"
-          :disabled="!decision?.confluenceLink"
-          @click="openInConfluence"
-        />
-        <v-btn
-          variant="outlined"
-          prepend-icon="mdi-upload"
-          class="mr-2"
-          :loading="pushingToConfluence"
-          :disabled="!decision?.confluenceLink || pushingToConfluence"
-          @click="pushToConfluence"
-        >
-          Push to Confluence
-        </v-btn>
-        <v-btn variant="outlined" prepend-icon="mdi-download" @click="pullFromConfluence">
-          Pull from Confluence
-        </v-btn>
-      </div>
-    </Teleport>
+    <template #headerActions>
+      <v-btn
+        variant="outlined"
+        icon="mdi-pencil"
+        class="mr-2"
+        @click="openEditConfluenceUrlDialog"
+      />
+      <v-btn
+        variant="outlined"
+        icon="mdi-content-copy"
+        class="mr-2"
+        :disabled="!decision?.confluenceLink"
+        @click="copyConfluenceUrl"
+      />
+      <v-btn
+        variant="outlined"
+        icon="mdi-open-in-new"
+        class="mr-2"
+        :disabled="!decision?.confluenceLink"
+        @click="openInConfluence"
+      />
+      <v-btn
+        variant="outlined"
+        prepend-icon="mdi-upload"
+        class="mr-2"
+        :loading="pushingToConfluence"
+        :disabled="!decision?.confluenceLink || pushingToConfluence"
+        @click="pushToConfluence"
+      >
+        Push to Confluence
+      </v-btn>
+      <v-btn variant="outlined" prepend-icon="mdi-download" @click="pullFromConfluence">
+        Pull from Confluence
+      </v-btn>
+    </template>
 
-    <v-container fluid>
-      <v-row v-if="loading">
-        <v-col cols="12" class="text-center">
-          <v-progress-circular indeterminate color="primary" />
-          <p class="mt-4">
-            Loading decision...
-          </p>
-        </v-col>
-      </v-row>
-
-      <v-row v-else-if="error">
-        <v-col cols="12">
-          <v-alert type="error" variant="tonal">
-            {{ error }}
-          </v-alert>
-        </v-col>
-      </v-row>
-
-      <v-row v-else-if="decision">
-        <!-- Left Column: Problem, Components, Decision Drivers -->
-        <v-col cols="2">
+    <template #sidebar>
+      <template v-if="decision">
           <!-- Problem Definition -->
           <v-card class="mb-4">
             <v-card-title>
@@ -826,120 +802,98 @@ const handleSaveConfluenceUrl = async () => {
           </v-card>
 
           <!-- Components -->
-          <v-card class="mb-4 hover-card">
-            <v-card-title class="d-flex align-center">
-              <span>Components</span>
-              <v-spacer />
-              <v-btn
-                icon="mdi-plus"
-                size="small"
-                variant="text"
-                class="hover-btn"
-                @click="openAddComponentDialog"
-              />
-            </v-card-title>
-            <v-card-text>
-              <template v-if="decision.components && decision.components.length > 0">
-                <v-card
-                  v-for="component in decision.components"
-                  :key="component.id"
-                  variant="outlined"
-                  class="mb-2"
-                >
-                  <v-card-title class="text-subtitle-1 d-flex align-center">
-                    <v-menu>
-                      <template #activator="{ props }">
-                        <span
-                          v-bind="props"
-                          class="clickable-header"
-                          @dblclick.stop="openEditComponentDialog(component)"
-                        >{{ component.name }}</span>
-                      </template>
-                      <v-list density="compact">
-                        <v-list-item
-                          prepend-icon="mdi-pencil"
-                          title="Edit"
-                          @click="openEditComponentDialog(component)"
-                        />
-                        <v-list-item
-                          prepend-icon="mdi-robot"
-                          title="Edit with AI"
-                          @click="appendAIPromptForComponent(component)"
-                        />
-                        <v-list-item
-                          prepend-icon="mdi-delete"
-                          title="Delete"
-                          @click="confirmDeleteComponent(component)"
-                        />
-                      </v-list>
-                    </v-menu>
-                  </v-card-title>
-                  <v-card-text>{{ component.description }}</v-card-text>
-                </v-card>
-              </template>
-              <div v-else class="text-center text-grey py-4">
-                No components yet. Click + to add one.
-              </div>
-            </v-card-text>
-          </v-card>
+          <ListBox
+            title="Components"
+            class="mb-4"
+            empty-text="No components yet. Click + to add one."
+            @add="openAddComponentDialog"
+          >
+            <template v-if="decision.components && decision.components.length > 0">
+              <v-card
+                v-for="component in decision.components"
+                :key="component.id"
+                variant="outlined"
+                class="mb-2"
+              >
+                <v-card-title class="text-subtitle-1 d-flex align-center">
+                  <v-menu>
+                    <template #activator="{ props }">
+                      <span
+                        v-bind="props"
+                        class="clickable-header"
+                        @dblclick.stop="openEditComponentDialog(component)"
+                      >{{ component.name }}</span>
+                    </template>
+                    <v-list density="compact">
+                      <v-list-item
+                        prepend-icon="mdi-pencil"
+                        title="Edit"
+                        @click="openEditComponentDialog(component)"
+                      />
+                      <v-list-item
+                        prepend-icon="mdi-robot"
+                        title="Edit with AI"
+                        @click="appendAIPromptForComponent(component)"
+                      />
+                      <v-list-item
+                        prepend-icon="mdi-delete"
+                        title="Delete"
+                        @click="confirmDeleteComponent(component)"
+                      />
+                    </v-list>
+                  </v-menu>
+                </v-card-title>
+                <v-card-text>{{ component.description }}</v-card-text>
+              </v-card>
+            </template>
+          </ListBox>
 
           <!-- Use Cases -->
-          <v-card class="mb-4 hover-card">
-            <v-card-title class="d-flex align-center">
-              <span>Use Cases</span>
-              <v-spacer />
-              <v-btn
-                icon="mdi-plus"
-                size="small"
-                variant="text"
-                class="hover-btn"
-                @click="openAddUseCaseDialog"
-              />
-            </v-card-title>
-            <v-card-text>
-              <template v-if="decision.useCases && decision.useCases.length > 0">
-                <v-card
-                  v-for="useCase in decision.useCases"
-                  :key="useCase.id"
-                  variant="outlined"
-                  class="mb-2"
-                >
-                  <v-card-title class="text-subtitle-1 d-flex align-center">
-                    <v-menu>
-                      <template #activator="{ props }">
-                        <span
-                          v-bind="props"
-                          class="clickable-header"
-                          @dblclick.stop="openEditUseCaseDialog(useCase)"
-                        >{{ useCase.name }}</span>
-                      </template>
-                      <v-list density="compact">
-                        <v-list-item
-                          prepend-icon="mdi-pencil"
-                          title="Edit"
-                          @click="openEditUseCaseDialog(useCase)"
-                        />
-                        <v-list-item
-                          prepend-icon="mdi-robot"
-                          title="Edit with AI"
-                          @click="appendAIPromptForUseCase(useCase)"
-                        />
-                        <v-list-item
-                          prepend-icon="mdi-delete"
-                          title="Delete"
-                          @click="confirmDeleteUseCase(useCase)"
-                        />
-                      </v-list>
-                    </v-menu>
-                  </v-card-title>
-                  <v-card-text>{{ useCase.description }}</v-card-text>
-                </v-card>
-              </template>
-              <div v-else class="text-center text-grey py-4">
-                No use cases yet. Click + to add one.
-              </div>
-            </v-card-text>
-          </v-card>
+          <ListBox
+            title="Use Cases"
+            class="mb-4"
+            empty-text="No use cases yet. Click + to add one."
+            @add="openAddUseCaseDialog"
+          >
+            <template v-if="decision.useCases && decision.useCases.length > 0">
+              <v-card
+                v-for="useCase in decision.useCases"
+                :key="useCase.id"
+                variant="outlined"
+                class="mb-2"
+              >
+                <v-card-title class="text-subtitle-1 d-flex align-center">
+                  <v-menu>
+                    <template #activator="{ props }">
+                      <span
+                        v-bind="props"
+                        class="clickable-header"
+                        @dblclick.stop="openEditUseCaseDialog(useCase)"
+                      >{{ useCase.name }}</span>
+                    </template>
+                    <v-list density="compact">
+                      <v-list-item
+                        prepend-icon="mdi-pencil"
+                        title="Edit"
+                        @click="openEditUseCaseDialog(useCase)"
+                      />
+                      <v-list-item
+                        prepend-icon="mdi-robot"
+                        title="Edit with AI"
+                        @click="appendAIPromptForUseCase(useCase)"
+                      />
+                      <v-list-item
+                        prepend-icon="mdi-delete"
+                        title="Delete"
+                        @click="confirmDeleteUseCase(useCase)"
+                      />
+                    </v-list>
+                  </v-menu>
+                </v-card-title>
+                <v-card-text>{{ useCase.description }}</v-card-text>
+              </v-card>
+            </template>
+          </ListBox>
 
           <!-- Proposal -->
           <v-card>
@@ -1020,11 +974,21 @@ const handleSaveConfluenceUrl = async () => {
               </v-chip>
             </v-card-text>
           </v-card>
-        </v-col>
+      </template>
+    </template>
 
-        <!-- Middle Column: Evaluation Matrix -->
-        <v-col cols="10">
-          <v-card>
+    <!-- Main content area -->
+    <div v-if="loading" class="text-center py-8">
+      <v-progress-circular indeterminate color="primary" />
+      <p class="mt-4">Loading decision...</p>
+    </div>
+
+    <v-alert v-else-if="error" type="error" variant="tonal">
+      {{ error }}
+    </v-alert>
+
+    <template v-else-if="decision">
+      <v-card>
             <v-card-title class="d-flex align-center">
               <span>Evaluation Matrix</span>
               <v-spacer />
@@ -1297,9 +1261,7 @@ const handleSaveConfluenceUrl = async () => {
               </div>
             </v-card-text>
           </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+    </template>
 
     <!-- AI Agent Input -->
     <div class="agent-input-container">
@@ -1516,7 +1478,7 @@ const handleSaveConfluenceUrl = async () => {
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </EntityDetailPage>
 </template>
 
 <style scoped>
@@ -1738,13 +1700,4 @@ const handleSaveConfluenceUrl = async () => {
   background-color: rgba(var(--v-theme-primary), 0.15);
 }
 
-/* Hover to show button */
-.hover-card .hover-btn {
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.hover-card:hover .hover-btn {
-  opacity: 1;
-}
 </style>
