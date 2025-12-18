@@ -21,6 +21,7 @@ SectionedBox provides a container for multiple BoxSection components, each with 
 ## Features
 
 - **Multiple sections**: Contains BoxSection children with automatic dividers
+- **Double-click to edit**: Each section can be edited by double-clicking
 - **Footer slot**: Optional footer area for additional content
 - **Flexible**: Each section can have its own title and edit handler
 
@@ -39,7 +40,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Default usage with multiple sections. Hover over each section to see the edit button.
+ * Default usage with multiple sections. Double-click each section to edit.
  */
 export const Default: Story = {
   args: {
@@ -48,14 +49,14 @@ export const Default: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEditDesc = () => alert('Edit description clicked!')
-      const onEditReasoning = () => alert('Edit reasoning clicked!')
+      const onEditDesc = () => alert('Edit description! (double-click)')
+      const onEditReasoning = () => alert('Edit reasoning! (double-click)')
       return { args, onEditDesc, onEditReasoning }
     },
     template: `
       <SectionedBox v-bind="args">
         <BoxSection @edit="onEditDesc">
-          <p>This is the main description of the proposal. It explains what we're proposing and why.</p>
+          <p>This is the main description of the proposal. Double-click to edit.</p>
         </BoxSection>
         <BoxSection title="Reasoning" @edit="onEditReasoning">
           <ul>
@@ -79,8 +80,8 @@ export const WithFooter: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEditDesc = () => alert('Edit description clicked!')
-      const onEditReasoning = () => alert('Edit reasoning clicked!')
+      const onEditDesc = () => alert('Edit description!')
+      const onEditReasoning = () => alert('Edit reasoning!')
       return { args, onEditDesc, onEditReasoning }
     },
     template: `
@@ -106,7 +107,7 @@ export const WithFooter: Story = {
 }
 
 /**
- * Single section without title - edit button appears inline.
+ * Single section without title.
  */
 export const SingleSection: Story = {
   args: {
@@ -115,13 +116,13 @@ export const SingleSection: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEdit = () => alert('Edit clicked!')
+      const onEdit = () => alert('Edit notes!')
       return { args, onEdit }
     },
     template: `
       <SectionedBox v-bind="args">
         <BoxSection @edit="onEdit">
-          <p>These are some notes about the project. They can be edited by hovering and clicking the pencil icon.</p>
+          <p>These are some notes about the project. Double-click to edit.</p>
         </BoxSection>
       </SectionedBox>
     `,
@@ -161,7 +162,7 @@ export const MultipleSections: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEdit = (section: string) => alert(`Edit ${section} clicked!`)
+      const onEdit = (section: string) => alert(`Edit ${section}!`)
       return { args, onEdit }
     },
     template: `

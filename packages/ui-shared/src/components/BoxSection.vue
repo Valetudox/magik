@@ -14,44 +14,25 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="box-section">
-    <div v-if="props.title" class="d-flex align-center mb-2">
-      <span class="font-weight-bold">{{ props.title }}</span>
-      <v-spacer />
-      <v-btn
-        v-if="props.editable"
-        icon="mdi-pencil"
-        size="x-small"
-        variant="text"
-        class="hover-btn"
-        @click="$emit('edit')"
-      />
-    </div>
-    <div v-else-if="props.editable" class="d-flex">
-      <div class="flex-grow-1">
-        <slot />
-      </div>
-      <v-btn
-        icon="mdi-pencil"
-        size="x-small"
-        variant="text"
-        class="hover-btn ml-2"
-        @click="$emit('edit')"
-      />
-    </div>
-    <div v-if="props.title">
-      <slot />
-    </div>
+  <div
+    class="box-section"
+    :class="{ 'editable-section': props.editable }"
+    @dblclick="props.editable && $emit('edit')"
+  >
+    <p v-if="props.title" class="font-weight-bold mb-2">{{ props.title }}</p>
+    <slot />
   </div>
 </template>
 
 <style scoped>
-.box-section .hover-btn {
-  opacity: 0;
-  transition: opacity 0.15s ease;
+.editable-section {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px;
+  margin: -4px;
 }
 
-.box-section:hover .hover-btn {
-  opacity: 1;
+.editable-section:hover {
+  background-color: rgba(var(--v-theme-primary), 0.05);
 }
 </style>

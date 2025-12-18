@@ -11,16 +11,17 @@ const meta = {
         component: `
 # SimpleBox
 
-A basic card component with a header, content area, and optional edit button.
+A basic card component with a header and editable content area.
 
 ## Overview
 
-SimpleBox provides a simple container for displaying titled content. It uses Vuetify's v-card under the hood and supports customization via slots.
+SimpleBox provides a simple container for displaying titled content. It uses Vuetify's v-card under the hood.
 
 ## Features
 
-- **Hover edit button**: A pencil button appears on hover when \`editable\` is true
-- **Customizable**: Control editability via props, customize header via slot
+- **Double-click to edit**: When \`editable\` is true, double-click the content area to trigger edit
+- **Hover highlight**: Content area highlights on hover when editable
+- **Customizable**: Control editability via props
 
 ## Usage
 
@@ -38,7 +39,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Default usage with title and content. Hover over the card to see the edit button.
+ * Default usage with title and content. Double-click the content to edit.
  */
 export const Default: Story = {
   args: {
@@ -47,44 +48,19 @@ export const Default: Story = {
   render: (args) => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = () => alert('Edit clicked!')
+      const onEdit = () => alert('Edit triggered! (double-click)')
       return { args, onEdit }
     },
     template: `
       <SimpleBox v-bind="args" @edit="onEdit">
-        <p>This is the content of the box. It can contain any text or components.</p>
+        <p>This is the content of the box. Double-click to edit.</p>
       </SimpleBox>
     `,
   }),
 }
 
 /**
- * Override the header with custom content using the #header slot.
- */
-export const WithCustomHeader: Story = {
-  args: {
-    title: 'Custom Header',
-  },
-  render: (args) => ({
-    components: { SimpleBox },
-    setup: () => {
-      const onEdit = () => alert('Edit clicked!')
-      return { args, onEdit }
-    },
-    template: `
-      <SimpleBox v-bind="args" @edit="onEdit">
-        <template #header>
-          <v-icon start>mdi-information</v-icon>
-          <span>Custom Header Content</span>
-        </template>
-        <p>Box content here.</p>
-      </SimpleBox>
-    `,
-  }),
-}
-
-/**
- * Read-only mode with `editable: false`. The edit button is hidden.
+ * Read-only mode with \`editable: false\`. Double-click is disabled.
  */
 export const ReadOnly: Story = {
   args: {
@@ -96,7 +72,7 @@ export const ReadOnly: Story = {
     setup: () => ({ args }),
     template: `
       <SimpleBox v-bind="args">
-        <p>This box cannot be edited. No edit button appears on hover.</p>
+        <p>This box cannot be edited. Double-click is disabled.</p>
       </SimpleBox>
     `,
   }),
@@ -112,7 +88,7 @@ export const Empty: Story = {
   render: (args) => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = () => alert('Edit clicked!')
+      const onEdit = () => alert('Edit triggered!')
       return { args, onEdit }
     },
     template: `<SimpleBox v-bind="args" @edit="onEdit" />`,
@@ -129,7 +105,7 @@ export const Stacked: Story = {
   render: () => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = (section: string) => alert(`Edit ${section} clicked!`)
+      const onEdit = (section: string) => alert(`Edit ${section}!`)
       return { onEdit }
     },
     template: `
