@@ -19,9 +19,9 @@ SimpleBox provides a simple container for displaying titled content. It uses Vue
 
 ## Features
 
-- **Double-click to edit**: When \`editable\` is true, double-click the content area to trigger edit
+- **Double-click menu**: When \`editable\` is true, double-click shows a menu with Edit and Edit with AI options
 - **Hover highlight**: Content area highlights on hover when editable
-- **Customizable**: Control editability via props
+- **Two edit modes**: Emits \`@edit\` for direct editing and \`@editAi\` for AI-assisted editing
 
 ## Usage
 
@@ -39,7 +39,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Default usage with title and content. Double-click the content to edit.
+ * Default usage with title and content. Double-click to see the edit menu.
  */
 export const Default: Story = {
   args: {
@@ -48,19 +48,20 @@ export const Default: Story = {
   render: (args) => ({
     components: { SimpleBox },
     setup: () => {
-      const onEdit = () => alert('Edit triggered! (double-click)')
-      return { args, onEdit }
+      const onEdit = () => alert('Edit clicked!')
+      const onEditAi = () => alert('Edit with AI clicked!')
+      return { args, onEdit, onEditAi }
     },
     template: `
-      <SimpleBox v-bind="args" @edit="onEdit">
-        <p>This is the content of the box. Double-click to edit.</p>
+      <SimpleBox v-bind="args" @edit="onEdit" @edit-ai="onEditAi">
+        <p>This is the content of the box. Double-click to see the edit menu.</p>
       </SimpleBox>
     `,
   }),
 }
 
 /**
- * Read-only mode with \`editable: false\`. Double-click is disabled.
+ * Read-only mode with \`editable: false\`. Double-click menu is disabled.
  */
 export const ReadOnly: Story = {
   args: {
@@ -79,23 +80,6 @@ export const ReadOnly: Story = {
 }
 
 /**
- * Empty box with no content.
- */
-export const Empty: Story = {
-  args: {
-    title: 'Empty Box',
-  },
-  render: (args) => ({
-    components: { SimpleBox },
-    setup: () => {
-      const onEdit = () => alert('Edit triggered!')
-      return { args, onEdit }
-    },
-    template: `<SimpleBox v-bind="args" @edit="onEdit" />`,
-  }),
-}
-
-/**
  * Multiple boxes stacked vertically.
  */
 export const Stacked: Story = {
@@ -106,17 +90,15 @@ export const Stacked: Story = {
     components: { SimpleBox },
     setup: () => {
       const onEdit = (section: string) => alert(`Edit ${section}!`)
-      return { onEdit }
+      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
+      return { onEdit, onEditAi }
     },
     template: `
       <div>
-        <SimpleBox title="Problem Definition" class="mb-4" @edit="onEdit('problem')">
+        <SimpleBox title="Problem Definition" class="mb-4" @edit="onEdit('problem')" @edit-ai="onEditAi('problem')">
           <p>What problem are we trying to solve?</p>
         </SimpleBox>
-        <SimpleBox title="Proposal" class="mb-4" @edit="onEdit('proposal')">
-          <p>Our recommended solution is...</p>
-        </SimpleBox>
-        <SimpleBox title="Notes" @edit="onEdit('notes')">
+        <SimpleBox title="Notes" @edit="onEdit('notes')" @edit-ai="onEditAi('notes')">
           <p>Additional context and notes.</p>
         </SimpleBox>
       </div>

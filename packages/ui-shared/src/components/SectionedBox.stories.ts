@@ -21,9 +21,9 @@ SectionedBox provides a container for multiple BoxSection components, each with 
 ## Features
 
 - **Multiple sections**: Contains BoxSection children with automatic dividers
-- **Double-click to edit**: Each section can be edited by double-clicking
+- **Double-click menu**: Each section shows Edit/Edit with AI menu on double-click
 - **Footer slot**: Optional footer area for additional content
-- **Flexible**: Each section can have its own title and edit handler
+- **Two edit modes**: Each section emits \`@edit\` and \`@editAi\` events
 
 ## Usage
 
@@ -40,7 +40,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Default usage with multiple sections. Double-click each section to edit.
+ * Default usage with multiple sections. Double-click each section to see the edit menu.
  */
 export const Default: Story = {
   args: {
@@ -49,20 +49,21 @@ export const Default: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEditDesc = () => alert('Edit description! (double-click)')
-      const onEditReasoning = () => alert('Edit reasoning! (double-click)')
-      return { args, onEditDesc, onEditReasoning }
+      const onEditDesc = () => alert('Edit description!')
+      const onEditDescAi = () => alert('Edit description with AI!')
+      const onEditReasoning = () => alert('Edit reasoning!')
+      const onEditReasoningAi = () => alert('Edit reasoning with AI!')
+      return { args, onEditDesc, onEditDescAi, onEditReasoning, onEditReasoningAi }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEditDesc">
-          <p>This is the main description of the proposal. Double-click to edit.</p>
+        <BoxSection @edit="onEditDesc" @edit-ai="onEditDescAi">
+          <p>This is the main description. Double-click to see the edit menu.</p>
         </BoxSection>
-        <BoxSection title="Reasoning" @edit="onEditReasoning">
+        <BoxSection title="Reasoning" @edit="onEditReasoning" @edit-ai="onEditReasoningAi">
           <ul>
             <li>First reason for this proposal</li>
             <li>Second reason with more details</li>
-            <li>Third supporting argument</li>
           </ul>
         </BoxSection>
       </SectionedBox>
@@ -80,16 +81,16 @@ export const WithFooter: Story = {
   render: (args) => ({
     components: { SectionedBox, BoxSection },
     setup: () => {
-      const onEditDesc = () => alert('Edit description!')
-      const onEditReasoning = () => alert('Edit reasoning!')
-      return { args, onEditDesc, onEditReasoning }
+      const onEdit = (section: string) => alert(`Edit ${section}!`)
+      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
+      return { args, onEdit, onEditAi }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEditDesc">
+        <BoxSection @edit="onEdit('description')" @edit-ai="onEditAi('description')">
           <p>Our recommended approach is to use the new architecture pattern.</p>
         </BoxSection>
-        <BoxSection title="Reasoning" @edit="onEditReasoning">
+        <BoxSection title="Reasoning" @edit="onEdit('reasoning')" @edit-ai="onEditAi('reasoning')">
           <ul>
             <li>Better scalability</li>
             <li>Easier maintenance</li>
@@ -101,29 +102,6 @@ export const WithFooter: Story = {
             Approved
           </v-chip>
         </template>
-      </SectionedBox>
-    `,
-  }),
-}
-
-/**
- * Single section without title.
- */
-export const SingleSection: Story = {
-  args: {
-    title: 'Notes',
-  },
-  render: (args) => ({
-    components: { SectionedBox, BoxSection },
-    setup: () => {
-      const onEdit = () => alert('Edit notes!')
-      return { args, onEdit }
-    },
-    template: `
-      <SectionedBox v-bind="args">
-        <BoxSection @edit="onEdit">
-          <p>These are some notes about the project. Double-click to edit.</p>
-        </BoxSection>
       </SectionedBox>
     `,
   }),
@@ -153,7 +131,7 @@ export const ReadOnly: Story = {
 }
 
 /**
- * Multiple sections stacked with different content types.
+ * Multiple sections with different content types.
  */
 export const MultipleSections: Story = {
   args: {
@@ -163,25 +141,22 @@ export const MultipleSections: Story = {
     components: { SectionedBox, BoxSection },
     setup: () => {
       const onEdit = (section: string) => alert(`Edit ${section}!`)
-      return { args, onEdit }
+      const onEditAi = (section: string) => alert(`Edit ${section} with AI!`)
+      return { args, onEdit, onEditAi }
     },
     template: `
       <SectionedBox v-bind="args">
-        <BoxSection @edit="onEdit('summary')">
-          <p>A brief summary of the project goals and objectives.</p>
+        <BoxSection @edit="onEdit('summary')" @edit-ai="onEditAi('summary')">
+          <p>A brief summary of the project goals.</p>
         </BoxSection>
-        <BoxSection title="Key Features" @edit="onEdit('features')">
+        <BoxSection title="Key Features" @edit="onEdit('features')" @edit-ai="onEditAi('features')">
           <ul>
             <li>Feature one</li>
             <li>Feature two</li>
-            <li>Feature three</li>
           </ul>
         </BoxSection>
-        <BoxSection title="Timeline" @edit="onEdit('timeline')">
+        <BoxSection title="Timeline" @edit="onEdit('timeline')" @edit-ai="onEditAi('timeline')">
           <p>Q1 2025 - Q3 2025</p>
-        </BoxSection>
-        <BoxSection title="Team" @edit="onEdit('team')">
-          <p>Engineering, Design, Product</p>
         </BoxSection>
       </SectionedBox>
     `,

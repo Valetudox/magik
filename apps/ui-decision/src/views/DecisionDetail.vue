@@ -668,6 +668,21 @@ const handleSaveProposalReasoning = async (newReasoning: string[]) => {
   }
 }
 
+const appendAIPromptForProblem = () => {
+  const prompt = 'Edit the problem definition: '
+  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
+}
+
+const appendAIPromptForProposalDesc = () => {
+  const prompt = 'Edit the proposal description: '
+  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
+}
+
+const appendAIPromptForProposalReasoning = () => {
+  const prompt = 'Edit the proposal reasoning: '
+  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
+}
+
 const appendAIPromptForComponent = (component: { id: string; name: string }) => {
   const prompt = `Edit the component "${component.name}": `
   agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
@@ -753,9 +768,10 @@ const handleSaveConfluenceUrl = async () => {
             title="Problem Definition"
             class="mb-4"
             @edit="openEditProblemDialog"
+            @edit-ai="appendAIPromptForProblem"
           >
             <span :class="{ 'empty-placeholder': !decision.problemDefinition }">
-              {{ decision.problemDefinition || 'Click edit to add problem definition...' }}
+              {{ decision.problemDefinition || 'Double-click to add problem definition...' }}
             </span>
           </SimpleBox>
 
@@ -855,19 +871,19 @@ const handleSaveConfluenceUrl = async () => {
 
           <!-- Proposal -->
           <SectionedBox title="Proposal">
-            <BoxSection @edit="openEditProposalDescDialog">
+            <BoxSection @edit="openEditProposalDescDialog" @edit-ai="appendAIPromptForProposalDesc">
               <span :class="{ 'empty-placeholder': !decision.proposal.description }">
-                {{ decision.proposal.description || 'Click edit to add proposal description...' }}
+                {{ decision.proposal.description || 'Double-click to add proposal description...' }}
               </span>
             </BoxSection>
-            <BoxSection title="Reasoning" @edit="openEditProposalReasoningDialog">
+            <BoxSection title="Reasoning" @edit="openEditProposalReasoningDialog" @edit-ai="appendAIPromptForProposalReasoning">
               <ul v-if="decision.proposal.reasoning.length > 0" class="reasoning-list">
                 <li v-for="(reason, index) in decision.proposal.reasoning" :key="index">
                   {{ reason }}
                 </li>
               </ul>
               <span v-else class="empty-placeholder">
-                Click edit to add reasoning...
+                Double-click to add reasoning...
               </span>
             </BoxSection>
           </SectionedBox>
