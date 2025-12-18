@@ -1,0 +1,5 @@
+export { default as ProblemDefinitionSection } from './ProblemDefinitionSection.vue'
+export { default as ComponentsSection } from './ComponentsSection.vue'
+export { default as UseCasesSection } from './UseCasesSection.vue'
+export { default as ProposalSection } from './ProposalSection.vue'
+export { default as EvaluationMatrix } from './EvaluationMatrix.vue'

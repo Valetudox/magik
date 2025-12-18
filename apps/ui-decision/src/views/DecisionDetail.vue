@@ -1,31 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   EntityDetailPage,
-  EntityDetailTable,
-  SimpleBox,
-  ListBox,
-  SectionedBox,
-  BoxSection,
-  Editable,
-  ClickMenu,
-  type ClickMenuItem,
   NameDescriptionDialog,
   TextEditDialog,
-  type DetailTableConfigInput,
-  type CellUpdatePayload,
-  type EditAiPayload,
-  type RowHeaderMenuPayload,
-  type ColumnHeaderMenuPayload,
-  type SpecialRowUpdatePayload,
-  type SpecialRowEditAiPayload,
 } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
-import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
 import OptionDialog from '../components/OptionDialog.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import {
+  ProblemDefinitionSection,
+  ComponentsSection,
+  UseCasesSection,
+  ProposalSection,
+  EvaluationMatrix,
+} from '../components/decision-detail'
 
 const route = useRoute()
 const router = useRouter()
@@ -118,24 +109,6 @@ const goBack = () => {
   void router.push('/')
 }
 
-const getEvaluation = (optionId: string, driverId: string) => {
-  return decision.value?.evaluationMatrix.find(
-    (e) => e.optionId === optionId && e.driverId === driverId
-  )
-}
-
-const _getRatingColor = (rating?: 'high' | 'medium' | 'low') => {
-  switch (rating) {
-    case 'high':
-      return 'success'
-    case 'medium':
-      return 'warning'
-    case 'low':
-      return 'error'
-    default:
-      return 'grey'
-  }
-}
 
 const copyConfluenceUrl = async () => {
   if (decision.value?.confluenceLink) {
@@ -216,107 +189,6 @@ const handleAgentRequest = async () => {
   }
 }
 
-const hasAnyDiagram = computed(() => {
-  return decision.value?.options.some(
-    (option) => option.architectureDiagramMermaid ?? option.architectureDiagramLink
-  )
-})
-
-// Evaluation table config for EntityDetailTable
-const evaluationTableConfig = computed<DetailTableConfigInput>(() => {
-  const options = decision.value?.options ?? []
-  const specialRows: DetailTableConfigInput['specialRows'] = [
-    { key: 'description', header: 'Description', type: 'text', fieldKey: 'description' },
-  ]
-
-  // Add diagram row if any option has a diagram
-  if (hasAnyDiagram.value) {
-    specialRows.push({ key: 'diagram', header: 'Architecture Diagram', type: 'mermaid', fieldKey: 'architectureDiagramMermaid' })
-  }
-
-  return {
-    rowKey: 'driverId',
-    rowHeader: {
-      key: 'driverName',
-      header: '',
-      width: '15%',
-      tooltip: 'driverDescription',
-      menu: [
-        { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
-        { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
-      ],
-    },
-    columns: options.map((option) => ({
-      type: 'list' as const,
-      key: `option-${option.id}`,
-      header: option.name,
-      editable: true,
-      headerMenu: [
-        decision.value?.selectedOption === option.id
-          ? { key: 'clearSelection', icon: 'mdi-close-circle-outline', title: 'Clear selection' }
-          : { key: 'select', icon: 'mdi-check-circle-outline', title: 'Select' },
-        { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
-        { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
-      ],
-      headerBadge: decision.value?.selectedOption === option.id
-        ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
-        : undefined,
-      rating: {
-        key: `rating-${option.id}`,
-        levels: [
-          { key: 'high', label: 'High', color: 'success' },
-          { key: 'medium', label: 'Medium', color: 'warning' },
-          { key: 'low', label: 'Low', color: 'error' },
-        ],
-        allowEmpty: true,
-        emptyLabel: 'Not rated',
-      },
-    })),
-    specialRows,
-    editable: true,
-    emptyText: 'No drivers defined. Add a driver to start evaluating options.',
-  }
-})
-
-// Evaluation table rows - one row per driver with evaluation data
-const evaluationTableRows = computed(() => {
-  if (!decision.value) return []
-
-  return decision.value.decisionDrivers.map((driver) => {
-    const row: Record<string, unknown> = {
-      driverId: driver.id,
-      driverName: driver.name,
-      driverDescription: driver.description,
-    }
-
-    // Add evaluation data for each option
-    for (const option of decision.value!.options) {
-      const evaluation = decision.value!.evaluationMatrix.find(
-        (e) => e.optionId === option.id && e.driverId === driver.id
-      )
-      row[`option-${option.id}`] = evaluation?.evaluationDetails ?? []
-      row[`rating-${option.id}`] = evaluation?.rating ?? null
-    }
-
-    return row
-  })
-})
-
-// Column data for special rows (description, diagram per option)
-const evaluationColumnData = computed(() => {
-  if (!decision.value) return {}
-
-  const data: Record<string, Record<string, unknown>> = {}
-
-  for (const option of decision.value.options) {
-    data[`option-${option.id}`] = {
-      description: option.description,
-      architectureDiagramMermaid: option.architectureDiagramMermaid,
-    }
-  }
-
-  return data
-})
 
 // Option handlers
 const openAddOptionDialog = () => {
@@ -390,185 +262,71 @@ const handleSetSelectedOption = async (optionId: string | null) => {
   }
 }
 
-// Option menu items and handler
-const getOptionMenuItems = (option: { id: string }): ClickMenuItem[] => {
-  const isSelected = decision.value?.selectedOption === option.id
-  return [
-    isSelected
-      ? { key: 'clearSelection', icon: 'mdi-close-circle-outline', title: 'Clear selection' }
-      : { key: 'select', icon: 'mdi-check-circle-outline', title: 'Select' },
-    { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
-    { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
-  ]
-}
 
-const handleOptionMenuSelect = (key: string, option: { id: string; name: string; description: string; moreLink?: string }) => {
-  switch (key) {
-    case 'select':
-      void handleSetSelectedOption(option.id)
-      break
-    case 'clearSelection':
-      void handleSetSelectedOption(null)
-      break
-    case 'edit':
-      openEditOptionDialog(option)
-      break
-    case 'delete':
-      confirmDeleteOption(option)
-      break
-  }
-}
-
-// Driver menu items and handler
-const driverMenuItems: ClickMenuItem[] = [
-  { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
-  { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
-]
-
-const handleDriverMenuSelect = (key: string, driver: { id: string; name: string; description: string }) => {
-  switch (key) {
-    case 'edit':
-      openEditDriverDialog(driver)
-      break
-    case 'delete':
-      confirmDeleteDriver(driver)
-      break
-  }
-}
-
-// EntityDetailTable event handlers
-const handleEvaluationCellUpdate = (payload: CellUpdatePayload) => {
-  const { rowKey, columnKey, value } = payload
-
-  // Check if this is a rating update
-  if (columnKey.startsWith('rating-')) {
-    const optionId = columnKey.replace('rating-', '')
-    void (async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.updateEvaluationRating(decisionId, optionId, rowKey, value as 'high' | 'medium' | 'low' | null)
-      } catch (err: unknown) {
-        agentNotification.value = {
-          show: true,
-          message: (err as Error).message ?? 'Failed to update rating',
-          type: 'error',
-        }
-      }
-    })()
-    return
-  }
-
-  // This is an evaluation details update
-  if (columnKey.startsWith('option-')) {
-    const optionId = columnKey.replace('option-', '')
-    void (async () => {
-      try {
-        const decisionId = route.params.id as string
-        await api.updateEvaluationDetails(decisionId, optionId, rowKey, value as string[])
-      } catch (err: unknown) {
-        agentNotification.value = {
-          show: true,
-          message: (err as Error).message ?? 'Failed to update evaluation details',
-          type: 'error',
-        }
-      }
-    })()
-  }
-}
-
-const handleEvaluationEditAi = (payload: EditAiPayload) => {
-  const { rowKey, columnKey } = payload
-  const driver = decision.value?.decisionDrivers.find((d) => d.id === rowKey)
-  const optionId = columnKey.replace('option-', '').replace('rating-', '')
-  const option = decision.value?.options.find((o) => o.id === optionId)
-
-  if (driver && option) {
-    const prompt = `Edit the "${option.name}" - "${driver.name}" evaluation: `
-    agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-  }
-}
-
-const handleEvaluationRowHeaderMenu = (payload: RowHeaderMenuPayload) => {
-  const { rowKey, menuKey } = payload
-  const driver = decision.value?.decisionDrivers.find((d) => d.id === rowKey)
-  if (!driver) return
-
-  switch (menuKey) {
-    case 'edit':
-      openEditDriverDialog(driver)
-      break
-    case 'delete':
-      confirmDeleteDriver(driver)
-      break
-  }
-}
-
-const handleEvaluationColumnHeaderMenu = (payload: ColumnHeaderMenuPayload) => {
-  const { columnKey, menuKey } = payload
-  const optionId = columnKey.replace('option-', '')
-  const option = decision.value?.options.find((o) => o.id === optionId)
-  if (!option) return
-
-  switch (menuKey) {
-    case 'select':
-      void handleSetSelectedOption(option.id)
-      break
-    case 'clearSelection':
-      void handleSetSelectedOption(null)
-      break
-    case 'edit':
-      openEditOptionDialog(option)
-      break
-    case 'delete':
-      confirmDeleteOption(option)
-      break
-  }
-}
-
-const handleEvaluationSpecialRowUpdate = (payload: SpecialRowUpdatePayload) => {
-  const { specialRowKey, columnKey, value } = payload
-  const optionId = columnKey.replace('option-', '')
-  const option = decision.value?.options.find((o) => o.id === optionId)
-  if (!option) return
-
-  void (async () => {
-    try {
-      const decisionId = route.params.id as string
-      if (specialRowKey === 'description') {
-        await api.updateOption(decisionId, optionId, {
-          name: option.name,
-          description: value as string,
-          moreLink: option.moreLink,
-        })
-      } else if (specialRowKey === 'diagram') {
-        // TODO: Add API method to update architecture diagram
-        agentNotification.value = {
-          show: true,
-          message: 'Diagram update not yet implemented',
-          type: 'error',
-        }
-      }
-    } catch (err: unknown) {
-      agentNotification.value = {
-        show: true,
-        message: (err as Error).message ?? 'Failed to update',
-        type: 'error',
-      }
+// EvaluationMatrix event handlers
+const handleUpdateRating = async (optionId: string, driverId: string, rating: 'high' | 'medium' | 'low' | null) => {
+  try {
+    const decisionId = route.params.id as string
+    await api.updateEvaluationRating(decisionId, optionId, driverId, rating)
+  } catch (err: unknown) {
+    agentNotification.value = {
+      show: true,
+      message: (err as Error).message ?? 'Failed to update rating',
+      type: 'error',
     }
-  })()
+  }
 }
 
-const handleEvaluationSpecialRowEditAi = (payload: SpecialRowEditAiPayload) => {
-  const { specialRowKey, columnKey } = payload
-  const optionId = columnKey.replace('option-', '')
+const handleUpdateEvaluationDetails = async (optionId: string, driverId: string, details: string[]) => {
+  try {
+    const decisionId = route.params.id as string
+    await api.updateEvaluationDetails(decisionId, optionId, driverId, details)
+  } catch (err: unknown) {
+    agentNotification.value = {
+      show: true,
+      message: (err as Error).message ?? 'Failed to update evaluation details',
+      type: 'error',
+    }
+  }
+}
+
+const handleUpdateOptionDescription = async (optionId: string, description: string) => {
   const option = decision.value?.options.find((o) => o.id === optionId)
   if (!option) return
 
+  try {
+    const decisionId = route.params.id as string
+    await api.updateOption(decisionId, optionId, {
+      name: option.name,
+      description,
+      moreLink: option.moreLink,
+    })
+  } catch (err: unknown) {
+    agentNotification.value = {
+      show: true,
+      message: (err as Error).message ?? 'Failed to update description',
+      type: 'error',
+    }
+  }
+}
+
+const handleUpdateOptionDiagram = async (_optionId: string, _diagram: string) => {
+  // TODO: Add API method to update architecture diagram
+  agentNotification.value = {
+    show: true,
+    message: 'Diagram update not yet implemented',
+    type: 'error',
+  }
+}
+
+const handleEvaluationEditAi = (context: { type: 'evaluation' | 'description' | 'diagram'; optionName: string; driverName?: string }) => {
   let prompt = ''
-  if (specialRowKey === 'description') {
-    prompt = `Edit the description of "${option.name}": `
-  } else if (specialRowKey === 'diagram') {
-    prompt = `Edit the architecture diagram of "${option.name}": `
+  if (context.type === 'evaluation' && context.driverName) {
+    prompt = `Edit the "${context.optionName}" - "${context.driverName}" evaluation: `
+  } else if (context.type === 'description') {
+    prompt = `Edit the description of "${context.optionName}": `
+  } else if (context.type === 'diagram') {
+    prompt = `Edit the architecture diagram of "${context.optionName}": `
   }
   agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
 }
@@ -870,128 +628,35 @@ const handleSaveConfluenceUrl = async (value: string) => {
 
     <template #sidebar>
       <template v-if="decision">
-          <!-- Problem Definition -->
-          <SimpleBox
-            title="Problem Definition"
-            class="mb-4"
-            :value="decision.problemDefinition"
-            empty-text="Double-click to add problem definition..."
-            @update="handleSaveProblemDefinition"
-            @edit-ai="appendAIPromptForProblem"
-          />
+        <ProblemDefinitionSection
+          :value="decision.problemDefinition"
+          @update="handleSaveProblemDefinition"
+          @edit-ai="appendAIPromptForProblem"
+        />
 
-          <!-- Components -->
-          <ListBox
-            title="Components"
-            class="mb-4"
-            empty-text="No components yet. Click + to add one."
-            @add="openAddComponentDialog"
-          >
-            <template v-if="decision.components && decision.components.length > 0">
-              <v-card
-                v-for="component in decision.components"
-                :key="component.id"
-                variant="outlined"
-                class="mb-2"
-              >
-                <v-card-title class="text-subtitle-1 d-flex align-center">
-                  <v-menu>
-                    <template #activator="{ props }">
-                      <span
-                        v-bind="props"
-                        class="clickable-header"
-                        @dblclick.stop="openEditComponentDialog(component)"
-                      >{{ component.name }}</span>
-                    </template>
-                    <v-list density="compact">
-                      <v-list-item
-                        prepend-icon="mdi-pencil"
-                        title="Edit"
-                        @click="openEditComponentDialog(component)"
-                      />
-                      <v-list-item
-                        prepend-icon="mdi-robot"
-                        title="Edit with AI"
-                        @click="appendAIPromptForComponent(component)"
-                      />
-                      <v-list-item
-                        prepend-icon="mdi-delete"
-                        title="Delete"
-                        @click="confirmDeleteComponent(component)"
-                      />
-                    </v-list>
-                  </v-menu>
-                </v-card-title>
-                <v-card-text>{{ component.description }}</v-card-text>
-              </v-card>
-            </template>
-          </ListBox>
+        <ComponentsSection
+          :components="decision.components ?? []"
+          @add="openAddComponentDialog"
+          @edit="openEditComponentDialog"
+          @delete="confirmDeleteComponent"
+          @edit-ai="appendAIPromptForComponent"
+        />
 
-          <!-- Use Cases -->
-          <ListBox
-            title="Use Cases"
-            class="mb-4"
-            empty-text="No use cases yet. Click + to add one."
-            @add="openAddUseCaseDialog"
-          >
-            <template v-if="decision.useCases && decision.useCases.length > 0">
-              <v-card
-                v-for="useCase in decision.useCases"
-                :key="useCase.id"
-                variant="outlined"
-                class="mb-2"
-              >
-                <v-card-title class="text-subtitle-1 d-flex align-center">
-                  <v-menu>
-                    <template #activator="{ props }">
-                      <span
-                        v-bind="props"
-                        class="clickable-header"
-                        @dblclick.stop="openEditUseCaseDialog(useCase)"
-                      >{{ useCase.name }}</span>
-                    </template>
-                    <v-list density="compact">
-                      <v-list-item
-                        prepend-icon="mdi-pencil"
-                        title="Edit"
-                        @click="openEditUseCaseDialog(useCase)"
-                      />
-                      <v-list-item
-                        prepend-icon="mdi-robot"
-                        title="Edit with AI"
-                        @click="appendAIPromptForUseCase(useCase)"
-                      />
-                      <v-list-item
-                        prepend-icon="mdi-delete"
-                        title="Delete"
-                        @click="confirmDeleteUseCase(useCase)"
-                      />
-                    </v-list>
-                  </v-menu>
-                </v-card-title>
-                <v-card-text>{{ useCase.description }}</v-card-text>
-              </v-card>
-            </template>
-          </ListBox>
+        <UseCasesSection
+          :use-cases="decision.useCases ?? []"
+          @add="openAddUseCaseDialog"
+          @edit="openEditUseCaseDialog"
+          @delete="confirmDeleteUseCase"
+          @edit-ai="appendAIPromptForUseCase"
+        />
 
-          <!-- Proposal -->
-          <SectionedBox title="Proposal">
-            <BoxSection
-              type="text"
-              :value="decision.proposal.description"
-              empty-text="Double-click to add proposal description..."
-              @update="handleSaveProposalDesc"
-              @edit-ai="appendAIPromptForProposalDesc"
-            />
-            <BoxSection
-              title="Reasoning"
-              type="list"
-              :items="decision.proposal.reasoning"
-              empty-text="Double-click to add reasoning..."
-              @update="handleSaveProposalReasoning"
-              @edit-ai="appendAIPromptForProposalReasoning"
-            />
-          </SectionedBox>
+        <ProposalSection
+          :proposal="decision.proposal"
+          @update:description="handleSaveProposalDesc"
+          @update:reasoning="handleSaveProposalReasoning"
+          @edit-ai:description="appendAIPromptForProposalDesc"
+          @edit-ai:reasoning="appendAIPromptForProposalReasoning"
+        />
       </template>
     </template>
 
@@ -1006,64 +671,24 @@ const handleSaveConfluenceUrl = async (value: string) => {
     </v-alert>
 
     <template v-else-if="decision">
-      <EntityDetailTable
-        :config="evaluationTableConfig"
-        :rows="evaluationTableRows"
-        :column-data="evaluationColumnData"
-        @update:cell="handleEvaluationCellUpdate"
+      <EvaluationMatrix
+        :options="decision.options"
+        :drivers="decision.decisionDrivers"
+        :evaluation-matrix="decision.evaluationMatrix"
+        :selected-option="decision.selectedOption"
+        @add-option="openAddOptionDialog"
+        @add-driver="openAddDriverDialog"
+        @edit-option="openEditOptionDialog"
+        @delete-option="confirmDeleteOption"
+        @select-option="handleSetSelectedOption"
+        @edit-driver="openEditDriverDialog"
+        @delete-driver="confirmDeleteDriver"
+        @update-rating="handleUpdateRating"
+        @update-evaluation-details="handleUpdateEvaluationDetails"
+        @update-option-description="handleUpdateOptionDescription"
+        @update-option-diagram="handleUpdateOptionDiagram"
         @edit-ai="handleEvaluationEditAi"
-        @row-header:menu="handleEvaluationRowHeaderMenu"
-        @column-header:menu="handleEvaluationColumnHeaderMenu"
-        @update:special-row="handleEvaluationSpecialRowUpdate"
-        @edit-ai:special-row="handleEvaluationSpecialRowEditAi"
-      >
-        <template #title>
-          <v-card-title class="d-flex align-center">
-            <span>Evaluation Matrix</span>
-            <v-spacer />
-            <v-btn
-              variant="tonal"
-              color="primary"
-              size="small"
-              prepend-icon="mdi-plus"
-              class="mr-2"
-              @click="openAddOptionDialog"
-            >
-              Add Option
-            </v-btn>
-            <v-btn
-              variant="tonal"
-              color="primary"
-              size="small"
-              prepend-icon="mdi-plus"
-              @click="openAddDriverDialog"
-            >
-              Add Driver
-            </v-btn>
-          </v-card-title>
-        </template>
-
-        <template #footer>
-          <v-card-text class="pt-0">
-            <!-- Rating Legend -->
-            <div class="rating-legend">
-              <div class="legend-item">
-                <span class="legend-dot success" />
-                <span class="legend-text">Green - Meets requirements well / Good fit / Low risk</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot warning" />
-                <span class="legend-text">Yellow - Partially meets requirements / Acceptable with trade-offs / Medium
-                  risk</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot error" />
-                <span class="legend-text">Red - Does not meet requirements / Significant concerns / High risk</span>
-              </div>
-            </div>
-          </v-card-text>
-        </template>
-      </EntityDetailTable>
+      />
     </template>
 
     <!-- AI Agent Input -->
@@ -1219,191 +844,5 @@ const handleSaveConfluenceUrl = async (value: string) => {
   opacity: 0.8;
 }
 
-.evaluation-list {
-  list-style-type: disc;
-  padding-left: 20px;
-  margin: 0;
-}
-
-.evaluation-list li {
-  margin-bottom: 4px;
-  font-size: 0.9em;
-}
-
-.reasoning-list {
-  list-style-type: disc;
-  padding-left: 20px;
-  margin: 0;
-}
-
-.reasoning-list li {
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-:deep(tbody td) {
-  vertical-align: top;
-  padding: 12px !important;
-  font-size: 1rem;
-}
-
-:deep(tbody td:first-child),
-:deep(tbody th:first-child) {
-  background-color: rgba(var(--v-theme-primary), 0.1);
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-:deep(thead th) {
-  background-color: rgba(var(--v-theme-primary), 0.1);
-  font-weight: bold;
-  padding: 12px !important;
-  font-size: 1rem;
-}
-
-.driver-name {
-  cursor: pointer;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-}
-
-.option-name {
-  cursor: pointer;
-}
-
-.option-name:hover,
-.driver-name:hover {
-  text-decoration: underline;
-}
-
-.tooltip-content {
-  max-width: 300px;
-}
-
-.diagram-container {
-  max-width: 100%;
-  overflow: auto;
-  padding: 8px;
-  background-color: white;
-  border-radius: 4px;
-}
-
-.diagram-container :deep(svg) {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Evaluation cell layout */
-.evaluation-cell {
-  padding: 0 !important;
-  overflow: hidden;
-}
-
-.evaluation-content {
-  display: flex;
-  min-height: 60px;
-  overflow: hidden;
-}
-
-.rating-indicator {
-  width: 12px;
-  min-width: 12px;
-  cursor: pointer;
-  transition: width 0.15s ease;
-}
-
-.rating-indicator:hover {
-  width: 20px;
-}
-
-.rating-indicator.rating-high {
-  background-color: rgb(var(--v-theme-success));
-}
-
-.rating-indicator.rating-medium {
-  background-color: rgb(var(--v-theme-warning));
-}
-
-.rating-indicator.rating-low {
-  background-color: rgb(var(--v-theme-error));
-}
-
-.evaluation-details {
-  padding: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.evaluation-details.editable-text {
-  margin: 0;
-}
-
-/* Rating Legend */
-.rating-legend {
-  padding: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.legend-dot.success {
-  background-color: rgb(var(--v-theme-success));
-}
-
-.legend-dot.warning {
-  background-color: rgb(var(--v-theme-warning));
-}
-
-.legend-dot.error {
-  background-color: rgb(var(--v-theme-error));
-}
-
-.legend-text {
-  font-size: 0.875rem;
-  color: white;
-}
-
-/* Editable text (clickable for menu) */
-.editable-text {
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin: -2px -4px;
-  transition: background-color 0.15s ease;
-}
-
-.editable-text:hover {
-  background-color: rgba(var(--v-theme-primary), 0.1);
-}
-
-.empty-placeholder {
-  color: rgba(255, 255, 255, 0.5);
-  font-style: italic;
-}
-
-.clickable-header {
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin: -2px -6px;
-  transition: background-color 0.15s ease;
-}
-
-.clickable-header:hover {
-  background-color: rgba(var(--v-theme-primary), 0.15);
-}
 
 </style>
