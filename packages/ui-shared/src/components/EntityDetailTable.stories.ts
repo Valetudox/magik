@@ -506,6 +506,116 @@ export const Editable: Story = {
 }
 
 /**
+ * Rating editing - click the colored bar on the left to change ratings.
+ */
+export const EditableRatings: Story = {
+  args: {
+    config: {
+      rowKey: 'id',
+      columns: [],
+    } as DetailTableConfigInput,
+    rows: [],
+  },
+  render: () => ({
+    components: { EntityDetailTable },
+    setup: () => {
+      const ratingLevels = [
+        { key: 'high', label: 'High', color: 'success' },
+        { key: 'medium', label: 'Medium', color: 'warning' },
+        { key: 'low', label: 'Low', color: 'error' },
+      ]
+
+      const config: DetailTableConfigInput = {
+        rowKey: 'id',
+        editable: true,
+        rowHeader: { key: 'task', header: 'Task', width: '180px' },
+        columns: [
+          {
+            type: 'text',
+            key: 'description',
+            header: 'Description',
+            rating: { key: 'priority', levels: ratingLevels },
+          },
+          {
+            type: 'list',
+            key: 'blockers',
+            header: 'Blockers',
+            rating: { key: 'risk', levels: ratingLevels, allowEmpty: true, emptyLabel: 'Not assessed' },
+          },
+        ],
+      }
+
+      const rows = ref([
+        {
+          id: '1',
+          task: 'Database migration',
+          description: 'Migrate from MySQL to PostgreSQL',
+          priority: 'high',
+          blockers: ['Schema differences', 'Data validation'],
+          risk: 'medium',
+        },
+        {
+          id: '2',
+          task: 'API refactor',
+          description: 'Update REST endpoints to v2',
+          priority: 'medium',
+          blockers: ['Breaking changes'],
+          risk: 'low',
+        },
+        {
+          id: '3',
+          task: 'Documentation',
+          description: 'Update API docs',
+          priority: 'low',
+          blockers: [],
+          risk: null, // Not assessed
+        },
+      ])
+
+      const handleCellUpdate = (payload: { rowKey: string; columnKey: string; value: unknown }) => {
+        console.log('Cell updated:', payload)
+        const row = rows.value.find((r) => r.id === payload.rowKey)
+        if (row) {
+          ;(row as Record<string, unknown>)[payload.columnKey] = payload.value
+        }
+      }
+
+      const handleRatingUpdate = (payload: { rowKey: string; ratingKey: string; value: string | null }) => {
+        console.log('Rating updated:', payload)
+        const row = rows.value.find((r) => r.id === payload.rowKey)
+        if (row) {
+          ;(row as Record<string, unknown>)[payload.ratingKey] = payload.value
+        }
+      }
+
+      return { config, rows, handleCellUpdate, handleRatingUpdate }
+    },
+    template: `
+      <EntityDetailTable
+        :config="config"
+        :rows="rows"
+        @update:cell="handleCellUpdate"
+        @update:rating="handleRatingUpdate"
+      >
+        <template #title>
+          <v-card-title>Tasks (click colored bar to change rating)</v-card-title>
+        </template>
+        <template #footer>
+          <v-card-text>
+            <div class="d-flex gap-4 text-caption">
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgb(var(--v-theme-success))" class="mr-1"></span> High priority</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgb(var(--v-theme-warning))" class="mr-1"></span> Medium priority</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgb(var(--v-theme-error))" class="mr-1"></span> Low priority</span>
+              <span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgba(128,128,128,0.2)" class="mr-1"></span> Not assessed</span>
+            </div>
+          </v-card-text>
+        </template>
+      </EntityDetailTable>
+    `,
+  }),
+}
+
+/**
  * Column header badges - visual indicators on column headers.
  */
 export const WithBadges: Story = {
