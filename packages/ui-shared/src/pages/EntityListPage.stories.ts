@@ -58,7 +58,7 @@ const mockItems: MockItem[] = [
 ]
 
 const meta = {
-  title: 'Components/EntityListPage',
+  title: 'Pages/EntityListPage',
   component: EntityListPage,
   tags: ['autodocs'],
   parameters: {

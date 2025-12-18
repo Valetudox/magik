@@ -2,10 +2,10 @@
 import { computed, h } from 'vue'
 import { useListPage } from '../composables/useListPage'
 import type { ListPageConfig, RowActionConfig, BulkActionConfig } from '../types/list-page.schema'
-import AppHeader from './AppHeader.vue'
-import DeleteConfirmDialog from './DeleteConfirmDialog.vue'
-import BulkOperationProgress from './BulkOperationProgress.vue'
-import BulkActionsToolbar from './list-page/BulkActionsToolbar.vue'
+import AppHeader from '../components/AppHeader.vue'
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
+import BulkOperationProgress from '../components/BulkOperationProgress.vue'
+import BulkActionsToolbar from '../components/list-page/BulkActionsToolbar.vue'
 
 interface Props {
   config: ListPageConfig<T>

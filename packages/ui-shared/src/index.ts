@@ -1,7 +1,9 @@
+// Export page components
+export { default as EntityListPage } from './pages/EntityListPage.vue'
+export { default as EntityDetailPage } from './pages/EntityDetailPage.vue'
+
 // Export all shared components
 export { default as AppHeader } from './components/AppHeader.vue'
-export { default as EntityListPage } from './components/EntityListPage.vue'
-export { default as EntityDetailPage } from './components/EntityDetailPage.vue'
 export { default as SimpleBox } from './components/SimpleBox.vue'
 export { default as ListBox } from './components/ListBox.vue'
 export { default as SectionedBox } from './components/SectionedBox.vue'

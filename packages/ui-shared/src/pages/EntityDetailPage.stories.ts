@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/vue3'
 import { ref } from 'vue'
 import { VBtn, VAlert, VProgressCircular, VCard, VCardTitle, VCardText } from 'vuetify/components'
 import EntityDetailPage from './EntityDetailPage.vue'
-import SimpleBox from './SimpleBox.vue'
-import SectionedBox from './SectionedBox.vue'
-import BoxSection from './BoxSection.vue'
-import ListBox from './ListBox.vue'
+import SimpleBox from '../components/SimpleBox.vue'
+import SectionedBox from '../components/SectionedBox.vue'
+import BoxSection from '../components/BoxSection.vue'
+import ListBox from '../components/ListBox.vue'
 
 const meta = {
-  title: 'Components/EntityDetailPage',
+  title: 'Pages/EntityDetailPage',
   component: EntityDetailPage,
   tags: ['autodocs'],
   parameters: {
@@ -23,20 +23,22 @@ A layout component for entity detail views with a header, sidebar, and main cont
 ## Overview
 
 EntityDetailPage provides a consistent layout for detail/edit pages with:
-- A header with customizable title and action buttons
+- A header with breadcrumb-style navigation (title / subtitle)
+- Clickable title for navigation back
 - A 2-column layout with sidebar (2 cols) and main content (10 cols)
-- Slots for full customization
-
-## Slots
-
-- \`title\`: Custom title content (overrides pageTitle prop)
-- \`headerActions\`: Action buttons in the header
-- \`sidebar\`: Left sidebar content (2 columns wide)
-- \`default\`: Main content area (10 columns wide)
+- Slots for header actions, sidebar, and main content
 
 ## Props
 
-- \`pageTitle\`: Default page title shown in header
+- \`title\`: Main page title (clickable, navigates to goBackUrl)
+- \`subtitle\`: Subtitle shown after title with "/" separator
+- \`goBackUrl\`: URL for navigation when clicking the title
+
+## Slots
+
+- \`headerActions\`: Action buttons in the header
+- \`sidebar\`: Left sidebar content (2 columns wide)
+- \`default\`: Main content area (10 columns wide)
         `,
       },
     },
@@ -47,18 +49,20 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Basic usage with just the pageTitle prop and a SimpleBox in the main content.
+ * Basic usage with title, subtitle, and goBackUrl props.
  */
 export const Basic: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'The most basic usage with just a page title and a SimpleBox for main content.',
+        story: 'The most basic usage with title/subtitle breadcrumb and a SimpleBox for main content.',
       },
     },
   },
   args: {
-    pageTitle: 'Item Details',
+    title: 'Items',
+    subtitle: 'Item Details',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: { EntityDetailPage, SimpleBox },
@@ -79,43 +83,6 @@ export const Basic: Story = {
 }
 
 /**
- * Custom title slot with breadcrumb navigation pattern.
- */
-export const WithCustomTitle: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use the `title` slot to create custom titles like breadcrumb navigation.',
-      },
-    },
-  },
-  args: {
-    pageTitle: 'Items',
-  },
-  render: (args) => ({
-    components: { EntityDetailPage, SimpleBox },
-    setup() {
-      const details = ref('The title slot allows you to create breadcrumb-style navigation.')
-      return { args, details }
-    },
-    template: `
-      <EntityDetailPage v-bind="args">
-        <template #title>
-          <span style="cursor: pointer; text-decoration: underline;">Items</span>
-          <span class="mx-2">/</span>
-          <span>Item #123</span>
-        </template>
-        <SimpleBox
-          title="Item #123 Details"
-          :value="details"
-          @update="details = $event"
-        />
-      </EntityDetailPage>
-    `,
-  }),
-}
-
-/**
  * Header actions for common operations like save, delete, and navigation.
  */
 export const WithHeaderActions: Story = {
@@ -127,7 +94,9 @@ export const WithHeaderActions: Story = {
     },
   },
   args: {
-    pageTitle: 'Edit Item',
+    title: 'Items',
+    subtitle: 'Edit Item',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: { EntityDetailPage, VBtn, SimpleBox },
@@ -169,7 +138,9 @@ export const WithSidebar: Story = {
     },
   },
   args: {
-    pageTitle: 'Item Details',
+    title: 'Items',
+    subtitle: 'Item Details',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: { EntityDetailPage, SimpleBox, ListBox, VCard, VCardTitle, VCardText },
@@ -221,7 +192,9 @@ export const LoadingState: Story = {
     },
   },
   args: {
-    pageTitle: 'Loading Item...',
+    title: 'Items',
+    subtitle: 'Loading...',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: { EntityDetailPage, VProgressCircular },
@@ -251,7 +224,9 @@ export const ErrorState: Story = {
     },
   },
   args: {
-    pageTitle: 'Item Details',
+    title: 'Items',
+    subtitle: 'Item Details',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: { EntityDetailPage, VAlert, VBtn },
@@ -285,12 +260,14 @@ export const CompleteExample: Story = {
     docs: {
       description: {
         story:
-          'A full-featured example demonstrating all slots with Box components: custom breadcrumb title, header actions, sidebar with SimpleBox, ListBox, and SectionedBox, plus rich main content.',
+          'A full-featured example demonstrating all props and slots with Box components: title with subtitle and goBackUrl, header actions, sidebar with SimpleBox, ListBox, and SectionedBox, plus rich main content.',
       },
     },
   },
   args: {
-    pageTitle: 'Decision Documents',
+    title: 'Decision Documents',
+    subtitle: 'API Authentication Strategy',
+    goBackUrl: '/',
   },
   render: (args) => ({
     components: {
@@ -340,12 +317,6 @@ export const CompleteExample: Story = {
     },
     template: `
       <EntityDetailPage v-bind="args">
-        <template #title>
-          <span style="cursor: pointer; text-decoration: underline;">Decision Documents</span>
-          <span class="mx-2">/</span>
-          <span>API Authentication Strategy</span>
-        </template>
-
         <template #headerActions>
           <VBtn variant="outlined" icon="mdi-pencil" class="mr-2" title="Edit" />
           <VBtn variant="outlined" icon="mdi-content-copy" class="mr-2" title="Copy URL" />
