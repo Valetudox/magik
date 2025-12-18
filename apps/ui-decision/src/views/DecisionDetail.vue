@@ -7,6 +7,7 @@ import {
   ListBox,
   SectionedBox,
   BoxSection,
+  Editable,
   NameDescriptionDialog,
   TextEditDialog,
   ListEditDialog,
@@ -989,30 +990,17 @@ const handleSaveConfluenceUrl = async (value: string) => {
                       :key="option.id"
                       :style="{ width: optionColumnWidth }"
                     >
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <span
-                            v-bind="props"
-                            class="editable-text"
-                            :class="{ 'empty-placeholder': !option.description }"
-                            @dblclick.stop="openEditDescriptionDialog(option)"
-                          >
-                            {{ option.description || 'Click to add description...' }}
-                          </span>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditDescriptionDialog(option)"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-robot"
-                            title="Edit with AI"
-                            @click="appendAIPromptForDescription(option)"
-                          />
-                        </v-list>
-                      </v-menu>
+                      <Editable
+                        @edit="openEditDescriptionDialog(option)"
+                        @edit-ai="appendAIPromptForDescription(option)"
+                      >
+                        <span
+                          class="editable-text"
+                          :class="{ 'empty-placeholder': !option.description }"
+                        >
+                          {{ option.description || 'Click to add description...' }}
+                        </span>
+                      </Editable>
                     </td>
                   </tr>
 
@@ -1088,58 +1076,25 @@ const handleSaveConfluenceUrl = async (value: string) => {
                             )
                           "
                         />
-                        <v-menu>
-                          <template #activator="{ props }">
-                            <div
-                              v-bind="props"
-                              class="evaluation-details editable-text"
-                              @dblclick.stop="
-                                openEditEvaluationDetailDialog(
-                                  option,
-                                  driver,
-                                  getEvaluation(option.id, driver.id)?.evaluationDetails || []
-                                )
-                              "
+                        <Editable
+                          @edit="openEditEvaluationDetailDialog(option, driver, getEvaluation(option.id, driver.id)?.evaluationDetails || [])"
+                          @edit-ai="appendAIPromptForEvaluationDetail(option, driver)"
+                        >
+                          <div class="evaluation-details editable-text">
+                            <ul
+                              v-if="getEvaluation(option.id, driver.id)?.evaluationDetails?.length"
+                              class="evaluation-list"
                             >
-                              <ul
-                                v-if="
-                                  getEvaluation(option.id, driver.id)?.evaluationDetails?.length
-                                "
-                                class="evaluation-list"
+                              <li
+                                v-for="(detail, idx) in getEvaluation(option.id, driver.id)?.evaluationDetails"
+                                :key="idx"
                               >
-                                <li
-                                  v-for="(detail, idx) in getEvaluation(option.id, driver.id)
-                                    ?.evaluationDetails"
-                                  :key="idx"
-                                >
-                                  {{ detail }}
-                                </li>
-                              </ul>
-                              <span
-                                v-else
-                                class="empty-placeholder"
-                              >Click to add evaluation...</span>
-                            </div>
-                          </template>
-                          <v-list density="compact">
-                            <v-list-item
-                              prepend-icon="mdi-pencil"
-                              title="Edit"
-                              @click="
-                                openEditEvaluationDetailDialog(
-                                  option,
-                                  driver,
-                                  getEvaluation(option.id, driver.id)?.evaluationDetails || []
-                                )
-                              "
-                            />
-                            <v-list-item
-                              prepend-icon="mdi-robot"
-                              title="Edit with AI"
-                              @click="appendAIPromptForEvaluationDetail(option, driver)"
-                            />
-                          </v-list>
-                        </v-menu>
+                                {{ detail }}
+                              </li>
+                            </ul>
+                            <span v-else class="empty-placeholder">Click to add evaluation...</span>
+                          </div>
+                        </Editable>
                       </div>
                       <span v-else class="text-grey">N/A</span>
                     </td>
