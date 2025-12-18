@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import type { MermaidCellConfigInput } from '../../types/detail-table.schema'
 import ClickMenu, { type ClickMenuItem } from '../ClickMenu.vue'
-import TextEditDialog from '../TextEditDialog.vue'
+import MermaidEditDialog from '../MermaidEditDialog.vue'
 import { VueMermaidRender } from 'vue-mermaid-render'
 
 // Mermaid configuration - white nodes, black borders
@@ -58,7 +58,7 @@ const handleSave = (newValue: string) => {
 
 <template>
   <ClickMenu
-    v-if="editable && config.editable"
+    v-if="editable && config.editable !== false"
     :items="menuItems"
     @select="handleMenuSelect"
   >
@@ -80,11 +80,10 @@ const handleSave = (newValue: string) => {
     <span v-else class="text-grey text-caption">No diagram</span>
   </div>
 
-  <TextEditDialog
+  <MermaidEditDialog
     v-model="dialogOpen"
     :title="`Edit ${config.header}`"
     :value="value ?? ''"
-    :multiline="true"
     @save="handleSave"
   />
 </template>
