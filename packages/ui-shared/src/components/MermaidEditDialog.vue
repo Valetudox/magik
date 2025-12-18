@@ -160,13 +160,5 @@ const handleCancel = () => {
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.preview-container :deep(svg) {
-  max-width: 100%;
-  height: auto;
 }
 </style>
