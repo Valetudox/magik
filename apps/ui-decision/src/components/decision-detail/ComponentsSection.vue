@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ListBox } from '@magik/ui-shared'
+import { ref } from 'vue'
+import { ListBox, NameDescriptionDialog } from '@magik/ui-shared'
+import ConfirmDialog from '../ConfirmDialog.vue'
 
 export interface ComponentItem {
   id: string
@@ -11,12 +13,47 @@ defineProps<{
   components: ComponentItem[]
 }>()
 
-defineEmits<{
-  add: []
-  edit: [component: ComponentItem]
-  delete: [component: ComponentItem]
+const emit = defineEmits<{
+  create: [data: { name: string; description: string }]
+  update: [id: string, data: { name: string; description: string }]
+  delete: [id: string]
   'edit-ai': [component: ComponentItem]
 }>()
+
+// Dialog state
+const showDialog = ref(false)
+const showConfirmDialog = ref(false)
+const editingItem = ref<ComponentItem | null>(null)
+const deletingItem = ref<ComponentItem | null>(null)
+
+const openAddDialog = () => {
+  editingItem.value = null
+  showDialog.value = true
+}
+
+const openEditDialog = (component: ComponentItem) => {
+  editingItem.value = component
+  showDialog.value = true
+}
+
+const handleSave = (data: { name: string; description: string }) => {
+  if (editingItem.value) {
+    emit('update', editingItem.value.id, data)
+  } else {
+    emit('create', data)
+  }
+}
+
+const confirmDelete = (component: ComponentItem) => {
+  deletingItem.value = component
+  showConfirmDialog.value = true
+}
+
+const handleDelete = () => {
+  if (deletingItem.value) {
+    emit('delete', deletingItem.value.id)
+  }
+}
 </script>
 
 <template>
@@ -24,7 +61,7 @@ defineEmits<{
     title="Components"
     class="mb-4"
     empty-text="No components yet. Click + to add one."
-    @add="$emit('add')"
+    @add="openAddDialog"
   >
     <template v-if="components && components.length > 0">
       <v-card
@@ -39,24 +76,24 @@ defineEmits<{
               <span
                 v-bind="props"
                 class="clickable-header"
-                @dblclick.stop="$emit('edit', component)"
+                @dblclick.stop="openEditDialog(component)"
               >{{ component.name }}</span>
             </template>
             <v-list density="compact">
               <v-list-item
                 prepend-icon="mdi-pencil"
                 title="Edit"
-                @click="$emit('edit', component)"
+                @click="openEditDialog(component)"
               />
               <v-list-item
                 prepend-icon="mdi-robot"
                 title="Edit with AI"
-                @click="$emit('edit-ai', component)"
+                @click="emit('edit-ai', component)"
               />
               <v-list-item
                 prepend-icon="mdi-delete"
                 title="Delete"
-                @click="$emit('delete', component)"
+                @click="confirmDelete(component)"
               />
             </v-list>
           </v-menu>
@@ -65,6 +102,20 @@ defineEmits<{
       </v-card>
     </template>
   </ListBox>
+
+  <NameDescriptionDialog
+    v-model="showDialog"
+    entity-name="Component"
+    :edit-item="editingItem"
+    @save="handleSave"
+  />
+
+  <ConfirmDialog
+    v-model="showConfirmDialog"
+    title="Delete Component"
+    :message="`Are you sure you want to delete '${deletingItem?.name}'?`"
+    @confirm="handleDelete"
+  />
 </template>
 
 <style scoped>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import {
   EntityDetailTable,
+  NameDescriptionDialog,
   type DetailTableConfigInput,
   type CellUpdatePayload,
   type EditAiPayload,
@@ -10,6 +11,8 @@ import {
   type SpecialRowUpdatePayload,
   type SpecialRowEditAiPayload,
 } from '@magik/ui-shared'
+import OptionDialog from '../OptionDialog.vue'
+import ConfirmDialog from '../ConfirmDialog.vue'
 
 export interface Option {
   id: string
@@ -42,19 +45,95 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'add-option': []
-  'add-driver': []
-  'edit-option': [option: Option]
-  'delete-option': [option: Option]
+  // Option events
+  'create-option': [data: { name: string; description: string; moreLink?: string }]
+  'update-option': [id: string, data: { name: string; description: string; moreLink?: string }]
+  'delete-option': [id: string]
   'select-option': [optionId: string | null]
-  'edit-driver': [driver: Driver]
-  'delete-driver': [driver: Driver]
-  'update-rating': [optionId: string, driverId: string, rating: 'high' | 'medium' | 'low' | null]
-  'update-evaluation-details': [optionId: string, driverId: string, details: string[]]
   'update-option-description': [optionId: string, description: string]
   'update-option-diagram': [optionId: string, diagram: string]
+  // Driver events
+  'create-driver': [data: { name: string; description: string }]
+  'update-driver': [id: string, data: { name: string; description: string }]
+  'delete-driver': [id: string]
+  // Evaluation events
+  'update-rating': [optionId: string, driverId: string, rating: 'high' | 'medium' | 'low' | null]
+  'update-evaluation-details': [optionId: string, driverId: string, details: string[]]
+  // AI events
   'edit-ai': [context: { type: 'evaluation' | 'description' | 'diagram'; optionName: string; driverName?: string }]
 }>()
+
+// Option dialog state
+const showOptionDialog = ref(false)
+const editingOption = ref<Option | null>(null)
+
+// Driver dialog state
+const showDriverDialog = ref(false)
+const editingDriver = ref<Driver | null>(null)
+
+// Confirm dialog state
+const showConfirmDialog = ref(false)
+const confirmDialogData = ref<{ title: string; message: string; onConfirm: () => void } | null>(null)
+
+// Option handlers
+const openAddOptionDialog = () => {
+  editingOption.value = null
+  showOptionDialog.value = true
+}
+
+const openEditOptionDialog = (option: Option) => {
+  editingOption.value = option
+  showOptionDialog.value = true
+}
+
+const handleSaveOption = (data: { name: string; description: string; moreLink?: string }) => {
+  if (editingOption.value) {
+    emit('update-option', editingOption.value.id, data)
+  } else {
+    emit('create-option', data)
+  }
+}
+
+const confirmDeleteOption = (option: Option) => {
+  confirmDialogData.value = {
+    title: 'Delete Option',
+    message: `Are you sure you want to delete "${option.name}"? This will also remove all evaluations for this option.`,
+    onConfirm: () => emit('delete-option', option.id),
+  }
+  showConfirmDialog.value = true
+}
+
+// Driver handlers
+const openAddDriverDialog = () => {
+  editingDriver.value = null
+  showDriverDialog.value = true
+}
+
+const openEditDriverDialog = (driver: Driver) => {
+  editingDriver.value = driver
+  showDriverDialog.value = true
+}
+
+const handleSaveDriver = (data: { name: string; description: string }) => {
+  if (editingDriver.value) {
+    emit('update-driver', editingDriver.value.id, data)
+  } else {
+    emit('create-driver', data)
+  }
+}
+
+const confirmDeleteDriver = (driver: Driver) => {
+  confirmDialogData.value = {
+    title: 'Delete Driver',
+    message: `Are you sure you want to delete "${driver.name}"? This will also remove all evaluations for this driver.`,
+    onConfirm: () => emit('delete-driver', driver.id),
+  }
+  showConfirmDialog.value = true
+}
+
+const handleConfirmDialogConfirm = () => {
+  confirmDialogData.value?.onConfirm()
+}
 
 const hasAnyDiagram = computed(() => {
   return props.options.some(
@@ -180,9 +259,9 @@ const handleRowHeaderMenu = (payload: RowHeaderMenuPayload) => {
   if (!driver) return
 
   if (menuKey === 'edit') {
-    emit('edit-driver', driver)
+    openEditDriverDialog(driver)
   } else if (menuKey === 'delete') {
-    emit('delete-driver', driver)
+    confirmDeleteDriver(driver)
   }
 }
 
@@ -200,10 +279,10 @@ const handleColumnHeaderMenu = (payload: ColumnHeaderMenuPayload) => {
       emit('select-option', null)
       break
     case 'edit':
-      emit('edit-option', option)
+      openEditOptionDialog(option)
       break
     case 'delete':
-      emit('delete-option', option)
+      confirmDeleteOption(option)
       break
   }
 }
@@ -256,7 +335,7 @@ const handleSpecialRowEditAi = (payload: SpecialRowEditAiPayload) => {
           size="small"
           prepend-icon="mdi-plus"
           class="mr-2"
-          @click="$emit('add-option')"
+          @click="openAddOptionDialog"
         >
           Add Option
         </v-btn>
@@ -265,7 +344,7 @@ const handleSpecialRowEditAi = (payload: SpecialRowEditAiPayload) => {
           color="primary"
           size="small"
           prepend-icon="mdi-plus"
-          @click="$emit('add-driver')"
+          @click="openAddDriverDialog"
         >
           Add Driver
         </v-btn>
@@ -291,6 +370,29 @@ const handleSpecialRowEditAi = (payload: SpecialRowEditAiPayload) => {
       </v-card-text>
     </template>
   </EntityDetailTable>
+
+  <!-- Dialogs -->
+  <OptionDialog
+    v-model="showOptionDialog"
+    :edit-option="editingOption"
+    @save="handleSaveOption"
+  />
+
+  <NameDescriptionDialog
+    v-model="showDriverDialog"
+    entity-name="Decision Driver"
+    :edit-item="editingDriver"
+    :description-max-length="500"
+    @save="handleSaveDriver"
+  />
+
+  <ConfirmDialog
+    v-if="confirmDialogData"
+    v-model="showConfirmDialog"
+    :title="confirmDialogData.title"
+    :message="confirmDialogData.message"
+    @confirm="handleConfirmDialogConfirm"
+  />
 </template>
 
 <style scoped>

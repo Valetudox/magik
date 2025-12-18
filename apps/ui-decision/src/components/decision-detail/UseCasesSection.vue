@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ListBox } from '@magik/ui-shared'
+import { ref } from 'vue'
+import { ListBox, NameDescriptionDialog } from '@magik/ui-shared'
+import ConfirmDialog from '../ConfirmDialog.vue'
 
 export interface UseCaseItem {
   id: string
@@ -11,12 +13,47 @@ defineProps<{
   useCases: UseCaseItem[]
 }>()
 
-defineEmits<{
-  add: []
-  edit: [useCase: UseCaseItem]
-  delete: [useCase: UseCaseItem]
+const emit = defineEmits<{
+  create: [data: { name: string; description: string }]
+  update: [id: string, data: { name: string; description: string }]
+  delete: [id: string]
   'edit-ai': [useCase: UseCaseItem]
 }>()
+
+// Dialog state
+const showDialog = ref(false)
+const showConfirmDialog = ref(false)
+const editingItem = ref<UseCaseItem | null>(null)
+const deletingItem = ref<UseCaseItem | null>(null)
+
+const openAddDialog = () => {
+  editingItem.value = null
+  showDialog.value = true
+}
+
+const openEditDialog = (useCase: UseCaseItem) => {
+  editingItem.value = useCase
+  showDialog.value = true
+}
+
+const handleSave = (data: { name: string; description: string }) => {
+  if (editingItem.value) {
+    emit('update', editingItem.value.id, data)
+  } else {
+    emit('create', data)
+  }
+}
+
+const confirmDelete = (useCase: UseCaseItem) => {
+  deletingItem.value = useCase
+  showConfirmDialog.value = true
+}
+
+const handleDelete = () => {
+  if (deletingItem.value) {
+    emit('delete', deletingItem.value.id)
+  }
+}
 </script>
 
 <template>
@@ -24,7 +61,7 @@ defineEmits<{
     title="Use Cases"
     class="mb-4"
     empty-text="No use cases yet. Click + to add one."
-    @add="$emit('add')"
+    @add="openAddDialog"
   >
     <template v-if="useCases && useCases.length > 0">
       <v-card
@@ -39,24 +76,24 @@ defineEmits<{
               <span
                 v-bind="props"
                 class="clickable-header"
-                @dblclick.stop="$emit('edit', useCase)"
+                @dblclick.stop="openEditDialog(useCase)"
               >{{ useCase.name }}</span>
             </template>
             <v-list density="compact">
               <v-list-item
                 prepend-icon="mdi-pencil"
                 title="Edit"
-                @click="$emit('edit', useCase)"
+                @click="openEditDialog(useCase)"
               />
               <v-list-item
                 prepend-icon="mdi-robot"
                 title="Edit with AI"
-                @click="$emit('edit-ai', useCase)"
+                @click="emit('edit-ai', useCase)"
               />
               <v-list-item
                 prepend-icon="mdi-delete"
                 title="Delete"
-                @click="$emit('delete', useCase)"
+                @click="confirmDelete(useCase)"
               />
             </v-list>
           </v-menu>
@@ -65,6 +102,20 @@ defineEmits<{
       </v-card>
     </template>
   </ListBox>
+
+  <NameDescriptionDialog
+    v-model="showDialog"
+    entity-name="Use Case"
+    :edit-item="editingItem"
+    @save="handleSave"
+  />
+
+  <ConfirmDialog
+    v-model="showConfirmDialog"
+    title="Delete Use Case"
+    :message="`Are you sure you want to delete '${deletingItem?.name}'?`"
+    @confirm="handleDelete"
+  />
 </template>
 
 <style scoped>

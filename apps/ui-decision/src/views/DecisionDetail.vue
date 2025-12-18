@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  EntityDetailPage,
-  NameDescriptionDialog,
-  TextEditDialog,
-} from '@magik/ui-shared'
+import { EntityDetailPage, TextEditDialog } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { initSocket, onDecisionUpdated } from '../services/socket'
-import OptionDialog from '../components/OptionDialog.vue'
-import ConfirmDialog from '../components/ConfirmDialog.vue'
 import {
   ProblemDefinitionSection,
   ComponentsSection,
@@ -28,23 +22,10 @@ const decision = ref<DecisionDetail | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const showNotification = ref(false)
-
-// Use the mutations composable
-const mutations = useDecisionMutations(decisionId.value, decision)
-
-// Dialog state
-const showOptionDialog = ref(false)
-const showDriverDialog = ref(false)
-const showComponentDialog = ref(false)
-const showUseCaseDialog = ref(false)
-const showConfirmDialog = ref(false)
 const showEditConfluenceUrlDialog = ref(false)
 
-const editingOption = ref<{ id: string; name: string; description: string; moreLink?: string } | null>(null)
-const editingDriver = ref<{ id: string; name: string; description: string } | null>(null)
-const editingComponent = ref<{ id: string; name: string; description: string } | null>(null)
-const editingUseCase = ref<{ id: string; name: string; description: string } | null>(null)
-const confirmDialogData = ref<{ title: string; message: string; onConfirm: () => void } | null>(null)
+// Mutations composable for API calls
+const mutations = useDecisionMutations(decisionId.value, decision)
 
 // Socket.IO setup
 let unsubscribeUpdate: (() => void) | null = null
@@ -101,123 +82,6 @@ const openInConfluence = () => {
 
 const pullFromConfluence = () => {
   alert('Pull from Confluence - Not implemented yet')
-}
-
-// Option dialog handlers
-const openAddOptionDialog = () => {
-  editingOption.value = null
-  showOptionDialog.value = true
-}
-
-const openEditOptionDialog = (option: { id: string; name: string; description: string; moreLink?: string }) => {
-  editingOption.value = option
-  showOptionDialog.value = true
-}
-
-const handleSaveOption = async (data: { name: string; description: string; moreLink?: string }) => {
-  if (editingOption.value) {
-    await mutations.updateOption(editingOption.value.id, data)
-  } else {
-    await mutations.createOption(data)
-  }
-}
-
-const confirmDeleteOption = (option: { id: string; name: string }) => {
-  confirmDialogData.value = {
-    title: 'Delete Option',
-    message: `Are you sure you want to delete "${option.name}"? This will also remove all evaluations for this option.`,
-    onConfirm: () => void mutations.deleteOption(option.id),
-  }
-  showConfirmDialog.value = true
-}
-
-// Driver dialog handlers
-const openAddDriverDialog = () => {
-  editingDriver.value = null
-  showDriverDialog.value = true
-}
-
-const openEditDriverDialog = (driver: { id: string; name: string; description: string }) => {
-  editingDriver.value = driver
-  showDriverDialog.value = true
-}
-
-const handleSaveDriver = async (data: { name: string; description: string }) => {
-  if (editingDriver.value) {
-    await mutations.updateDriver(editingDriver.value.id, data)
-  } else {
-    await mutations.createDriver(data)
-  }
-}
-
-const confirmDeleteDriver = (driver: { id: string; name: string }) => {
-  confirmDialogData.value = {
-    title: 'Delete Driver',
-    message: `Are you sure you want to delete "${driver.name}"? This will also remove all evaluations for this driver.`,
-    onConfirm: () => void mutations.deleteDriver(driver.id),
-  }
-  showConfirmDialog.value = true
-}
-
-// Component dialog handlers
-const openAddComponentDialog = () => {
-  editingComponent.value = null
-  showComponentDialog.value = true
-}
-
-const openEditComponentDialog = (component: { id: string; name: string; description: string }) => {
-  editingComponent.value = component
-  showComponentDialog.value = true
-}
-
-const handleSaveComponent = async (data: { name: string; description: string }) => {
-  if (editingComponent.value) {
-    await mutations.updateComponent(editingComponent.value.id, data)
-  } else {
-    await mutations.createComponent(data)
-  }
-}
-
-const confirmDeleteComponent = (component: { id: string; name: string }) => {
-  confirmDialogData.value = {
-    title: 'Delete Component',
-    message: `Are you sure you want to delete "${component.name}"?`,
-    onConfirm: () => void mutations.deleteComponent(component.id),
-  }
-  showConfirmDialog.value = true
-}
-
-// Use Case dialog handlers
-const openAddUseCaseDialog = () => {
-  editingUseCase.value = null
-  showUseCaseDialog.value = true
-}
-
-const openEditUseCaseDialog = (useCase: { id: string; name: string; description: string }) => {
-  editingUseCase.value = useCase
-  showUseCaseDialog.value = true
-}
-
-const handleSaveUseCase = async (data: { name: string; description: string }) => {
-  if (editingUseCase.value) {
-    await mutations.updateUseCase(editingUseCase.value.id, data)
-  } else {
-    await mutations.createUseCase(data)
-  }
-}
-
-const confirmDeleteUseCase = (useCase: { id: string; name: string }) => {
-  confirmDialogData.value = {
-    title: 'Delete Use Case',
-    message: `Are you sure you want to delete "${useCase.name}"?`,
-    onConfirm: () => void mutations.deleteUseCase(useCase.id),
-  }
-  showConfirmDialog.value = true
-}
-
-// Confirm dialog
-const handleConfirmDialogConfirm = () => {
-  confirmDialogData.value?.onConfirm()
 }
 
 // AI prompt helpers
@@ -306,17 +170,17 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
 
         <ComponentsSection
           :components="decision.components ?? []"
-          @add="openAddComponentDialog"
-          @edit="openEditComponentDialog"
-          @delete="confirmDeleteComponent"
+          @create="mutations.createComponent"
+          @update="mutations.updateComponent"
+          @delete="mutations.deleteComponent"
           @edit-ai="appendAIPromptForComponent"
         />
 
         <UseCasesSection
           :use-cases="decision.useCases ?? []"
-          @add="openAddUseCaseDialog"
-          @edit="openEditUseCaseDialog"
-          @delete="confirmDeleteUseCase"
+          @create="mutations.createUseCase"
+          @update="mutations.updateUseCase"
+          @delete="mutations.deleteUseCase"
           @edit-ai="appendAIPromptForUseCase"
         />
 
@@ -346,17 +210,17 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
         :drivers="decision.decisionDrivers"
         :evaluation-matrix="decision.evaluationMatrix"
         :selected-option="decision.selectedOption"
-        @add-option="openAddOptionDialog"
-        @add-driver="openAddDriverDialog"
-        @edit-option="openEditOptionDialog"
-        @delete-option="confirmDeleteOption"
+        @create-option="mutations.createOption"
+        @update-option="mutations.updateOption"
+        @delete-option="mutations.deleteOption"
         @select-option="mutations.setSelectedOption"
-        @edit-driver="openEditDriverDialog"
-        @delete-driver="confirmDeleteDriver"
-        @update-rating="mutations.updateEvaluationRating"
-        @update-evaluation-details="mutations.updateEvaluationDetails"
         @update-option-description="mutations.updateOptionDescription"
         @update-option-diagram="mutations.updateOptionDiagram"
+        @create-driver="mutations.createDriver"
+        @update-driver="mutations.updateDriver"
+        @delete-driver="mutations.deleteDriver"
+        @update-rating="mutations.updateEvaluationRating"
+        @update-evaluation-details="mutations.updateEvaluationDetails"
         @edit-ai="handleEvaluationEditAi"
       />
     </template>
@@ -405,43 +269,7 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
       {{ mutations.notification.value.message }}
     </v-snackbar>
 
-    <!-- Dialogs -->
-    <OptionDialog
-      v-model="showOptionDialog"
-      :edit-option="editingOption"
-      @save="handleSaveOption"
-    />
-
-    <NameDescriptionDialog
-      v-model="showDriverDialog"
-      entity-name="Decision Driver"
-      :edit-item="editingDriver"
-      :description-max-length="500"
-      @save="handleSaveDriver"
-    />
-
-    <NameDescriptionDialog
-      v-model="showComponentDialog"
-      entity-name="Component"
-      :edit-item="editingComponent"
-      @save="handleSaveComponent"
-    />
-
-    <NameDescriptionDialog
-      v-model="showUseCaseDialog"
-      entity-name="Use Case"
-      :edit-item="editingUseCase"
-      @save="handleSaveUseCase"
-    />
-
-    <ConfirmDialog
-      v-if="confirmDialogData"
-      v-model="showConfirmDialog"
-      :title="confirmDialogData.title"
-      :message="confirmDialogData.message"
-      @confirm="handleConfirmDialogConfirm"
-    />
-
+    <!-- Confluence URL Dialog -->
     <TextEditDialog
       v-model="showEditConfluenceUrlDialog"
       title="Edit Confluence URL"
