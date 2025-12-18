@@ -893,7 +893,7 @@ const handleSaveConfluenceUrl = async (value: string) => {
                 :key="component.id"
                 variant="outlined"
                 class="mb-2"
-              >https://ih1.redbubble.net/image.761152374.7995/ssrco,essential_tee,mens_01,101010:01c5ca27c6,front,close_portrait,x1000.u2.jpg
+              >
                 <v-card-title class="text-subtitle-1 d-flex align-center">
                   <v-menu>
                     <template #activator="{ props }">
