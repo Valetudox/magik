@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { EntityDetailPage, ListBox } from '@magik/ui-shared'
+import { EntityDetailPage, SimpleBox, ListBox } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
@@ -674,11 +674,6 @@ const handleSaveProposalReasoning = async (newReasoning: string[]) => {
   }
 }
 
-const appendAIPromptForProblem = () => {
-  const prompt = 'Edit the problem definition: '
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-}
-
 const appendAIPromptForProposalDesc = () => {
   const prompt = 'Edit the proposal description: '
   agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
@@ -770,36 +765,15 @@ const handleSaveConfluenceUrl = async () => {
     <template #sidebar>
       <template v-if="decision">
           <!-- Problem Definition -->
-          <v-card class="mb-4">
-            <v-card-title>
-              <v-menu>
-                <template #activator="{ props }">
-                  <span
-                    v-bind="props"
-                    class="clickable-header"
-                    @dblclick.stop="openEditProblemDialog"
-                  >Problem Definition</span>
-                </template>
-                <v-list density="compact">
-                  <v-list-item
-                    prepend-icon="mdi-pencil"
-                    title="Edit"
-                    @click="openEditProblemDialog"
-                  />
-                  <v-list-item
-                    prepend-icon="mdi-robot"
-                    title="Edit with AI"
-                    @click="appendAIPromptForProblem"
-                  />
-                </v-list>
-              </v-menu>
-            </v-card-title>
-            <v-card-text>
-              <span :class="{ 'empty-placeholder': !decision.problemDefinition }">
-                {{ decision.problemDefinition || 'Click header to add problem definition...' }}
-              </span>
-            </v-card-text>
-          </v-card>
+          <SimpleBox
+            title="Problem Definition"
+            class="mb-4"
+            @edit="openEditProblemDialog"
+          >
+            <span :class="{ 'empty-placeholder': !decision.problemDefinition }">
+              {{ decision.problemDefinition || 'Click edit to add problem definition...' }}
+            </span>
+          </SimpleBox>
 
           <!-- Components -->
           <ListBox
