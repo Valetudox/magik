@@ -23,8 +23,16 @@ const error = ref<string | null>(null)
 const showNotification = ref(false)
 const showEditConfluenceUrlDialog = ref(false)
 
+// Reference to EntityDetailPage for agent prompt
+const detailPageRef = ref<InstanceType<typeof EntityDetailPage> | null>(null)
+
 // Mutations composable for API calls
 const mutations = useDecisionMutations(decisionId.value, decision)
+
+// Agent submit handler
+const handleAgentSubmit = async (prompt: string) => {
+  await api.askAgent(decisionId.value, prompt)
+}
 
 // Socket.IO setup
 let unsubscribeUpdate: (() => void) | null = null
@@ -83,41 +91,44 @@ const pullFromConfluence = () => {
 
 // AI prompt helpers
 const appendAIPromptForProblem = () => {
-  mutations.appendToAgentPrompt('Edit the problem definition: ')
+  detailPageRef.value?.appendToAgentPrompt('Edit the problem definition: ')
 }
 
 const appendAIPromptForProposalDesc = () => {
-  mutations.appendToAgentPrompt('Edit the proposal description: ')
+  detailPageRef.value?.appendToAgentPrompt('Edit the proposal description: ')
 }
 
 const appendAIPromptForProposalReasoning = () => {
-  mutations.appendToAgentPrompt('Edit the proposal reasoning: ')
+  detailPageRef.value?.appendToAgentPrompt('Edit the proposal reasoning: ')
 }
 
 const appendAIPromptForComponent = (component: { name: string }) => {
-  mutations.appendToAgentPrompt(`Edit the component "${component.name}": `)
+  detailPageRef.value?.appendToAgentPrompt(`Edit the component "${component.name}": `)
 }
 
 const appendAIPromptForUseCase = (useCase: { name: string }) => {
-  mutations.appendToAgentPrompt(`Edit the use case "${useCase.name}": `)
+  detailPageRef.value?.appendToAgentPrompt(`Edit the use case "${useCase.name}": `)
 }
 
 const handleEvaluationEditAi = (context: { type: string; optionName: string; driverName?: string }) => {
   if (context.type === 'evaluation' && context.driverName) {
-    mutations.appendToAgentPrompt(`Edit the "${context.optionName}" - "${context.driverName}" evaluation: `)
+    detailPageRef.value?.appendToAgentPrompt(`Edit the "${context.optionName}" - "${context.driverName}" evaluation: `)
   } else if (context.type === 'description') {
-    mutations.appendToAgentPrompt(`Edit the description of "${context.optionName}": `)
+    detailPageRef.value?.appendToAgentPrompt(`Edit the description of "${context.optionName}": `)
   } else if (context.type === 'diagram') {
-    mutations.appendToAgentPrompt(`Edit the architecture diagram of "${context.optionName}": `)
+    detailPageRef.value?.appendToAgentPrompt(`Edit the architecture diagram of "${context.optionName}": `)
   }
 }
 </script>
 
 <template>
   <EntityDetailPage
+    ref="detailPageRef"
     title="Decision Documents"
     :subtitle="decision?.id.replace(/-/g, ' ') || 'Loading...'"
     go-back-url="/"
+    :on-agent-submit="handleAgentSubmit"
+    agent-placeholder="Ask the AI to modify this decision..."
   >
     <template #title-actions>
       <div class="d-flex ga-2">
@@ -233,32 +244,6 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
       />
     </template>
 
-    <!-- AI Agent Input -->
-    <div class="agent-input-container">
-      <v-textarea
-        v-model="mutations.agentPrompt.value"
-        placeholder="Ask the AI to modify this decision..."
-        variant="outlined"
-        hide-details
-        auto-grow
-        rows="1"
-        :loading="mutations.agentProcessing.value"
-        :disabled="mutations.agentProcessing.value"
-        @keyup.ctrl.enter="mutations.submitAgentPrompt"
-        @keyup.meta.enter="mutations.submitAgentPrompt"
-      >
-        <template #append-inner>
-          <v-btn
-            icon="mdi-send"
-            variant="text"
-            :loading="mutations.agentProcessing.value"
-            :disabled="!mutations.agentPrompt.value.trim() || mutations.agentProcessing.value"
-            @click="mutations.submitAgentPrompt"
-          />
-        </template>
-      </v-textarea>
-    </div>
-
     <!-- Notifications -->
     <v-snackbar v-model="showNotification" :timeout="3000" color="success" location="top">
       <v-icon start>mdi-refresh</v-icon>
@@ -304,14 +289,5 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
 :deep(.v-table tbody td:first-child) {
   width: 15% !important;
   min-width: 250px !important;
-}
-
-.agent-input-container {
-  position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1500px;
-  z-index: 100;
 }
 </style>

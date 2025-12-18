@@ -34,30 +34,6 @@ export function useDecisionMutations(
     }
   }
 
-  // AI prompt state
-  const agentPrompt = ref('')
-  const agentProcessing = ref(false)
-
-  const appendToAgentPrompt = (prompt: string) => {
-    agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-  }
-
-  const submitAgentPrompt = async () => {
-    if (!agentPrompt.value.trim()) return
-
-    agentProcessing.value = true
-    const prompt = agentPrompt.value.trim()
-
-    try {
-      await api.askAgent(decisionId, prompt)
-      agentPrompt.value = ''
-    } catch (err) {
-      showError(err, 'Failed to process request')
-    } finally {
-      agentProcessing.value = false
-    }
-  }
-
   // Problem Definition
   const updateProblemDefinition = async (value: string) => {
     try {
@@ -282,12 +258,6 @@ export function useDecisionMutations(
     notification,
     showError,
     showSuccess,
-
-    // Agent
-    agentPrompt,
-    agentProcessing,
-    appendToAgentPrompt,
-    submitAgentPrompt,
 
     // Problem Definition
     updateProblemDefinition,
