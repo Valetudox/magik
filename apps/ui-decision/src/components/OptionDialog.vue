@@ -49,6 +49,7 @@ watch(modelValue, (open) => {
 })
 
 const handleSave = async () => {
+  if (!form.value) return
   const { valid } = await form.value.validate()
   if (!valid) return
 

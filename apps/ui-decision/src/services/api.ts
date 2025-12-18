@@ -55,7 +55,7 @@ export const api = {
 
   async updateDecision(
     id: string,
-    updates: { problemDefinition?: string; proposal?: { description: string; reasoning: string[] } }
+    updates: { problemDefinition?: string; proposal?: { description: string; reasoning: string[] }; confluenceLink?: string }
   ): Promise<{ success: boolean }> {
     const response = await fetch(`${API_BASE_URL}/decisions/${encodeURIComponent(id)}`, {
       method: 'PATCH',

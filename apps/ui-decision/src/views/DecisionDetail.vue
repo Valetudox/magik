@@ -48,7 +48,7 @@ const config = computed<DetailPageConfig>(() => ({
   agent: {
     enabled: true,
     placeholder: 'Ask the AI to modify this decision...',
-    onSubmit: (prompt: string) => api.askAgent(decisionId.value, prompt),
+    onSubmit: async (prompt: string) => { await api.askAgent(decisionId.value, prompt) },
   },
 }))
 

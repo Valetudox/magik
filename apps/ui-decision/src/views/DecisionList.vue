@@ -51,7 +51,7 @@ const bulkPushConfig: BulkOperationConfig<DecisionSummary> = {
 }
 
 // Handle bulk push to Confluence
-const handleBulkPush = (selectedIds: string[], items: DecisionSummary[]) => {
+const handleBulkPush = (_selectedIds: string[], items: DecisionSummary[]) => {
   bulkPushItems.value = items
   showBulkPushDialog.value = true
 }
@@ -168,7 +168,7 @@ const config: ListPageConfig<DecisionSummary> = {
       label: 'Push to Confluence',
       icon: 'mdi-upload',
       onClick: handleBulkPush,
-      disabled: (selectedIds, items) => items.some((item) => !item.confluenceLink),
+      disabled: (_selectedIds, items) => items.some((item) => !item.confluenceLink),
     },
   ],
 
@@ -180,7 +180,7 @@ const config: ListPageConfig<DecisionSummary> = {
 
   endpoints: {
     list: () => api.getDecisions(),
-    delete: (id) => api.deleteDecision(id),
+    delete: async (id) => { await api.deleteDecision(id) },
   },
 
   pageUrls: {
