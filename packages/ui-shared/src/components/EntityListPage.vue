@@ -2,6 +2,7 @@
 import { computed, h } from 'vue'
 import { useListPage } from '../composables/useListPage'
 import type { ListPageConfig, RowActionConfig, BulkActionConfig } from '../types/list-page.schema'
+import AppHeader from './AppHeader.vue'
 import DeleteConfirmDialog from './DeleteConfirmDialog.vue'
 import BulkOperationProgress from './BulkOperationProgress.vue'
 import BulkActionsToolbar from './list-page/BulkActionsToolbar.vue'
@@ -109,6 +110,13 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
 
 <template>
   <div class="entity-list-page">
+    <!-- App header with page title -->
+    <AppHeader>
+      <template #title>
+        {{ config.pageTitle }}
+      </template>
+    </AppHeader>
+
     <!-- Main content -->
     <v-container fluid>
       <!-- Loading state -->

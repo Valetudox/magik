@@ -219,6 +219,7 @@ export const socketConfigSchema = z.discriminatedUnion('enabled', [
 ]).describe('Socket.IO configuration discriminated by enabled state')
 
 const baseConfigSchema = z.object({
+  pageTitle: z.string().min(1).describe('Title displayed in the app header'),
   entityId: z.string().min(1).describe('Property name used as unique identifier'),
   entityName: z.string().min(1).describe('Singular entity display name'),
   entityNamePlural: z.string().min(1).describe('Plural entity display name'),

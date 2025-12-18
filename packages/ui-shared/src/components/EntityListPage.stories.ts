@@ -109,6 +109,7 @@ export const Minimal: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -142,6 +143,7 @@ export const WithSearchAndSort: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -180,6 +182,7 @@ export const WithCustomFormatters: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -246,6 +249,7 @@ export const WithRowActions: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -326,6 +330,7 @@ export const WithBulkOperations: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -416,6 +421,7 @@ export const WithCreateAction: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',
@@ -495,6 +501,7 @@ export const CompleteExample: Story = {
   },
   args: {
     config: {
+      pageTitle: 'Items',
       entityId: 'id',
       entityName: 'Item',
       entityNamePlural: 'Items',

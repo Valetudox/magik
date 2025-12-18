@@ -64,9 +64,10 @@ const handleDecisionCreated = (result: { id: string; [key: string]: any }) => {
 
 // Configuration
 const config: ListPageConfig<DecisionSummary> = {
+  pageTitle: 'Decision Documents',
   entityId: 'id',
   entityName: 'Decision',
-  entityNamePlural: 'Decision Documents',
+  entityNamePlural: 'Decisions',
 
   fields: [
     {
@@ -241,10 +242,6 @@ const config: ListPageConfig<DecisionSummary> = {
 
 <template>
   <div>
-    <Teleport to="#header-title-slot">
-      <div>Decision Documents</div>
-    </Teleport>
-
     <EntityListPage :config="config">
       <!-- Custom create dialog using slot -->
       <template #create-dialog="{ show, onClose }">

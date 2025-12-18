@@ -12,9 +12,10 @@ import type { Recording } from '@magik/backend-audio-client'
 import { api } from '../services/api'
 
 const config: ListPageConfig<Recording> = {
+  pageTitle: 'Audio Recordings',
   entityId: 'id',
   entityName: 'Recording',
-  entityNamePlural: 'Audio Recordings',
+  entityNamePlural: 'Recordings',
 
   fields: [
     {
@@ -121,9 +122,6 @@ const config: ListPageConfig<Recording> = {
 
 <template>
   <div>
-    <Teleport to="#header-title-slot">
-      <div>Audio Recordings</div>
-    </Teleport>
     <EntityListPage :config="config" />
   </div>
 </template>
