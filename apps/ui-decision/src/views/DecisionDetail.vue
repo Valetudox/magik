@@ -13,7 +13,6 @@ import {
   type ClickMenuItem,
   NameDescriptionDialog,
   TextEditDialog,
-  ListEditDialog,
   type DetailTableConfigInput,
   type CellUpdatePayload,
   type EditAiPayload,
@@ -730,12 +729,6 @@ const confirmDeleteUseCase = (useCase: { id: string; name: string }) => {
   showConfirmDialog.value = true
 }
 
-// Proposal description edit dialog state
-const showEditProposalDescDialog = ref(false)
-
-// Proposal reasoning edit dialog state
-const showEditProposalReasoningDialog = ref(false)
-
 const handleSaveProblemDefinition = async (value: string) => {
   try {
     const decisionId = route.params.id as string
@@ -749,16 +742,12 @@ const handleSaveProblemDefinition = async (value: string) => {
   }
 }
 
-const openEditProposalDescDialog = () => {
-  showEditProposalDescDialog.value = true
-}
-
-const handleSaveProposalDesc = async (value: string) => {
+const handleSaveProposalDesc = async (value: string | string[]) => {
   try {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, {
       proposal: {
-        description: value,
+        description: value as string,
         reasoning: decision.value?.proposal.reasoning ?? [],
       },
     })
@@ -771,17 +760,13 @@ const handleSaveProposalDesc = async (value: string) => {
   }
 }
 
-const openEditProposalReasoningDialog = () => {
-  showEditProposalReasoningDialog.value = true
-}
-
-const handleSaveProposalReasoning = async (items: string[]) => {
+const handleSaveProposalReasoning = async (value: string | string[]) => {
   try {
     const decisionId = route.params.id as string
     await api.updateDecision(decisionId, {
       proposal: {
         description: decision.value?.proposal.description ?? '',
-        reasoning: items,
+        reasoning: value as string[],
       },
     })
   } catch (err: unknown) {
@@ -991,21 +976,21 @@ const handleSaveConfluenceUrl = async (value: string) => {
 
           <!-- Proposal -->
           <SectionedBox title="Proposal">
-            <BoxSection @edit="openEditProposalDescDialog" @edit-ai="appendAIPromptForProposalDesc">
-              <span :class="{ 'empty-placeholder': !decision.proposal.description }">
-                {{ decision.proposal.description || 'Double-click to add proposal description...' }}
-              </span>
-            </BoxSection>
-            <BoxSection title="Reasoning" @edit="openEditProposalReasoningDialog" @edit-ai="appendAIPromptForProposalReasoning">
-              <ul v-if="decision.proposal.reasoning.length > 0" class="reasoning-list">
-                <li v-for="(reason, index) in decision.proposal.reasoning" :key="index">
-                  {{ reason }}
-                </li>
-              </ul>
-              <span v-else class="empty-placeholder">
-                Double-click to add reasoning...
-              </span>
-            </BoxSection>
+            <BoxSection
+              type="text"
+              :value="decision.proposal.description"
+              empty-text="Double-click to add proposal description..."
+              @update="handleSaveProposalDesc"
+              @edit-ai="appendAIPromptForProposalDesc"
+            />
+            <BoxSection
+              title="Reasoning"
+              type="list"
+              :items="decision.proposal.reasoning"
+              empty-text="Double-click to add reasoning..."
+              @update="handleSaveProposalReasoning"
+              @edit-ai="appendAIPromptForProposalReasoning"
+            />
           </SectionedBox>
       </template>
     </template>
@@ -1185,25 +1170,6 @@ const handleSaveConfluenceUrl = async (value: string) => {
       :title="confirmDialogData.title"
       :message="confirmDialogData.message"
       @confirm="handleConfirmDialogConfirm"
-    />
-
-    <!-- Edit Proposal Description Dialog -->
-    <TextEditDialog
-      v-model="showEditProposalDescDialog"
-      title="Edit Proposal"
-      label="Proposal Description"
-      :value="decision?.proposal.description ?? ''"
-      @save="handleSaveProposalDesc"
-    />
-
-    <!-- Edit Proposal Reasoning Dialog -->
-    <ListEditDialog
-      v-model="showEditProposalReasoningDialog"
-      title="Edit Proposal Reasoning"
-      :items="decision?.proposal.reasoning ?? []"
-      label="Reasoning (one per line)"
-      hint="Each line becomes a bullet point"
-      @save="handleSaveProposalReasoning"
     />
 
     <!-- Edit Confluence URL Dialog -->
