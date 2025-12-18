@@ -24,9 +24,9 @@ defineEmits<{
       @edit="$emit('edit')"
       @edit-ai="$emit('editAi')"
     >
-      <v-card-text>
+      <div class="v-card-text">
         <slot />
-      </v-card-text>
+      </div>
     </Editable>
   </v-card>
 </template>

@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { ref, useSlots, cloneVNode, type VNode } from 'vue'
 
+export interface ClickMenuItem {
+  key: string
+  title: string
+  icon?: string
+  class?: string
+  disabled?: boolean
+}
+
 const props = withDefaults(
   defineProps<{
-    editable?: boolean
+    items: ClickMenuItem[]
+    disabled?: boolean
   }>(),
   {
-    editable: true,
+    disabled: false,
   }
 )
 
 const emit = defineEmits<{
-  edit: []
-  editAi: []
+  select: [key: string]
 }>()
 
 const slots = useSlots()
@@ -20,10 +28,15 @@ const menuOpen = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 
 const onDblclick = (event: MouseEvent) => {
-  if (!props.editable) return
+  if (props.disabled) return
   event.stopPropagation()
   menuPosition.value = { x: event.clientX, y: event.clientY }
   menuOpen.value = true
+}
+
+const handleSelect = (key: string) => {
+  emit('select', key)
+  menuOpen.value = false
 }
 
 const renderSlot = (): VNode | null => {
@@ -33,7 +46,7 @@ const renderSlot = (): VNode | null => {
   const child = children[0]
   if (!child) return null
 
-  return cloneVNode(child, props.editable ? { onDblclick } : {})
+  return cloneVNode(child, props.disabled ? {} : { onDblclick })
 }
 </script>
 
@@ -41,21 +54,20 @@ const renderSlot = (): VNode | null => {
   <component :is="renderSlot" />
 
   <v-menu
-    v-if="props.editable"
+    v-if="!props.disabled"
     v-model="menuOpen"
     :target="[menuPosition.x, menuPosition.y]"
     location="end"
   >
     <v-list density="compact">
       <v-list-item
-        prepend-icon="mdi-pencil"
-        title="Edit"
-        @click="emit('edit')"
-      />
-      <v-list-item
-        prepend-icon="mdi-robot"
-        title="Edit with AI"
-        @click="emit('editAi')"
+        v-for="item in props.items"
+        :key="item.key"
+        :prepend-icon="item.icon"
+        :title="item.title"
+        :class="item.class"
+        :disabled="item.disabled"
+        @click="handleSelect(item.key)"
       />
     </v-list>
   </v-menu>

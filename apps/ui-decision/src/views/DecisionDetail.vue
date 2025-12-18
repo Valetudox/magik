@@ -8,6 +8,8 @@ import {
   SectionedBox,
   BoxSection,
   Editable,
+  ClickMenu,
+  type ClickMenuItem,
   NameDescriptionDialog,
   TextEditDialog,
   ListEditDialog,
@@ -340,6 +342,52 @@ const handleSetSelectedOption = async (optionId: string | null) => {
       message: (err as Error).message ?? 'Failed to update selection',
       type: 'error',
     }
+  }
+}
+
+// Option menu items and handler
+const getOptionMenuItems = (option: { id: string }): ClickMenuItem[] => {
+  const isSelected = decision.value?.selectedOption === option.id
+  return [
+    isSelected
+      ? { key: 'clearSelection', icon: 'mdi-close-circle-outline', title: 'Clear selection' }
+      : { key: 'select', icon: 'mdi-check-circle-outline', title: 'Select' },
+    { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
+    { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
+  ]
+}
+
+const handleOptionMenuSelect = (key: string, option: { id: string; name: string; description: string; moreLink?: string }) => {
+  switch (key) {
+    case 'select':
+      void handleSetSelectedOption(option.id)
+      break
+    case 'clearSelection':
+      void handleSetSelectedOption(null)
+      break
+    case 'edit':
+      openEditOptionDialog(option)
+      break
+    case 'delete':
+      confirmDeleteOption(option)
+      break
+  }
+}
+
+// Driver menu items and handler
+const driverMenuItems: ClickMenuItem[] = [
+  { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
+  { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
+]
+
+const handleDriverMenuSelect = (key: string, driver: { id: string; name: string; description: string }) => {
+  switch (key) {
+    case 'edit':
+      openEditDriverDialog(driver)
+      break
+    case 'delete':
+      confirmDeleteDriver(driver)
+      break
   }
 }
 
@@ -928,43 +976,17 @@ const handleSaveConfluenceUrl = async (value: string) => {
                       class="text-left"
                       :style="{ width: optionColumnWidth }"
                     >
-                      <v-menu>
-                        <template #activator="{ props }">
-                          <span
-                            v-bind="props"
-                            class="option-name"
-                            :class="{ 'font-weight-bold': decision.selectedOption === option.id }"
-                            @dblclick.stop="openEditOptionDialog(option)"
-                          >
-                            {{ option.name }}
-                          </span>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            v-if="decision.selectedOption === option.id"
-                            prepend-icon="mdi-close-circle-outline"
-                            title="Clear selection"
-                            @click="handleSetSelectedOption(null)"
-                          />
-                          <v-list-item
-                            v-else
-                            prepend-icon="mdi-check-circle-outline"
-                            title="Select"
-                            @click="handleSetSelectedOption(option.id)"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditOptionDialog(option)"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-delete"
-                            title="Remove"
-                            class="text-error"
-                            @click="confirmDeleteOption(option)"
-                          />
-                        </v-list>
-                      </v-menu>
+                      <ClickMenu
+                        :items="getOptionMenuItems(option)"
+                        @select="handleOptionMenuSelect($event, option)"
+                      >
+                        <span
+                          class="option-name"
+                          :class="{ 'font-weight-bold': decision.selectedOption === option.id }"
+                        >
+                          {{ option.name }}
+                        </span>
+                      </ClickMenu>
                       <v-chip
                         v-if="decision.selectedOption === option.id"
                         color="success"
@@ -1024,15 +1046,14 @@ const handleSaveConfluenceUrl = async (value: string) => {
                   <!-- Evaluation Rows -->
                   <tr v-for="driver in decision.decisionDrivers" :key="driver.id">
                     <td class="font-weight-bold">
-                      <v-menu>
-                        <template #activator="{ props: menuProps }">
+                      <ClickMenu
+                        :items="driverMenuItems"
+                        @select="handleDriverMenuSelect($event, driver)"
+                      >
+                        <span class="driver-name-wrapper">
                           <v-tooltip location="right">
                             <template #activator="{ props: tooltipProps }">
-                              <span
-                                v-bind="{ ...menuProps, ...tooltipProps }"
-                                class="driver-name"
-                                @dblclick.stop="openEditDriverDialog(driver)"
-                              >
+                              <span v-bind="tooltipProps" class="driver-name">
                                 {{ driver.name }}
                               </span>
                             </template>
@@ -1040,21 +1061,8 @@ const handleSaveConfluenceUrl = async (value: string) => {
                               {{ driver.description }}
                             </div>
                           </v-tooltip>
-                        </template>
-                        <v-list density="compact">
-                          <v-list-item
-                            prepend-icon="mdi-pencil"
-                            title="Edit"
-                            @click="openEditDriverDialog(driver)"
-                          />
-                          <v-list-item
-                            prepend-icon="mdi-delete"
-                            title="Remove"
-                            class="text-error"
-                            @click="confirmDeleteDriver(driver)"
-                          />
-                        </v-list>
-                      </v-menu>
+                        </span>
+                      </ClickMenu>
                     </td>
                     <td
                       v-for="option in decision.options"
