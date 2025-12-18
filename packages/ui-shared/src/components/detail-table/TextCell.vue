@@ -37,7 +37,7 @@ const handleSave = (newValue: string) => {
 
 <template>
   <ClickMenu
-    v-if="editable && config.editable"
+    v-if="editable && config.editable !== false"
     :items="menuItems"
     @select="handleMenuSelect"
   >

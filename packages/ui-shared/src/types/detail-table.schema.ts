@@ -48,7 +48,7 @@ const baseCellConfig = z.object({
   editable: z.boolean().optional().default(true),
   rating: ratingDecoratorSchema.optional(), // Optional rating bar on left
   headerMenu: z.array(menuItemSchema).optional(), // Context menu for column header
-  headerBadge: headerBadgeSchema.optional(), // Badge shown next to header
+  headerBadges: z.array(headerBadgeSchema).optional(), // Badges shown next to header
 })
 
 // Text cell - simple text with TextEditDialog

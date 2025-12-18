@@ -28,7 +28,7 @@ A config-driven table component for detail pages. Supports multiple cell types a
 |------|-------------|-------------|
 | \`text\` | Simple text | TextEditDialog |
 | \`list\` | Array of strings | ListEditDialog |
-| \`mermaid\` | Mermaid diagram | TextEditDialog (multiline) |
+| \`mermaid\` | Mermaid diagram | MermaidEditDialog (side-by-side editor + preview) |
 | \`custom\` | Custom slot | User-defined |
 
 ## Rating Decorator
@@ -48,6 +48,22 @@ Any cell can have a rating bar by adding the \`rating\` property:
       { key: 'low', label: 'Low', color: 'error' },
     ],
   }
+}
+\`\`\`
+
+## Header Badges
+
+Add visual badges to column headers with \`headerBadges\` (array):
+
+\`\`\`ts
+{
+  type: 'text',
+  key: 'option-a',
+  header: 'Option A',
+  headerBadges: [
+    { label: 'Selected', color: 'success', icon: 'mdi-check-circle' },
+    { label: 'Best Value', color: 'info' },
+  ],
 }
 \`\`\`
         `,
@@ -424,6 +440,192 @@ export const ReadOnly: Story = {
 }
 
 /**
+ * Editable table - double-click any cell to edit.
+ * Demonstrates text, list, and mermaid cell editing.
+ */
+export const Editable: Story = {
+  args: {
+    config: {
+      rowKey: 'id',
+      columns: [],
+    } as DetailTableConfigInput,
+    rows: [],
+  },
+  render: () => ({
+    components: { EntityDetailTable },
+    setup: () => {
+      const config: DetailTableConfigInput = {
+        rowKey: 'id',
+        editable: true,
+        rowHeader: { key: 'name', header: 'Service', width: '150px' },
+        columns: [
+          { type: 'text', key: 'description', header: 'Description' },
+          { type: 'list', key: 'features', header: 'Features' },
+          { type: 'mermaid', key: 'diagram', header: 'Architecture' },
+        ],
+      }
+      const rows = ref([
+        {
+          id: '1',
+          name: 'API Gateway',
+          description: 'Handles all incoming requests and routes them to appropriate services',
+          features: ['Rate limiting', 'Authentication', 'Load balancing'],
+          diagram: 'graph LR\n  Client --> Gateway\n  Gateway --> ServiceA\n  Gateway --> ServiceB',
+        },
+        {
+          id: '2',
+          name: 'User Service',
+          description: 'Manages user accounts and profiles',
+          features: ['Registration', 'Profile management', 'Password reset'],
+          diagram: 'graph TD\n  API[API Layer] --> BL[Business Logic]\n  BL --> DB[(Database)]',
+        },
+      ])
+
+      const handleUpdate = (payload: { rowKey: string; columnKey: string; value: unknown }) => {
+        console.log('Cell updated:', payload)
+        const row = rows.value.find((r) => r.id === payload.rowKey)
+        if (row) {
+          ;(row as Record<string, unknown>)[payload.columnKey] = payload.value
+        }
+      }
+
+      return { config, rows, handleUpdate }
+    },
+    template: `
+      <EntityDetailTable
+        :config="config"
+        :rows="rows"
+        @update:cell="handleUpdate"
+      >
+        <template #title>
+          <v-card-title>Services (double-click to edit any cell)</v-card-title>
+        </template>
+      </EntityDetailTable>
+    `,
+  }),
+}
+
+/**
+ * Column header badges - visual indicators on column headers.
+ */
+export const WithBadges: Story = {
+  args: {
+    config: {
+      rowKey: 'id',
+      columns: [],
+    } as DetailTableConfigInput,
+    rows: [],
+  },
+  render: () => ({
+    components: { EntityDetailTable },
+    setup: () => {
+      const config: DetailTableConfigInput = {
+        rowKey: 'id',
+        rowHeader: { key: 'criteria', header: 'Criteria', width: '150px' },
+        columns: [
+          {
+            type: 'text',
+            key: 'option-a',
+            header: 'Option A',
+            headerBadges: [
+              { label: 'Selected', color: 'success', icon: 'mdi-check-circle' },
+              { label: 'Best Value', color: 'info' },
+            ],
+          },
+          {
+            type: 'text',
+            key: 'option-b',
+            header: 'Option B',
+            headerBadges: [{ label: 'Runner-up', color: 'warning' }],
+          },
+          {
+            type: 'text',
+            key: 'option-c',
+            header: 'Option C',
+            // No badges
+          },
+        ],
+      }
+      const rows = [
+        { id: '1', criteria: 'Cost', 'option-a': '$100/mo', 'option-b': '$150/mo', 'option-c': '$200/mo' },
+        { id: '2', criteria: 'Support', 'option-a': '24/7', 'option-b': 'Business hours', 'option-c': 'Email only' },
+        { id: '3', criteria: 'Features', 'option-a': 'Full', 'option-b': 'Standard', 'option-c': 'Basic' },
+      ]
+      return { config, rows }
+    },
+    template: `
+      <EntityDetailTable :config="config" :rows="rows">
+        <template #title>
+          <v-card-title>Options Comparison (with header badges)</v-card-title>
+        </template>
+      </EntityDetailTable>
+    `,
+  }),
+}
+
+/**
+ * Row headers with tooltips - hover over row names to see descriptions.
+ */
+export const WithTooltips: Story = {
+  args: {
+    config: {
+      rowKey: 'id',
+      columns: [],
+    } as DetailTableConfigInput,
+    rows: [],
+  },
+  render: () => ({
+    components: { EntityDetailTable },
+    setup: () => {
+      const config: DetailTableConfigInput = {
+        rowKey: 'id',
+        rowHeader: {
+          key: 'name',
+          header: 'Feature',
+          width: '180px',
+          tooltip: 'description', // Field to use for tooltip content
+        },
+        columns: [
+          { type: 'text', key: 'status', header: 'Status' },
+          { type: 'text', key: 'owner', header: 'Owner' },
+        ],
+      }
+      const rows = [
+        {
+          id: '1',
+          name: 'Authentication',
+          description: 'Handles user login, logout, and session management with JWT tokens',
+          status: 'Active',
+          owner: 'Security Team',
+        },
+        {
+          id: '2',
+          name: 'Caching',
+          description: 'Redis-based caching layer for improved performance on read-heavy operations',
+          status: 'Active',
+          owner: 'Platform Team',
+        },
+        {
+          id: '3',
+          name: 'Rate Limiting',
+          description: 'Prevents abuse by limiting API requests per user/IP within a time window',
+          status: 'Beta',
+          owner: 'API Team',
+        },
+      ]
+      return { config, rows }
+    },
+    template: `
+      <EntityDetailTable :config="config" :rows="rows">
+        <template #title>
+          <v-card-title>Features (hover row names for details)</v-card-title>
+        </template>
+      </EntityDetailTable>
+    `,
+  }),
+}
+
+/**
  * Loading state.
  */
 export const Loading: Story = {
@@ -507,8 +709,8 @@ export const FullFeatured: Story = {
             key: 'details-opt-1',
             header: 'Option A',
             headerMenu: getOptionMenuItems('opt-1'),
-            headerBadge: selectedOption.value === 'opt-1'
-              ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
+            headerBadges: selectedOption.value === 'opt-1'
+              ? [{ label: 'Selected', color: 'success', icon: 'mdi-check-circle' }]
               : undefined,
             rating: { key: 'rating-opt-1', levels: ratingLevels },
           },
@@ -517,8 +719,8 @@ export const FullFeatured: Story = {
             key: 'details-opt-2',
             header: 'Option B',
             headerMenu: getOptionMenuItems('opt-2'),
-            headerBadge: selectedOption.value === 'opt-2'
-              ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
+            headerBadges: selectedOption.value === 'opt-2'
+              ? [{ label: 'Selected', color: 'success', icon: 'mdi-check-circle' }]
               : undefined,
             rating: { key: 'rating-opt-2', levels: ratingLevels },
           },
@@ -527,8 +729,8 @@ export const FullFeatured: Story = {
             key: 'details-opt-3',
             header: 'Option C',
             headerMenu: getOptionMenuItems('opt-3'),
-            headerBadge: selectedOption.value === 'opt-3'
-              ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
+            headerBadges: selectedOption.value === 'opt-3'
+              ? [{ label: 'Selected', color: 'success', icon: 'mdi-check-circle' }]
               : undefined,
             rating: { key: 'rating-opt-3', levels: ratingLevels },
           },
@@ -615,8 +817,8 @@ export const FullFeatured: Story = {
             return {
               ...col,
               headerMenu: getOptionMenuItems(optKey),
-              headerBadge: selectedOption.value === optKey
-                ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
+              headerBadges: selectedOption.value === optKey
+                ? [{ label: 'Selected', color: 'success', icon: 'mdi-check-circle' }]
                 : undefined,
             }
           }),

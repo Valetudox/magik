@@ -174,8 +174,8 @@ const tableConfig = computed<DetailTableConfigInput>(() => {
         { key: 'edit', icon: 'mdi-pencil', title: 'Edit' },
         { key: 'delete', icon: 'mdi-delete', title: 'Remove', class: 'text-error' },
       ],
-      headerBadge: props.selectedOption === option.id
-        ? { label: 'Selected', color: 'success', icon: 'mdi-check-circle' }
+      headerBadges: props.selectedOption === option.id
+        ? [{ label: 'Selected', color: 'success', icon: 'mdi-check-circle' }]
         : undefined,
       rating: {
         key: `rating-${option.id}`,

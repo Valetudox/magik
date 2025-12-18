@@ -194,15 +194,16 @@ const columnWidths = computed(() => {
                 <span v-else class="column-header-text">{{ col.header }}</span>
 
                 <v-chip
-                  v-if="col.headerBadge"
-                  :color="isThemeColor(col.headerBadge.color) ? col.headerBadge.color : undefined"
-                  :style="!isThemeColor(col.headerBadge.color) ? { backgroundColor: col.headerBadge.color } : undefined"
+                  v-for="(badge, badgeIndex) in col.headerBadges"
+                  :key="badgeIndex"
+                  :color="isThemeColor(badge.color) ? badge.color : undefined"
+                  :style="!isThemeColor(badge.color) ? { backgroundColor: badge.color } : undefined"
                   size="small"
                   variant="tonal"
                   class="ml-2"
                 >
-                  <v-icon v-if="col.headerBadge.icon" :icon="col.headerBadge.icon" start size="small" />
-                  {{ col.headerBadge.label }}
+                  <v-icon v-if="badge.icon" :icon="badge.icon" start size="small" />
+                  {{ badge.label }}
                 </v-chip>
               </div>
             </th>
