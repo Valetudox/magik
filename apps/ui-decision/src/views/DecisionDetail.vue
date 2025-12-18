@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { EntityDetailPage, TextEditDialog } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { initSocket, onDecisionUpdated } from '../services/socket'
@@ -14,7 +14,6 @@ import {
 import { useDecisionMutations } from '../composables/useDecisionMutations'
 
 const route = useRoute()
-const router = useRouter()
 const decisionId = computed(() => route.params.id as string)
 
 // Decision state
@@ -60,8 +59,6 @@ onMounted(() => {
 onUnmounted(() => {
   unsubscribeUpdate?.()
 })
-
-const goBack = () => void router.push('/')
 
 // Confluence actions
 const copyConfluenceUrl = async () => {
@@ -117,13 +114,11 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
 </script>
 
 <template>
-  <EntityDetailPage page-title="Decision Documents">
-    <template #title>
-      <span class="clickable" @click="goBack">Decision Documents</span>
-      <span class="mx-2">/</span>
-      <span>{{ decision?.id.replace(/-/g, ' ') || 'Loading...' }}</span>
-    </template>
-
+  <EntityDetailPage
+    title="Decision Documents"
+    :subtitle="decision?.id.replace(/-/g, ' ') || 'Loading...'"
+    go-back-url="/"
+  >
     <template #headerActions>
       <v-btn
         variant="outlined"
@@ -305,14 +300,5 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
   transform: translateX(-50%);
   width: 1500px;
   z-index: 100;
-}
-
-.clickable {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.clickable:hover {
-  opacity: 0.8;
 }
 </style>
