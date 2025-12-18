@@ -1,42 +1,37 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
+import { useDetailPage } from '../composables/useDetailPage'
+import type { DetailPageConfig } from '../types/detail-page.schema'
 
 interface Props {
-  title: string
-  subtitle: string
-  goBackUrl: string
-  onAgentSubmit?: (prompt: string) => Promise<void>
-  agentPlaceholder?: string
+  config: DetailPageConfig
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  agentPlaceholder: 'Ask the AI to help...',
-})
+const props = defineProps<Props>()
+
+const {
+  loading,
+  error,
+  subtitle,
+  showUpdateNotification,
+  agentPrompt,
+  agentProcessing,
+  submitAgentPrompt,
+  appendToAgentPrompt,
+} = useDetailPage(props.config)
 
 const breadcrumbItems = computed(() => [
-  { title: props.title, href: props.goBackUrl },
-  { title: props.subtitle, disabled: true },
+  { title: props.config.pageTitle, href: props.config.goBackUrl },
+  { title: subtitle.value, disabled: true },
 ])
 
-// Agent input state
-const agentPrompt = ref('')
-const agentProcessing = ref(false)
-
-const submitAgentPrompt = async () => {
-  if (!agentPrompt.value.trim() || !props.onAgentSubmit) return
-  agentProcessing.value = true
-  try {
-    await props.onAgentSubmit(agentPrompt.value.trim())
-    agentPrompt.value = ''
-  } finally {
-    agentProcessing.value = false
+const agentPlaceholder = computed(() => {
+  if (props.config.agent?.enabled) {
+    return props.config.agent.placeholder ?? 'Ask the AI to help...'
   }
-}
-
-const appendToAgentPrompt = (text: string) => {
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${text}` : text
-}
+  return ''
+})
 
 defineExpose({
   appendToAgentPrompt,
@@ -55,7 +50,19 @@ defineExpose({
     </AppHeader>
 
     <v-container fluid>
-      <v-row>
+      <!-- Loading state -->
+      <div v-if="loading" class="text-center py-8">
+        <v-progress-circular indeterminate color="primary" />
+        <p class="mt-4">Loading...</p>
+      </div>
+
+      <!-- Error state -->
+      <v-alert v-else-if="error" type="error" variant="tonal">
+        {{ error }}
+      </v-alert>
+
+      <!-- Content -->
+      <v-row v-else>
         <v-col cols="2">
           <slot name="sidebar" />
         </v-col>
@@ -66,7 +73,7 @@ defineExpose({
     </v-container>
 
     <!-- Agent Input -->
-    <div v-if="onAgentSubmit" class="agent-input-container">
+    <div v-if="config.agent?.enabled" class="agent-input-container">
       <v-textarea
         v-model="agentPrompt"
         :placeholder="agentPlaceholder"
@@ -90,6 +97,12 @@ defineExpose({
         </template>
       </v-textarea>
     </div>
+
+    <!-- Update notification -->
+    <v-snackbar v-model="showUpdateNotification" :timeout="3000" color="success" location="top">
+      <v-icon start>mdi-refresh</v-icon>
+      Updated in real-time
+    </v-snackbar>
   </div>
 </template>
 

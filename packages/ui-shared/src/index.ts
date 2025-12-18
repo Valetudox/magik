@@ -22,6 +22,7 @@ export { default as BulkActionsToolbar } from './components/list-page/BulkAction
 
 // Export composables
 export { useListPage } from './composables/useListPage'
+export { useDetailPage } from './composables/useDetailPage'
 
 // Export utilities
 export {
@@ -106,3 +107,13 @@ export {
   type SpecialRowUpdatePayload,
   type SpecialRowEditAiPayload,
 } from './types/detail-table.schema'
+
+// Export detail page schemas and types
+export {
+  detailPageConfigSchema,
+  detailSocketConfigSchema,
+  detailAgentConfigSchema,
+  type DetailPageConfig,
+  type DetailSocketConfig,
+  type DetailAgentConfig,
+} from './types/detail-page.schema'

@@ -1,11 +1,37 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { ref } from 'vue'
-import { VBtn, VAlert, VProgressCircular, VCard, VCardTitle, VCardText } from 'vuetify/components'
+import { VBtn, VAlert, VCard, VCardTitle, VCardText } from 'vuetify/components'
 import EntityDetailPage from './EntityDetailPage.vue'
 import SimpleBox from '../components/SimpleBox.vue'
 import SectionedBox from '../components/SectionedBox.vue'
 import BoxSection from '../components/BoxSection.vue'
 import ListBox from '../components/ListBox.vue'
+import type { DetailPageConfig } from '../types/detail-page.schema'
+
+// Mock data for stories
+interface MockEntity {
+  id: string
+  name: string
+  description: string
+  status: string
+}
+
+const mockEntity: MockEntity = {
+  id: 'item-123',
+  name: 'Sample Item',
+  description: 'This is a sample item for demonstration purposes.',
+  status: 'Active',
+}
+
+const createMockConfig = (overrides: Partial<DetailPageConfig> = {}): DetailPageConfig => ({
+  pageTitle: 'Items',
+  goBackUrl: '/',
+  entityId: 'item-123',
+  getEntity: async () => mockEntity,
+  getSubtitle: (entity: MockEntity) => entity.name,
+  onLoad: () => {},
+  ...overrides,
+})
 
 const meta = {
   title: 'Pages/EntityDetailPage',
@@ -26,17 +52,26 @@ EntityDetailPage provides a consistent layout for detail/edit pages with:
 - A header with breadcrumb-style navigation (title / subtitle)
 - Clickable title for navigation back
 - A 2-column layout with sidebar (2 cols) and main content (10 cols)
+- Automatic loading and error states
+- Optional agent input for AI assistance
+- Socket.IO integration for real-time updates
 
-## Props
+## Config Props
 
-- \`title\`: Main page title (clickable, navigates to goBackUrl)
-- \`subtitle\`: Subtitle shown after title with "/" separator
+- \`pageTitle\`: Main page title (shown in breadcrumbs)
 - \`goBackUrl\`: URL for navigation when clicking the title
+- \`entityId\`: ID of the entity to load
+- \`getEntity\`: Async function to fetch the entity
+- \`getSubtitle\`: Function to generate subtitle from entity data
+- \`onLoad\`: Callback when entity is loaded or updated
+- \`socket\`: Optional socket configuration for real-time updates
+- \`agent\`: Optional agent input configuration
 
 ## Slots
 
 - \`sidebar\`: Left sidebar content (2 columns wide)
 - \`default\`: Main content area (10 columns wide)
+- \`title-actions\`: Action buttons in the header
         `,
       },
     },
@@ -44,36 +79,37 @@ EntityDetailPage provides a consistent layout for detail/edit pages with:
 } satisfies Meta<typeof EntityDetailPage>
 
 export default meta
-type Story = StoryObj<typeof meta>
+type Story = StoryObj<typeof meta> & { args?: unknown }
 
 /**
- * Basic usage with title, subtitle, and goBackUrl props.
+ * Basic usage with config prop.
  */
 export const Basic: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'The most basic usage with title/subtitle breadcrumb and a SimpleBox for main content.',
+        story: 'The most basic usage with config and a SimpleBox for main content.',
       },
     },
   },
-  args: {
-    title: 'Items',
-    subtitle: 'Item Details',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
+  render: () => ({
     components: { EntityDetailPage, SimpleBox },
     setup() {
-      const content = ref('This is the main content area. It spans 10 columns by default.')
-      return { args, content }
+      const entity = ref<MockEntity | null>(null)
+      const config = createMockConfig({
+        onLoad: (e: MockEntity) => {
+          entity.value = e
+        },
+      })
+      return { config, entity }
     },
     template: `
-      <EntityDetailPage v-bind="args">
+      <EntityDetailPage :config="config">
         <SimpleBox
+          v-if="entity"
           title="Main Content"
-          :value="content"
-          @update="content = $event"
+          :value="entity.description"
+          :editable="false"
         />
       </EntityDetailPage>
     `,
@@ -91,27 +127,24 @@ export const WithSidebar: Story = {
       },
     },
   },
-  args: {
-    title: 'Items',
-    subtitle: 'Item Details',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
+  render: () => ({
     components: { EntityDetailPage, SimpleBox, ListBox, VCard, VCardTitle, VCardText },
     setup() {
-      const mainContent = ref(
-        'The main content area works alongside the sidebar. The sidebar is 2 columns and the main content is 10 columns.'
-      )
-      const metadata = ref('Created: Jan 15, 2024\nModified: Mar 10, 2024\nStatus: Active')
+      const entity = ref<MockEntity | null>(null)
+      const config = createMockConfig({
+        onLoad: (e: MockEntity) => {
+          entity.value = e
+        },
+      })
       const navItems = ref([
         { id: '1', name: 'Overview', icon: 'mdi-information' },
         { id: '2', name: 'Settings', icon: 'mdi-cog' },
         { id: '3', name: 'History', icon: 'mdi-history' },
       ])
-      return { args, mainContent, metadata, navItems }
+      return { config, entity, navItems }
     },
     template: `
-      <EntityDetailPage v-bind="args">
+      <EntityDetailPage :config="config">
         <template #sidebar>
           <ListBox title="Navigation" class="mb-4" :editable="false">
             <VCard v-for="item in navItems" :key="item.id" variant="outlined" class="mb-2">
@@ -119,15 +152,17 @@ export const WithSidebar: Story = {
             </VCard>
           </ListBox>
           <SimpleBox
+            v-if="entity"
             title="Metadata"
-            :value="metadata"
+            :value="'Status: ' + entity.status"
             :editable="false"
           />
         </template>
         <SimpleBox
+          v-if="entity"
           title="Main Content"
-          :value="mainContent"
-          @update="mainContent = $event"
+          :value="entity.description"
+          :editable="false"
         />
       </EntityDetailPage>
     `,
@@ -135,95 +170,117 @@ export const WithSidebar: Story = {
 }
 
 /**
- * Loading state example for async data fetching.
+ * Loading state is automatically shown while getEntity is pending.
  */
 export const LoadingState: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Example of how to show a loading state while fetching data.',
+        story: 'Loading state is automatically shown while the getEntity function is pending.',
       },
     },
   },
-  args: {
-    title: 'Items',
-    subtitle: 'Loading...',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
-    components: { EntityDetailPage, VProgressCircular },
+  render: () => ({
+    components: { EntityDetailPage },
     setup() {
-      return { args }
+      const config = createMockConfig({
+        // Simulate slow loading
+        getEntity: () => new Promise(() => {}), // Never resolves
+      })
+      return { config }
     },
     template: `
-      <EntityDetailPage v-bind="args">
-        <div class="text-center py-8">
-          <VProgressCircular indeterminate color="primary" size="64" />
-          <p class="mt-4">Loading item details...</p>
-        </div>
+      <EntityDetailPage :config="config">
+        <div>This content won't be shown while loading.</div>
       </EntityDetailPage>
     `,
   }),
 }
 
 /**
- * Error state example for failed data fetching.
+ * Error state is automatically shown when getEntity fails.
  */
 export const ErrorState: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Example of how to display an error state when data fetching fails.',
+        story: 'Error state is automatically shown when the getEntity function throws an error.',
       },
     },
   },
-  args: {
-    title: 'Items',
-    subtitle: 'Item Details',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
-    components: { EntityDetailPage, VAlert, VBtn },
+  render: () => ({
+    components: { EntityDetailPage },
     setup() {
-      return { args }
+      const config = createMockConfig({
+        getEntity: async () => {
+          throw new Error('Failed to load')
+        },
+      })
+      return { config }
     },
     template: `
-      <EntityDetailPage v-bind="args">
-        <VAlert type="error" variant="tonal" class="mb-4">
-          <div class="d-flex align-center">
-            <div>
-              <strong>Failed to load item</strong>
-              <div>The requested item could not be found or the server is unavailable.</div>
-            </div>
-            <v-spacer />
-            <VBtn variant="outlined" color="error" class="ml-4">
-              Retry
-            </VBtn>
-          </div>
-        </VAlert>
+      <EntityDetailPage :config="config">
+        <div>This content won't be shown when there's an error.</div>
       </EntityDetailPage>
     `,
   }),
 }
 
 /**
- * Complete example combining all features using SimpleBox, SectionedBox, BoxSection, and ListBox.
+ * With agent input enabled for AI assistance.
+ */
+export const WithAgentInput: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Enable the agent input to allow users to interact with AI for assistance.',
+      },
+    },
+  },
+  render: () => ({
+    components: { EntityDetailPage, SimpleBox },
+    setup() {
+      const entity = ref<MockEntity | null>(null)
+      const config = createMockConfig({
+        onLoad: (e: MockEntity) => {
+          entity.value = e
+        },
+        agent: {
+          enabled: true,
+          placeholder: 'Ask the AI to help...',
+          onSubmit: async (prompt: string) => {
+            console.log('Agent prompt:', prompt)
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+          },
+        },
+      })
+      return { config, entity }
+    },
+    template: `
+      <EntityDetailPage :config="config">
+        <SimpleBox
+          v-if="entity"
+          title="Main Content"
+          :value="entity.description"
+          :editable="false"
+        />
+      </EntityDetailPage>
+    `,
+  }),
+}
+
+/**
+ * Complete example combining all features.
  */
 export const CompleteExample: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'A full-featured example demonstrating all props and slots with Box components: title with subtitle and goBackUrl, sidebar with SimpleBox, ListBox, and SectionedBox, plus rich main content with action toolbar.',
+        story: 'A full-featured example demonstrating all props and slots with Box components.',
       },
     },
   },
-  args: {
-    title: 'Decision Documents',
-    subtitle: 'API Authentication Strategy',
-    goBackUrl: '/',
-  },
-  render: (args) => ({
+  render: () => ({
     components: {
       EntityDetailPage,
       VBtn,
@@ -237,6 +294,22 @@ export const CompleteExample: Story = {
       ListBox,
     },
     setup() {
+      const entity = ref<MockEntity | null>(null)
+      const config = createMockConfig({
+        pageTitle: 'Decision Documents',
+        getSubtitle: () => 'API Authentication Strategy',
+        onLoad: (e: MockEntity) => {
+          entity.value = e
+        },
+        agent: {
+          enabled: true,
+          placeholder: 'Ask the AI to modify this decision...',
+          onSubmit: async (prompt: string) => {
+            console.log('Agent prompt:', prompt)
+          },
+        },
+      })
+
       const problemDefinition = ref(
         'We need to choose an authentication strategy for our new API that balances security, performance, and developer experience.'
       )
@@ -259,7 +332,8 @@ export const CompleteExample: Story = {
       const onAddUseCase = () => alert('Add use case')
 
       return {
-        args,
+        config,
+        entity,
         problemDefinition,
         components,
         useCases,
@@ -270,7 +344,17 @@ export const CompleteExample: Story = {
       }
     },
     template: `
-      <EntityDetailPage v-bind="args">
+      <EntityDetailPage :config="config">
+        <template #title-actions>
+          <div class="d-flex ga-2">
+            <VBtn variant="outlined" prepend-icon="mdi-pencil" size="small">Edit URL</VBtn>
+            <VBtn variant="outlined" prepend-icon="mdi-content-copy" size="small">Copy</VBtn>
+            <VBtn variant="outlined" prepend-icon="mdi-open-in-new" size="small">Open</VBtn>
+            <VBtn variant="outlined" prepend-icon="mdi-upload" size="small">Push</VBtn>
+            <VBtn variant="outlined" prepend-icon="mdi-download" size="small">Pull</VBtn>
+          </div>
+        </template>
+
         <template #sidebar>
           <SimpleBox
             title="Problem Definition"
@@ -306,19 +390,6 @@ export const CompleteExample: Story = {
             />
           </SectionedBox>
         </template>
-
-        <!-- Actions toolbar -->
-        <div class="d-flex align-center mb-4">
-          <VBtn variant="outlined" icon="mdi-pencil" class="mr-2" title="Edit" />
-          <VBtn variant="outlined" icon="mdi-content-copy" class="mr-2" title="Copy URL" />
-          <VBtn variant="outlined" icon="mdi-open-in-new" class="mr-2" title="Open in new tab" />
-          <VBtn variant="outlined" prepend-icon="mdi-upload" class="mr-2">
-            Push to Confluence
-          </VBtn>
-          <VBtn variant="outlined" prepend-icon="mdi-download">
-            Pull from Confluence
-          </VBtn>
-        </div>
 
         <VAlert type="info" variant="tonal" class="mb-4">
           This decision document is linked to Confluence and will sync changes automatically.

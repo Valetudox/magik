@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { EntityDetailPage, TextEditDialog } from '@magik/ui-shared'
+import { EntityDetailPage, TextEditDialog, type DetailPageConfig } from '@magik/ui-shared'
 import { api, type DecisionDetail } from '../services/api'
 import { initSocket, onDecisionUpdated } from '../services/socket'
 import {
@@ -16,57 +16,41 @@ import { useDecisionMutations } from '../composables/useDecisionMutations'
 const route = useRoute()
 const decisionId = computed(() => route.params.id as string)
 
-// Decision state
+// Decision state - updated via onLoad callback
 const decision = ref<DecisionDetail | null>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-const showNotification = ref(false)
-const showEditConfluenceUrlDialog = ref(false)
+const decisionVersion = ref(0)
 
 // Reference to EntityDetailPage for agent prompt
 const detailPageRef = ref<InstanceType<typeof EntityDetailPage> | null>(null)
 
+// Dialog state
+const showEditConfluenceUrlDialog = ref(false)
+
 // Mutations composable for API calls
 const mutations = useDecisionMutations(decisionId.value, decision)
 
-// Agent submit handler
-const handleAgentSubmit = async (prompt: string) => {
-  await api.askAgent(decisionId.value, prompt)
-}
-
-// Socket.IO setup
-let unsubscribeUpdate: (() => void) | null = null
-
-onMounted(() => {
-  loading.value = true
-  initSocket()
-
-  unsubscribeUpdate = onDecisionUpdated(({ id: updatedId, decision: updatedDecision }) => {
-    if (updatedId === decisionId.value) {
-      decision.value = updatedDecision
-      showNotification.value = true
-    }
-  })
-
-  void (async () => {
-    try {
-      decision.value = await api.getDecision(decisionId.value)
-    } catch (e: unknown) {
-      if ((e as { status?: number }).status === 404) {
-        error.value = 'Decision not found'
-      } else {
-        error.value = 'Failed to load decision. Make sure the backend is running on http://localhost:3000'
-      }
-      console.error(e)
-    } finally {
-      loading.value = false
-    }
-  })()
-})
-
-onUnmounted(() => {
-  unsubscribeUpdate?.()
-})
+// Page config
+const config = computed<DetailPageConfig>(() => ({
+  pageTitle: 'Decision Documents',
+  goBackUrl: '/',
+  entityId: decisionId.value,
+  getEntity: (id: string) => api.getDecision(id),
+  getSubtitle: (d: DecisionDetail) => d.id.replace(/-/g, ' '),
+  onLoad: (entity: DecisionDetail) => {
+    decision.value = entity
+    decisionVersion.value++
+  },
+  socket: {
+    enabled: true,
+    initSocket,
+    onUpdated: onDecisionUpdated,
+  },
+  agent: {
+    enabled: true,
+    placeholder: 'Ask the AI to modify this decision...',
+    onSubmit: (prompt: string) => api.askAgent(decisionId.value, prompt),
+  },
+}))
 
 // Confluence actions
 const copyConfluenceUrl = async () => {
@@ -124,11 +108,7 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
 <template>
   <EntityDetailPage
     ref="detailPageRef"
-    title="Decision Documents"
-    :subtitle="decision?.id.replace(/-/g, ' ') || 'Loading...'"
-    go-back-url="/"
-    :on-agent-submit="handleAgentSubmit"
-    agent-placeholder="Ask the AI to modify this decision..."
+    :config="config"
   >
     <template #title-actions>
       <div class="d-flex ga-2">
@@ -214,17 +194,9 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
     </template>
 
     <!-- Main content area -->
-    <div v-if="loading" class="text-center py-8">
-      <v-progress-circular indeterminate color="primary" />
-      <p class="mt-4">Loading decision...</p>
-    </div>
-
-    <v-alert v-else-if="error" type="error" variant="tonal">
-      {{ error }}
-    </v-alert>
-
-    <template v-else-if="decision">
+    <template v-if="decision">
       <EvaluationMatrix
+        :key="decisionVersion"
         :options="decision.options"
         :drivers="decision.decisionDrivers"
         :evaluation-matrix="decision.evaluationMatrix"
@@ -245,11 +217,6 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
     </template>
 
     <!-- Notifications -->
-    <v-snackbar v-model="showNotification" :timeout="3000" color="success" location="top">
-      <v-icon start>mdi-refresh</v-icon>
-      Decision updated in real-time
-    </v-snackbar>
-
     <v-snackbar
       v-model="mutations.notification.value.show"
       :timeout="5000"
