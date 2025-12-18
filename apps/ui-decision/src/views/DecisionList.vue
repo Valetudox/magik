@@ -174,7 +174,6 @@ const config: ListPageConfig<DecisionSummary> = {
 
   createAction: {
     enabled: true,
-    label: 'New Decision',
     useDialog: true,
     dialogTitle: 'Create New Decision',
   },

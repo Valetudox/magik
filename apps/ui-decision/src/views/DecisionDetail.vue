@@ -120,44 +120,52 @@ const handleEvaluationEditAi = (context: { type: string; optionName: string; dri
     go-back-url="/"
   >
     <template #title-actions>
-      <v-btn
-        variant="text"
-        icon="mdi-pencil"
-        size="small"
-        @click="showEditConfluenceUrlDialog = true"
-      />
-      <v-btn
-        variant="text"
-        icon="mdi-content-copy"
-        size="small"
-        :disabled="!decision?.confluenceLink"
-        @click="copyConfluenceUrl"
-      />
-      <v-btn
-        variant="text"
-        icon="mdi-open-in-new"
-        size="small"
-        :disabled="!decision?.confluenceLink"
-        @click="openInConfluence"
-      />
-      <v-btn
-        variant="text"
-        prepend-icon="mdi-upload"
-        size="small"
-        :loading="mutations.pushingToConfluence.value"
-        :disabled="!decision?.confluenceLink || mutations.pushingToConfluence.value"
-        @click="mutations.pushToConfluence"
-      >
-        Push
-      </v-btn>
-      <v-btn
-        variant="text"
-        prepend-icon="mdi-download"
-        size="small"
-        @click="pullFromConfluence"
-      >
-        Pull
-      </v-btn>
+      <div class="d-flex ga-2">
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-pencil"
+          size="small"
+          @click="showEditConfluenceUrlDialog = true"
+        >
+          Edit URL
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-content-copy"
+          size="small"
+          :disabled="!decision?.confluenceLink"
+          @click="copyConfluenceUrl"
+        >
+          Copy
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-open-in-new"
+          size="small"
+          :disabled="!decision?.confluenceLink"
+          @click="openInConfluence"
+        >
+          Open
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-upload"
+          size="small"
+          :loading="mutations.pushingToConfluence.value"
+          :disabled="!decision?.confluenceLink || mutations.pushingToConfluence.value"
+          @click="mutations.pushToConfluence"
+        >
+          Push
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-download"
+          size="small"
+          @click="pullFromConfluence"
+        >
+          Pull
+        </v-btn>
+      </div>
     </template>
 
     <template #sidebar>

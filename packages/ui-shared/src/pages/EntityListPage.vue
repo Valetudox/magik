@@ -115,6 +115,17 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
       <template #title>
         <v-breadcrumbs :items="[{ title: config.pageTitle, disabled: true }]" density="compact" class="pa-0" />
       </template>
+      <template #title-actions>
+        <v-btn
+          v-if="config.createAction?.enabled"
+          variant="outlined"
+          color="primary"
+          size="small"
+          @click="showCreateDialog = true"
+        >
+          {{ config.createAction.label || 'New' }}
+        </v-btn>
+      </template>
     </AppHeader>
 
     <!-- Main content -->
@@ -140,29 +151,17 @@ const renderFieldValue = (field: typeof props.config.fields[0], item: T) => {
       <v-row v-else>
         <v-col cols="12">
           <v-card>
-            <v-card-title v-if="config.enableSearch || config.createAction?.enabled">
-              <div class="d-flex align-center ga-4 w-100">
-                <v-text-field
-                  v-if="config.enableSearch"
-                  v-model="search"
-                  prepend-inner-icon="mdi-magnify"
-                  :label="`Search ${config.entityNamePlural}`"
-                  single-line
-                  hide-details
-                  clearable
-                  variant="outlined"
-                  density="compact"
-                  class="flex-grow-1"
-                />
-                <v-btn
-                  v-if="config.createAction?.enabled"
-                  color="primary"
-                  prepend-icon="mdi-plus"
-                  @click="showCreateDialog = true"
-                >
-                  {{ config.createAction.label || `New ${config.entityName}` }}
-                </v-btn>
-              </div>
+            <v-card-title v-if="config.enableSearch">
+              <v-text-field
+                v-model="search"
+                prepend-inner-icon="mdi-magnify"
+                :label="`Search ${config.entityNamePlural}`"
+                single-line
+                hide-details
+                clearable
+                variant="outlined"
+                density="compact"
+              />
             </v-card-title>
 
             <v-data-table
