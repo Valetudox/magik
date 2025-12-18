@@ -14,8 +14,6 @@ import {
   NameDescriptionDialog,
   TextEditDialog,
   ListEditDialog,
-  RatingDialog,
-  type RatingConfigInput,
   type DetailTableConfigInput,
   type CellUpdatePayload,
   type EditAiPayload,
@@ -29,7 +27,6 @@ import { VueMermaidRender } from 'vue-mermaid-render'
 import { initSocket, onDecisionUpdated } from '../services/socket'
 import OptionDialog from '../components/OptionDialog.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import EditDescriptionDialog from '../components/EditDescriptionDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -50,28 +47,6 @@ const agentNotification = ref<{ show: boolean; message: string; type: 'success' 
   message: '',
   type: 'success',
 })
-
-// Rating dialog state
-const showRatingDialog = ref(false)
-const ratingDialogData = ref<{
-  optionId: string
-  optionName: string
-  driverId: string
-  driverName: string
-  currentRating: 'high' | 'medium' | 'low' | null
-} | null>(null)
-
-// Rating configuration for evaluation matrix
-const evaluationRatingConfig: RatingConfigInput = {
-  key: 'evaluation',
-  levels: [
-    { key: 'high', label: 'High', color: 'success' },
-    { key: 'medium', label: 'Medium', color: 'warning' },
-    { key: 'low', label: 'Low', color: 'error' },
-  ],
-  allowEmpty: true,
-  emptyLabel: 'Not rated',
-}
 
 // Option, Driver, Component, and UseCase dialog state
 const showOptionDialog = ref(false)
@@ -343,52 +318,6 @@ const evaluationColumnData = computed(() => {
 
   return data
 })
-
-const _firstColumnWidthPercent = computed(() => {
-  if (!decision.value?.options.length) return '15%'
-  // First column: 15%, rest divided equally
-  // With pure percentages: first gets 15%, rest split the 85%
-  return '15%'
-})
-
-const optionColumnWidth = computed(() => {
-  if (!decision.value?.options.length) return '0%'
-  // Remaining 85% divided equally among options
-  const percentPerColumn = 85 / decision.value.options.length
-  return `${percentPerColumn}% !important`
-})
-
-// Rating dialog handlers
-const openRatingDialog = (
-  optionId: string,
-  optionName: string,
-  driverId: string,
-  driverName: string,
-  currentRating: 'high' | 'medium' | 'low' | null
-) => {
-  ratingDialogData.value = { optionId, optionName, driverId, driverName, currentRating }
-  showRatingDialog.value = true
-}
-
-const handleRatingSave = async (newRating: string | null) => {
-  if (!ratingDialogData.value) return
-
-  try {
-    const decisionId = route.params.id as string
-    await api.updateEvaluationRating(
-      decisionId,
-      ratingDialogData.value.optionId,
-      ratingDialogData.value.driverId,
-      newRating as 'high' | 'medium' | 'low'
-    )
-  } catch (err: unknown) {
-    agentNotification.value = {
-      show: true,
-      message: (err as Error).message ?? 'Failed to update rating',
-      type: 'error',
-    }
-  }
-}
 
 // Option handlers
 const openAddOptionDialog = () => {
@@ -801,112 +730,11 @@ const confirmDeleteUseCase = (useCase: { id: string; name: string }) => {
   showConfirmDialog.value = true
 }
 
-// Edit description dialog state
-const showEditDescriptionDialog = ref(false)
-const editDescriptionData = ref<{
-  optionId: string
-  optionName: string
-  description: string
-} | null>(null)
-
-// Edit evaluation detail dialog state
-const showEditEvaluationDetailDialog = ref(false)
-const editEvaluationDetailData = ref<{
-  optionId: string
-  optionName: string
-  driverId: string
-  driverName: string
-  details: string[]
-} | null>(null)
-
-// Description edit handlers
-const openEditDescriptionDialog = (option: { id: string; name: string; description: string }) => {
-  editDescriptionData.value = {
-    optionId: option.id,
-    optionName: option.name,
-    description: option.description,
-  }
-  showEditDescriptionDialog.value = true
-}
-
-const handleSaveDescription = async (newDescription: string) => {
-  if (!editDescriptionData.value) return
-  const option = decision.value?.options.find((o) => o.id === editDescriptionData.value!.optionId)
-  if (!option) return
-
-  try {
-    const decisionId = route.params.id as string
-    await api.updateOption(decisionId, editDescriptionData.value.optionId, {
-      name: option.name,
-      description: newDescription,
-      moreLink: option.moreLink,
-    })
-  } catch (err: unknown) {
-    agentNotification.value = {
-      show: true,
-      message: (err as Error).message ?? 'Failed to update description',
-      type: 'error',
-    }
-  }
-}
-
-const appendAIPromptForDescription = (option: { id: string; name: string }) => {
-  const prompt = `Edit the description of "${option.name}": `
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-}
-
-// Evaluation detail edit handlers
-const openEditEvaluationDetailDialog = (
-  option: { id: string; name: string },
-  driver: { id: string; name: string },
-  details: string[]
-) => {
-  editEvaluationDetailData.value = {
-    optionId: option.id,
-    optionName: option.name,
-    driverId: driver.id,
-    driverName: driver.name,
-    details,
-  }
-  showEditEvaluationDetailDialog.value = true
-}
-
-const handleSaveEvaluationDetail = async (newDetails: string[]) => {
-  if (!editEvaluationDetailData.value) return
-  const { optionId, driverId } = editEvaluationDetailData.value
-
-  try {
-    const decisionId = route.params.id as string
-    await api.updateEvaluationDetails(decisionId, optionId, driverId, newDetails)
-  } catch (err: unknown) {
-    agentNotification.value = {
-      show: true,
-      message: (err as Error).message ?? 'Failed to update evaluation details',
-      type: 'error',
-    }
-  }
-}
-
-const appendAIPromptForEvaluationDetail = (
-  option: { id: string; name: string },
-  driver: { id: string; name: string }
-) => {
-  const prompt = `Edit the "${option.name}" - "${driver.name}" evaluation: `
-  agentPrompt.value = agentPrompt.value ? `${agentPrompt.value}\n\n${prompt}` : prompt
-}
-
-// Problem Definition edit dialog state
-const showEditProblemDialog = ref(false)
-
 // Proposal description edit dialog state
 const showEditProposalDescDialog = ref(false)
 
 // Proposal reasoning edit dialog state
 const showEditProposalReasoningDialog = ref(false)
-
-const openEditProblemDialog = () => {
-  showEditProblemDialog.value = true
-}
 
 const handleSaveProblemDefinition = async (value: string) => {
   try {
@@ -1061,13 +889,11 @@ const handleSaveConfluenceUrl = async (value: string) => {
           <SimpleBox
             title="Problem Definition"
             class="mb-4"
-            @edit="openEditProblemDialog"
+            :value="decision.problemDefinition"
+            empty-text="Double-click to add problem definition..."
+            @update="handleSaveProblemDefinition"
             @edit-ai="appendAIPromptForProblem"
-          >
-            <span :class="{ 'empty-placeholder': !decision.problemDefinition }">
-              {{ decision.problemDefinition || 'Double-click to add problem definition...' }}
-            </span>
-          </SimpleBox>
+          />
 
           <!-- Components -->
           <ListBox
@@ -1082,7 +908,7 @@ const handleSaveConfluenceUrl = async (value: string) => {
                 :key="component.id"
                 variant="outlined"
                 class="mb-2"
-              >
+              >https://ih1.redbubble.net/image.761152374.7995/ssrco,essential_tee,mens_01,101010:01c5ca27c6,front,close_portrait,x1000.u2.jpg
                 <v-card-title class="text-subtitle-1 d-flex align-center">
                   <v-menu>
                     <template #activator="{ props }">
@@ -1320,17 +1146,6 @@ const handleSaveConfluenceUrl = async (value: string) => {
       {{ agentNotification.message }}
     </v-snackbar>
 
-    <!-- Rating Dialog -->
-    <RatingDialog
-      v-if="ratingDialogData"
-      v-model="showRatingDialog"
-      title="Change Rating"
-      :subtitle="`${ratingDialogData.optionName} / ${ratingDialogData.driverName}`"
-      :current-rating="ratingDialogData.currentRating"
-      :config="evaluationRatingConfig"
-      @save="handleRatingSave"
-    />
-
     <!-- Option Dialog -->
     <OptionDialog
       v-model="showOptionDialog"
@@ -1370,38 +1185,6 @@ const handleSaveConfluenceUrl = async (value: string) => {
       :title="confirmDialogData.title"
       :message="confirmDialogData.message"
       @confirm="handleConfirmDialogConfirm"
-    />
-
-    <!-- Edit Description Dialog -->
-    <EditDescriptionDialog
-      v-if="editDescriptionData"
-      v-model="showEditDescriptionDialog"
-      :option-name="editDescriptionData.optionName"
-      :description="editDescriptionData.description"
-      @save="handleSaveDescription"
-    />
-
-    <!-- Edit Evaluation Detail Dialog -->
-    <ListEditDialog
-      v-if="editEvaluationDetailData"
-      v-model="showEditEvaluationDetailDialog"
-      title="Edit Evaluation"
-      :subtitle="`${editEvaluationDetailData.optionName} - ${editEvaluationDetailData.driverName}`"
-      :items="editEvaluationDetailData.details"
-      label="Evaluation details (one per line)"
-      hint="Each line becomes a bullet point"
-      :rows="12"
-      :max-width="1200"
-      @save="handleSaveEvaluationDetail"
-    />
-
-    <!-- Edit Problem Definition Dialog -->
-    <TextEditDialog
-      v-model="showEditProblemDialog"
-      title="Edit Problem Definition"
-      label="Problem Definition"
-      :value="decision?.problemDefinition ?? ''"
-      @save="handleSaveProblemDefinition"
     />
 
     <!-- Edit Proposal Description Dialog -->
