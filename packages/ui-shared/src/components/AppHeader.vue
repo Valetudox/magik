@@ -20,14 +20,10 @@ export interface HeaderMenuItem {
 interface Props {
   appTitle?: string
   menuItems?: HeaderMenuItem[]
-  userName?: string
-  userAvatar?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   appTitle: 'Magik',
-  userName: 'User',
-  userAvatar: '',
   menuItems: () => {
     const isDev = import.meta.env.DEV
     const devUrls = {
@@ -123,16 +119,6 @@ function navigateToItem(item: HeaderMenuItem | HeaderSubMenuItem) {
     }
   }
 }
-
-// Get user initials for avatar fallback
-const userInitials = computed(() => {
-  return props.userName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-})
 </script>
 
 <template>
@@ -171,8 +157,11 @@ const userInitials = computed(() => {
 
       <v-spacer />
 
-      <!-- Action buttons slot with 2 dummy buttons as default -->
+      <!-- Action buttons slot with 3 dummy buttons as default -->
       <slot name="actions">
+        <v-btn icon variant="flat" size="small" color="white">
+          <v-icon color="primary">mdi-microphone</v-icon>
+        </v-btn>
         <v-btn icon variant="text" size="small">
           <v-icon>mdi-bell-outline</v-icon>
         </v-btn>
@@ -180,22 +169,6 @@ const userInitials = computed(() => {
           <v-icon>mdi-cog-outline</v-icon>
         </v-btn>
       </slot>
-
-      <!-- User avatar -->
-      <v-menu>
-        <template #activator="{ props: menuProps }">
-          <v-btn icon variant="text" class="ml-2" v-bind="menuProps">
-            <v-avatar size="32" color="white">
-              <v-img v-if="userAvatar" :src="userAvatar" :alt="userName" />
-              <span v-else class="text-primary text-caption font-weight-bold">{{ userInitials }}</span>
-            </v-avatar>
-          </v-btn>
-        </template>
-        <v-list density="compact">
-          <v-list-item prepend-icon="mdi-account" title="Profile" />
-          <v-list-item prepend-icon="mdi-logout" title="Logout" />
-        </v-list>
-      </v-menu>
     </v-app-bar>
 
     <!-- Title bar with breadcrumbs and actions -->

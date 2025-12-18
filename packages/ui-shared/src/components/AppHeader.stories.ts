@@ -18,20 +18,19 @@ A two-level header component with a top bar and horizontal navigation.
 ## Overview
 
 AppHeader provides a consistent header structure with:
-- **Top bar**: App title/logo, action buttons, and user avatar
-- **Navigation bar**: Horizontal menu with optional dropdown submenus
+- **Top bar**: Navigation menu tabs and action buttons
+- **Title bar**: Breadcrumbs/title and page-specific actions
 
 ## Props
 
-- \`appTitle\`: Application title displayed in the top bar (default: "Magik")
+- \`appTitle\`: Application title (default: "Magik")
 - \`menuItems\`: Array of navigation items with optional children for dropdowns
-- \`userName\`: User's display name for avatar fallback initials
-- \`userAvatar\`: URL to user's avatar image
 
 ## Slots
 
-- \`title\`: Custom content for the app title area
-- \`actions\`: Custom action buttons (defaults to bell and settings icons)
+- \`title\`: Content for the title bar (breadcrumbs)
+- \`title-actions\`: Page-specific action buttons in the title bar
+- \`actions\`: Action buttons in the top bar (defaults to mic, bell, and settings icons)
         `,
       },
     },
@@ -54,7 +53,6 @@ export const Default: Story = {
   },
   args: {
     appTitle: 'Magik',
-    userName: 'John Doe',
   },
 }
 
@@ -71,7 +69,6 @@ export const WithDropdowns: Story = {
   },
   args: {
     appTitle: 'Magik',
-    userName: 'Jane Smith',
     menuItems: [
       {
         title: 'Dashboard',
@@ -117,7 +114,6 @@ export const CustomActions: Story = {
   },
   args: {
     appTitle: 'Magik',
-    userName: 'Admin User',
     menuItems: [
       { title: 'Home', to: '/', icon: 'mdi-home' },
       { title: 'Projects', to: '/projects', icon: 'mdi-folder' },
@@ -147,28 +143,6 @@ export const CustomActions: Story = {
 }
 
 /**
- * Header with user avatar image.
- */
-export const WithAvatarImage: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'When `userAvatar` is provided, it displays an image instead of initials.',
-      },
-    },
-  },
-  args: {
-    appTitle: 'Magik',
-    userName: 'Alex Johnson',
-    userAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    menuItems: [
-      { title: 'Dashboard', to: '/dashboard', icon: 'mdi-view-dashboard' },
-      { title: 'Reports', to: '/reports', icon: 'mdi-chart-bar' },
-    ],
-  },
-}
-
-/**
  * Header with custom title slot content.
  */
 export const CustomTitle: Story = {
@@ -180,7 +154,6 @@ export const CustomTitle: Story = {
     },
   },
   args: {
-    userName: 'User',
     menuItems: [
       { title: 'Home', to: '/', icon: 'mdi-home' },
     ],
