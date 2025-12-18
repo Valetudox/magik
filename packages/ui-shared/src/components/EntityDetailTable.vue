@@ -270,7 +270,7 @@ const columnWidths = computed(() => {
           <!-- Data rows -->
           <tr v-for="row in rows" :key="getRowKey(row)">
             <!-- Row header cell with tooltip and menu -->
-            <td
+            <th
               v-if="config.rowHeader"
               class="row-header-cell"
               :style="{ width: columnWidths.rowHeader }"
@@ -280,18 +280,20 @@ const columnWidths = computed(() => {
                 :items="config.rowHeader.menu"
                 @select="handleRowHeaderMenu(row, $event)"
               >
-                <v-tooltip v-if="config.rowHeader.tooltip" location="right">
-                  <template #activator="{ props: tooltipProps }">
-                    <span v-bind="tooltipProps" class="row-header-text">
-                      {{ getRowHeaderValue(row) }}
-                    </span>
-                  </template>
-                  <div class="tooltip-content">
-                    {{ getRowHeaderTooltip(row) }}
-                  </div>
-                </v-tooltip>
-                <span v-else class="row-header-text">
-                  {{ getRowHeaderValue(row) }}
+                <span class="row-header-wrapper">
+                  <v-tooltip v-if="config.rowHeader.tooltip" location="right">
+                    <template #activator="{ props: tooltipProps }">
+                      <span v-bind="tooltipProps" class="row-header-text">
+                        {{ getRowHeaderValue(row) }}
+                      </span>
+                    </template>
+                    <div class="tooltip-content">
+                      {{ getRowHeaderTooltip(row) }}
+                    </div>
+                  </v-tooltip>
+                  <span v-else class="row-header-text">
+                    {{ getRowHeaderValue(row) }}
+                  </span>
                 </span>
               </ClickMenu>
               <template v-else>
@@ -309,7 +311,7 @@ const columnWidths = computed(() => {
                   {{ getRowHeaderValue(row) }}
                 </slot>
               </template>
-            </td>
+            </th>
 
             <!-- Data cells -->
             <td
@@ -457,6 +459,10 @@ const columnWidths = computed(() => {
   background-color: rgba(var(--v-theme-primary), 0.1);
   font-weight: bold;
   padding: 12px !important;
+}
+
+.row-header-wrapper {
+  display: inline;
 }
 
 .row-header-text {
