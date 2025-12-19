@@ -63,6 +63,9 @@ export default tseslint.config(
         },
       ],
 
+      // Type definitions - enforce type over interface
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+
       // TypeScript specific
       '@typescript-eslint/no-unused-vars': [
         'error',
