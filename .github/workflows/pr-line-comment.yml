@@ -1,0 +1,101 @@
+name: Claude Code - PR Line Comment
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  claude-line-comment-response:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Fetch PR context
+        id: fetch-context
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Fetch all review comments for context
+          echo "review-comments<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments --jq '
+            [.[] | {
+              path: .path,
+              line: .line,
+              body: .body,
+              user: .user.login,
+              created_at: .created_at
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Fetch files changed
+          echo "files-changed<<EOF" >> $GITHUB_OUTPUT
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files --jq '
+            [.[] | {
+              filename: .filename,
+              status: .status,
+              additions: .additions,
+              deletions: .deletions
+            }]
+          ' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Claude Code Line Comment Response
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          show_full_output: true
+          prompt: |
+            A new line comment has been posted on a specific file in this pull request. Please address the request.
+
+            **PR Details:**
+            - Title: ${{ github.event.pull_request.title }}
+            - PR #${{ github.event.pull_request.number }}
+            - Description: ${{ github.event.pull_request.body }}
+
+            **New Line Comment:**
+            - Author: ${{ github.event.comment.user.login }}
+            - File: ${{ github.event.comment.path }}
+            - Line: ${{ github.event.comment.line }}
+            - Comment: ${{ github.event.comment.body }}
+            - Posted at: ${{ github.event.comment.created_at }}
+
+            **Files Changed in PR:**
+            ${{ steps.fetch-context.outputs.files-changed }}
+
+            **All Review Comments (Context):**
+            ${{ steps.fetch-context.outputs.review-comments }}
+
+            **Your Task:**
+            1. Read the file mentioned in the comment: ${{ github.event.comment.path }}
+            2. Focus on line ${{ github.event.comment.line }} and the surrounding context
+            3. If it's a request for changes, implement the requested changes
+            4. Commit and push after each logical step
+            5. If it's a question, investigate and respond by commenting on the PR
+
+            **Important:** The comment is specifically about the file "${{ github.event.comment.path }}" at line ${{ github.event.comment.line }}.
+
+          claude_args: '--model=opus --allowed-tools "Read,Write,Edit,MultiEdit,Glob,Grep,LS,Bash(npm run:*),Bash(bun run:*),Bash(bun:*),Bash(npx nx:*),Bash(npx eslint:*),Bash(./nx:*),Bash(git:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh api:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue comment:*),Bash(chmod:*),Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(wc:*),Bash(./scripts/**),Bash(scripts/**)"'
