@@ -3,6 +3,7 @@ import tseslint from 'typescript-eslint'
 import importPlugin from 'eslint-plugin-import'
 import promisePlugin from 'eslint-plugin-promise'
 import nPlugin from 'eslint-plugin-n'
+import * as magikPlugin from '@magik/eslint-plugin'
 
 export default tseslint.config(
   // ESLint recommended rules
@@ -41,6 +42,7 @@ export default tseslint.config(
       import: importPlugin,
       promise: promisePlugin,
       n: nPlugin,
+      '@magik': magikPlugin,
     },
 
     settings: {
@@ -64,6 +66,7 @@ export default tseslint.config(
       ],
 
       // TypeScript specific
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -111,6 +114,9 @@ export default tseslint.config(
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
+
+      // Magik custom rules
+      '@magik/exports-first': 'error',
     },
   },
 
