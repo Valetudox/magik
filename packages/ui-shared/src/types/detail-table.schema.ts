@@ -134,40 +134,40 @@ export type DetailTableConfig = z.infer<typeof detailTableConfigSchema>
 export type DetailTableConfigInput = z.input<typeof detailTableConfigSchema>
 
 // Cell update payload emitted by EntityDetailTable
-export interface CellUpdatePayload {
+export type CellUpdatePayload = {
   rowKey: string
   columnKey: string
   value: unknown
 }
 
 // Edit with AI payload
-export interface EditAiPayload {
+export type EditAiPayload = {
   rowKey: string
   columnKey: string
 }
 
 // Row header menu selection payload
-export interface RowHeaderMenuPayload {
+export type RowHeaderMenuPayload = {
   rowKey: string
   menuKey: string
   row: Record<string, unknown>
 }
 
 // Column header menu selection payload
-export interface ColumnHeaderMenuPayload {
+export type ColumnHeaderMenuPayload = {
   columnKey: string
   menuKey: string
 }
 
 // Special row update payload
-export interface SpecialRowUpdatePayload {
+export type SpecialRowUpdatePayload = {
   specialRowKey: string
   columnKey: string
   value: unknown
 }
 
 // Special row edit AI payload
-export interface SpecialRowEditAiPayload {
+export type SpecialRowEditAiPayload = {
   specialRowKey: string
   columnKey: string
 }

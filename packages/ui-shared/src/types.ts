@@ -1,4 +1,4 @@
-export interface MenuItem {
+export type MenuItem = {
   title: string
   to: string
   icon?: string

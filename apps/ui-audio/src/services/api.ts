@@ -13,7 +13,7 @@ client.setConfig({
 export type { Recording }
 export type { Recording as TranscriptMetadata } from '@magik/backend-audio-client'
 
-export interface RecordingListResponse {
+export type RecordingListResponse = {
   recordings: Recording[]
   total: number
 }

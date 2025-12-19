@@ -13,7 +13,7 @@ const SAMPLE_RATE = 48000
 const CHANNELS = 2
 const BIT_DEPTH = 16
 
-interface TranscriptMessage {
+type TranscriptMessage = {
   message: string
   metadata?: {
     transcript?: string

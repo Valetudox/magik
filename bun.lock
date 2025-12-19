@@ -285,6 +285,13 @@
         "@types/node": "^22.10.2",
       },
     },
+    "packages/eslint-plugin-magik": {
+      "name": "@magik/eslint-plugin",
+      "version": "1.0.0",
+      "peerDependencies": {
+        "eslint": ">=8.0.0",
+      },
+    },
     "packages/gemini": {
       "name": "@magik/gemini",
       "version": "1.0.0",
@@ -620,6 +627,8 @@
     "@magik/config": ["@magik/config@workspace:config"],
 
     "@magik/decisions": ["@magik/decisions@workspace:packages/decisions"],
+
+    "@magik/eslint-plugin": ["@magik/eslint-plugin@workspace:packages/eslint-plugin-magik"],
 
     "@magik/gemini": ["@magik/gemini@workspace:packages/gemini"],
 

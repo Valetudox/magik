@@ -2,11 +2,11 @@ import { readdir, readFile } from 'fs/promises'
 import { join, relative } from 'path'
 import { SPECIFICATIONS_DIR } from '../config'
 
-interface NodeError extends Error {
+type NodeError = Error & {
   code?: string
 }
 
-export interface SpecificationRequirementItem {
+export type SpecificationRequirementItem = {
   type:
     | 'ubiquitous'
     | 'event-driven'
@@ -22,18 +22,18 @@ export interface SpecificationRequirementItem {
   unwantedConditions?: string[]
 }
 
-export interface SpecificationSection {
+export type SpecificationSection = {
   sectionName: string
   items: SpecificationRequirementItem[]
 }
 
-export interface Specification {
+export type Specification = {
   title: string
   description: string
   requirements: SpecificationSection[]
 }
 
-export interface SpecificationSummary {
+export type SpecificationSummary = {
   id: string
   title: string
   description: string
@@ -41,31 +41,8 @@ export interface SpecificationSummary {
   project: string
 }
 
-export interface SpecificationDetail extends Specification {
+export type SpecificationDetail = Specification & {
   id: string
-}
-
-async function findJsonFiles(dir: string): Promise<string[]> {
-  const files: string[] = []
-
-  try {
-    const entries = await readdir(dir, { withFileTypes: true })
-
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-
-      if (entry.isDirectory()) {
-        const subFiles = await findJsonFiles(fullPath)
-        files.push(...subFiles)
-      } else if (entry.isFile() && entry.name.endsWith('.json')) {
-        files.push(fullPath)
-      }
-    }
-  } catch (error) {
-    console.warn(`Could not read directory: ${dir}`, error)
-  }
-
-  return files
 }
 
 export async function listAllSpecifications(): Promise<SpecificationSummary[]> {
@@ -117,4 +94,27 @@ export async function getSpecificationById(id: string): Promise<SpecificationDet
     id,
     ...specification,
   }
+}
+
+async function findJsonFiles(dir: string): Promise<string[]> {
+  const files: string[] = []
+
+  try {
+    const entries = await readdir(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+
+      if (entry.isDirectory()) {
+        const subFiles = await findJsonFiles(fullPath)
+        files.push(...subFiles)
+      } else if (entry.isFile() && entry.name.endsWith('.json')) {
+        files.push(fullPath)
+      }
+    }
+  } catch (error) {
+    console.warn(`Could not read directory: ${dir}`, error)
+  }
+
+  return files
 }

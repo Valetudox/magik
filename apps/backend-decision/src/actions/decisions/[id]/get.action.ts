@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { getDecisionById } from '../../../services/decision.service'
 
-interface GetDecisionParams {
+type GetDecisionParams = {
   id: string
 }
 

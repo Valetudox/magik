@@ -5,7 +5,7 @@ import { listPageConfigSchema, type ListPageConfig } from '../types/list-page.sc
  */
 export type ValidationResult<T> =
   | { success: true; data: T }
-  | { success: false; errors: Array<{ path: string; message: string }> }
+  | { success: false; errors: { path: string; message: string }[] }
 
 /**
  * Validates a list page configuration using Zod schema

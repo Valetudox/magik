@@ -106,8 +106,8 @@ export const DynamicItems: Story = {
         { key: 'delete', icon: 'mdi-delete', title: 'Delete', class: 'text-error' },
       ])
       const onSelect = (key: string) => {
-        if (key === 'select') isSelected.value = true
-        if (key === 'clear') isSelected.value = false
+        if (key === 'select') {isSelected.value = true}
+        if (key === 'clear') {isSelected.value = false}
         alert(`Selected: ${key}`)
       }
       return { items, isSelected, onSelect }

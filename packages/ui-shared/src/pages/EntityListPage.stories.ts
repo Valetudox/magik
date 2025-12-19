@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { h } from 'vue'
 import { VChip, VIcon } from 'vuetify/components'
-import EntityListPage from './EntityListPage.vue'
 import type { ListPageConfig } from '../types/list-page.schema'
 import { formatDate, formatFileSize } from '../utils/formatters'
+import EntityListPage from './EntityListPage.vue'
 
-interface MockItem {
+type MockItem = {
   id: string
   name: string
   status: 'active' | 'inactive' | 'pending'

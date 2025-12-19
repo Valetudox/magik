@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_URL } from '../config'
 
-export interface BroadcastMessage {
+export type BroadcastMessage = {
   channel: string
   payload: Record<string, unknown>
 }

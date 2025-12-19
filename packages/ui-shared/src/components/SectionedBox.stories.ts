@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { ref } from 'vue'
-import SectionedBox from './SectionedBox.vue'
 import BoxSection from './BoxSection.vue'
+import SectionedBox from './SectionedBox.vue'
 
 const meta = {
   title: 'Components/SectionedBox',

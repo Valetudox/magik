@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { runAgent as runAgentService } from '../../../../services/agent.service'
 
-interface RunAgentParams {
+type RunAgentParams = {
   id: string
 }
 
-interface RunAgentBody {
+type RunAgentBody = {
   prompt: string
 }
 

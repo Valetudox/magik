@@ -8,7 +8,7 @@ const BroadcastRequestSchema = z.object({
   payload: z.unknown().optional(),
 })
 
-interface BroadcastBody {
+type BroadcastBody = {
   channel: string
   payload?: unknown
 }

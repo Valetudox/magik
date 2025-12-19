@@ -17,7 +17,7 @@ export function useDetailPage<T>(config: DetailPageConfig<T>) {
 
   // Computed
   const subtitle = computed(() => {
-    if (!entity.value) return 'Loading...'
+    if (!entity.value) {return 'Loading...'}
     return config.getSubtitle(entity.value)
   })
 
@@ -43,7 +43,7 @@ export function useDetailPage<T>(config: DetailPageConfig<T>) {
 
   // Setup socket listener
   const setupSocketListener = () => {
-    if (!config.socket?.enabled) return
+    if (!config.socket?.enabled) {return}
 
     if (config.socket.initSocket) {
       config.socket.initSocket()
@@ -67,8 +67,8 @@ export function useDetailPage<T>(config: DetailPageConfig<T>) {
 
   // Agent submit
   const submitAgentPrompt = async () => {
-    if (!agentPrompt.value.trim()) return
-    if (!config.agent?.enabled) return
+    if (!agentPrompt.value.trim()) {return}
+    if (!config.agent?.enabled) {return}
 
     agentProcessing.value = true
     try {

@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { ref } from 'vue'
 import { VBtn, VAlert, VCard, VCardTitle, VCardText } from 'vuetify/components'
-import EntityDetailPage from './EntityDetailPage.vue'
-import SimpleBox from '../components/SimpleBox.vue'
-import SectionedBox from '../components/SectionedBox.vue'
 import BoxSection from '../components/BoxSection.vue'
 import ListBox from '../components/ListBox.vue'
+import SectionedBox from '../components/SectionedBox.vue'
+import SimpleBox from '../components/SimpleBox.vue'
 import type { DetailPageConfig } from '../types/detail-page.schema'
+import EntityDetailPage from './EntityDetailPage.vue'
 
 // Mock data for stories
-interface MockEntity {
+type MockEntity = {
   id: string
   name: string
   description: string

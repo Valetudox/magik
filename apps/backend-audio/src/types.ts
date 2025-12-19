@@ -1,4 +1,4 @@
-export interface TranscriptMetadata {
+export type TranscriptMetadata = {
   format: string
   job: {
     created_at: string
@@ -21,7 +21,7 @@ export interface TranscriptMetadata {
   results?: unknown[]
 }
 
-export interface Recording {
+export type Recording = {
   id: string
   filename: string
   format: 'wav' | 'mp3'
@@ -38,7 +38,7 @@ export interface Recording {
   }
 }
 
-export interface RecordingListResponse {
+export type RecordingListResponse = {
   recordings: Recording[]
   total: number
 }

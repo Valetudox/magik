@@ -25,7 +25,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
   const bulkOperationProgress = ref(0)
 
   // Socket.IO cleanup functions
-  const socketUnsubscribers = ref<Array<() => void>>([])
+  const socketUnsubscribers = ref<(() => void)[]>([])
 
   // Computed
   const selectedItems = computed(() =>
@@ -49,7 +49,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
 
   // Create item
   const createItem = async (data: any) => {
-    if (!config.endpoints.create) return
+    if (!config.endpoints.create) {return}
 
     try {
       const result = await config.endpoints.create(data)
@@ -71,7 +71,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
 
   // Delete single item
   const deleteItem = async (id: string) => {
-    if (!config.endpoints.delete) return
+    if (!config.endpoints.delete) {return}
 
     deleting.value = true
     try {
@@ -92,7 +92,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
 
   // Bulk delete
   const bulkDelete = async () => {
-    if (!config.endpoints.delete) return
+    if (!config.endpoints.delete) {return}
 
     bulkOperationInProgress.value = true
     bulkOperationProgress.value = 0
@@ -102,7 +102,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
 
     for (let i = 0; i < toDelete.length; i++) {
       const id = toDelete[i]
-      if (!id) continue
+      if (!id) {continue}
 
       try {
         await config.endpoints.delete(id)
@@ -151,7 +151,7 @@ export function useListPage<T extends Record<string, any>>(config: ListPageConfi
 
   // Setup Socket.IO listeners
   const setupSocketListeners = () => {
-    if (!config.socket?.enabled || !config.socket.handlers) return
+    if (!config.socket?.enabled || !config.socket.handlers) {return}
 
     if (config.socket.initSocket) {
       config.socket.initSocket()

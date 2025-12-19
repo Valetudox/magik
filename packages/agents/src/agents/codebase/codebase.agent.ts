@@ -3,14 +3,14 @@ import { generateText } from 'ai'
 import { createSystemPrompt } from './codebase.systemPrompt.js'
 import { createCodebaseTools } from './codebase.tools.js'
 
-export interface CodebaseAgentOptions {
+export type CodebaseAgentOptions = {
   basePath: string
   query: string
   model?: 'claude-opus-4-20250514' | 'claude-sonnet-4-20250514' | 'claude-3-5-haiku-20241022'
   onStepFinish?: (step: any) => void
 }
 
-export interface CodebaseAgentResult {
+export type CodebaseAgentResult = {
   response: string
   toolCalls: {
     tool: string

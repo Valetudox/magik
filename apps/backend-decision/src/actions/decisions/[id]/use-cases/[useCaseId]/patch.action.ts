@@ -1,12 +1,12 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateUseCase as updateUseCaseService } from '../../../../../services/useCase.service'
 
-interface UpdateUseCaseParams {
+type UpdateUseCaseParams = {
   id: string
   useCaseId: string
 }
 
-interface UpdateUseCaseBody {
+type UpdateUseCaseBody = {
   name: string
   description: string
 }

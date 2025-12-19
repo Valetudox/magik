@@ -1,3 +1,3 @@
-export interface PlaceholderType {
+export type PlaceholderType = {
   id: string
 }

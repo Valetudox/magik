@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createComponent as createComponentService } from '../../../../services/component.service'
 
-interface CreateComponentParams {
+type CreateComponentParams = {
   id: string
 }
 
-interface CreateComponentBody {
+type CreateComponentBody = {
   name: string
   description: string
 }

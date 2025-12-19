@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { ref } from 'vue'
-import EntityDetailTable from './EntityDetailTable.vue'
 import type { DetailTableConfigInput } from '../types/detail-table.schema'
+import EntityDetailTable from './EntityDetailTable.vue'
 
 const meta = {
   title: 'Components/EntityDetailTable',

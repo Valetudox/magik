@@ -1,0 +1,22 @@
+{
+  "name": "@magik/eslint-plugin",
+  "version": "1.0.0",
+  "description": "Custom ESLint rules for Magik monorepo",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "eslint src --max-warnings 0"
+  },
+  "keywords": [
+    "eslint",
+    "plugin",
+    "magik"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  }
+}
