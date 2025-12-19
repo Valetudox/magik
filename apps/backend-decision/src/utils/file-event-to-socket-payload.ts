@@ -1,6 +1,6 @@
 import type { FileChangeEvent } from './file-watcher'
 
-export interface SocketPayload {
+export type SocketPayload = {
   channel: string
   payload: Record<string, unknown>
 }

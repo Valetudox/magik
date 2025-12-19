@@ -1,6 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4003/api'
-
-export interface SpecificationRequirementItem {
+export type SpecificationRequirementItem = {
   type:
     | 'ubiquitous'
     | 'event-driven'
@@ -16,18 +14,18 @@ export interface SpecificationRequirementItem {
   unwantedConditions?: string[]
 }
 
-export interface SpecificationSection {
+export type SpecificationSection = {
   sectionName: string
   items: SpecificationRequirementItem[]
 }
 
-export interface Specification {
+export type Specification = {
   title: string
   description: string
   requirements: SpecificationSection[]
 }
 
-export interface SpecificationSummary {
+export type SpecificationSummary = {
   id: string
   title: string
   description: string
@@ -35,9 +33,9 @@ export interface SpecificationSummary {
   project: string
 }
 
-export interface SpecificationDetail extends Specification {
+export type SpecificationDetail = {
   id: string
-}
+} & Specification
 
 export const api = {
   async getSpecifications(): Promise<SpecificationSummary[]> {
@@ -60,3 +58,6 @@ export const api = {
     return (await response.json()) as SpecificationDetail
   },
 }
+
+// Private configuration (after exports)
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4003/api'

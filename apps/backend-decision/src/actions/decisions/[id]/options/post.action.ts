@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createOption as createOptionService } from '../../../../services/option.service'
 
-interface CreateOptionParams {
+type CreateOptionParams = {
   id: string
 }
 
-interface CreateOptionBody {
+type CreateOptionBody = {
   name: string
   description: string
   moreLink?: string

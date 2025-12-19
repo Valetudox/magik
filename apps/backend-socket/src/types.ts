@@ -1,4 +1,4 @@
-export interface SocketMessage {
+export type SocketMessage = {
   type: string
   payload: unknown
 }

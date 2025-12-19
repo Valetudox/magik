@@ -1,12 +1,12 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateDriver as updateDriverService } from '../../../../../services/driver.service'
 
-interface UpdateDriverParams {
+type UpdateDriverParams = {
   id: string
   driverId: string
 }
 
-interface UpdateDriverBody {
+type UpdateDriverBody = {
   name: string
   description: string
 }

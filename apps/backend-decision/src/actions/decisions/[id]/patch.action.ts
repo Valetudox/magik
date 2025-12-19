@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateDecision as updateDecisionService } from '../../../services/decision.service'
 
-interface UpdateDecisionParams {
+type UpdateDecisionParams = {
   id: string
 }
 
-interface UpdateDecisionBody {
+type UpdateDecisionBody = {
   problemDefinition?: string
   proposal?: { description: string; reasoning: string[] }
   confluenceLink?: string

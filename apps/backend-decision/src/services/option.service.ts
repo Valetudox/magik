@@ -4,7 +4,7 @@ import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
 import { generateId } from '../utils/generate-id'
 
-export interface Option {
+export type Option = {
   id: string
   name: string
   description: string

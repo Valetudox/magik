@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createDecision as createDecisionService } from '../../services/decision.service'
 
-interface CreateDecisionBody {
+type CreateDecisionBody = {
   filename: string
 }
 

@@ -1,7 +1,7 @@
 import { ref, type Ref } from 'vue'
 import { api, type DecisionDetail } from '../services/api'
 
-export interface Notification {
+export type Notification = {
   show: boolean
   message: string
   type: 'success' | 'error'

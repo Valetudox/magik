@@ -1,4 +1,4 @@
-export interface DecisionResponse {
+export type DecisionResponse = {
   id: string
   [key: string]: unknown
 }

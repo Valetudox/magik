@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { deleteDecision as deleteDecisionService } from '../../../services/decision.service'
 
-interface DeleteDecisionParams {
+type DeleteDecisionParams = {
   id: string
 }
 

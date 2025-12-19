@@ -1,10 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import type { TableDocumentDetail } from './api'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:4004'
-
-let socket: Socket | null = null
-
 export function initSocket(): Socket {
   if (socket) {
     return socket
@@ -69,3 +65,8 @@ export function onTableDocumentDeleted(callback: (data: { id: string }) => void)
     sock.off('tabledocument:deleted', callback)
   }
 }
+
+// Private configuration (after exports)
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL as string | undefined) ?? 'http://localhost:4004'
+
+let socket: Socket | null = null

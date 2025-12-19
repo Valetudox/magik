@@ -1,4 +1,7 @@
 {
+  "packages": {
+    "agents": {}
+  },
   "menu": [
     {
       "title": "Architect",
