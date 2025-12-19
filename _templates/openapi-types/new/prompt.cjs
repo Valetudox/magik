@@ -29,11 +29,11 @@ function mapSchemaToType(schema, schemas) {
   }
 }
 
-function generateInterface(name, schema, schemas) {
+function generateType(name, schema, schemas) {
   const properties = schema.properties || {}
   const required = schema.required || []
 
-  let lines = [`export interface ${name} {`]
+  let lines = [`export type ${name} = {`]
 
   for (const [propName, propSchema] of Object.entries(properties)) {
     const optional = !required.includes(propName) ? '?' : ''
@@ -54,15 +54,15 @@ module.exports = {
       const schemasJson = Buffer.from(args.schemasBase64, 'base64').toString('utf-8')
       const schemas = JSON.parse(schemasJson)
 
-      // Generate all interfaces
-      const interfaces = []
+      // Generate all types
+      const types = []
       for (const [schemaName, schema] of Object.entries(schemas)) {
-        interfaces.push(generateInterface(schemaName, schema, schemas))
+        types.push(generateType(schemaName, schema, schemas))
       }
 
       return Promise.resolve({
         serviceName: args.serviceName,
-        typesContent: interfaces.join('\n\n'),
+        typesContent: types.join('\n\n'),
       })
     }
 
