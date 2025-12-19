@@ -1,0 +1,38 @@
+services:
+  backend-audio:
+    build:
+      context: ../../..
+      dockerfile: apps/backend-audio/Dockerfile
+    container_name: backend-audio-test
+    ports:
+      - '13002:3002'
+    environment:
+      - PORT=3002
+    networks:
+      - test-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3002/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  schemathesis:
+    image: python:3.12-slim
+    container_name: backend-audio-schemathesis
+    depends_on:
+      backend-audio:
+        condition: service_healthy
+    volumes:
+      - ../../../specs/domains/audio/openapi.yaml:/schema/openapi.yaml:ro
+      - ./schemathesis-tests:/tests:ro
+    working_dir: /tests
+    command: >
+      sh -c "pip install -q -r requirements.txt &&
+             pytest test_audio_api.py --base-url=http://backend-audio:3002 -v --tb=line -rA --hypothesis-show-statistics"
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
