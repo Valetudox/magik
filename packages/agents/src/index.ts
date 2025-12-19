@@ -1,7 +1,6 @@
 // Agent functions
 export { runDecisionAgent } from './agents/decision/decision.agent.js'
 export { runCodebaseAgent } from './agents/codebase/codebase.agent.js'
-export { runTableDocumentAgent } from './agents/tabledocument/tabledocument.agent.js'
 
 // Library utilities
 export { createTypedAgent } from './lib/index.js'

@@ -7,16 +7,20 @@
       "title": "Architect",
       "icon": "mdi-drawing",
       "items": [
-        { "ui": "UI_DECISION", "icon": "mdi-file-document-multiple" },
-        { "ui": "UI_SPECIFICATION", "icon": "mdi-file-document-outline" }
+        {
+          "ui": "UI_DECISION",
+          "icon": "mdi-file-document-multiple"
+        }
       ]
     },
     {
       "title": "Tools",
       "icon": "mdi-tools",
       "items": [
-        { "ui": "UI_AUDIO", "icon": "mdi-microphone" },
-        { "ui": "UI_TABLEDOCUMENT", "icon": "mdi-table-large" }
+        {
+          "ui": "UI_AUDIO",
+          "icon": "mdi-microphone"
+        }
       ]
     }
   ],
@@ -43,23 +47,9 @@
       "apiRoute": "/api/recordings",
       "containerName": "backend-audio",
       "backendMode": "endpoint-only",
-      "dataFolders": ["/data/recordings"]
-    },
-    "BACKEND_SPECIFICATION": {
-      "dev": 4003,
-      "prod": 3003,
-      "apiRoute": "/api/specifications",
-      "containerName": "backend-specification",
-      "backendMode": "endpoint-only",
-      "dataFolders": []
-    },
-    "BACKEND_TABLEDOCUMENT": {
-      "dev": 4004,
-      "prod": 3004,
-      "apiRoute": "/api/table-documents",
-      "containerName": "backend-tabledocument",
-      "backendMode": "custom",
-      "dataFolders": ["/data/table-documents"]
+      "dataFolders": [
+        "/data/recordings"
+      ]
     }
   },
   "uis": {
@@ -67,7 +57,10 @@
       "name": "Decisions",
       "basePath": "/decisions",
       "containerName": "ui-decision",
-      "dependsOn": ["backend-decision", "backend-socket"],
+      "dependsOn": [
+        "backend-decision",
+        "backend-socket"
+      ],
       "port": 80,
       "openapiSpec": "specs/domains/decision/openapi.yaml",
       "vitePort": 5173
@@ -76,29 +69,14 @@
       "name": "Audio",
       "basePath": "/audio",
       "containerName": "ui-audio",
-      "dependsOn": ["backend-audio", "backend-socket"],
+      "dependsOn": [
+        "backend-audio",
+        "backend-socket"
+      ],
       "port": 80,
       "openapiSpec": "specs/domains/audio/openapi.yaml",
       "vitePort": 5174,
       "needsSpecs": true
-    },
-    "UI_SPECIFICATION": {
-      "name": "Specifications",
-      "basePath": "/specifications",
-      "containerName": "ui-specification",
-      "dependsOn": ["backend-specification", "backend-socket"],
-      "port": 80,
-      "openapiSpec": "specs/domains/specification/openapi.yaml",
-      "vitePort": 5176
-    },
-    "UI_TABLEDOCUMENT": {
-      "name": "Table Documents",
-      "basePath": "/table-documents",
-      "containerName": "ui-tabledocument",
-      "dependsOn": ["backend-tabledocument", "backend-socket"],
-      "port": 80,
-      "openapiSpec": "specs/domains/tabledocument/openapi.yaml",
-      "vitePort": 5175
     }
   }
 }

@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://magik.local/schemas/decision.json",
+  "title": "Decision",
+  "description": "Architecture decision record with evaluation matrix.\n\nINVARIANT evaluationMatrixComplete:\nEvery option must be evaluated against every driver.\n∀ o ∈ options, d ∈ decisionDrivers: ∃ e ∈ evaluationMatrix: e.optionId = o.id ∧ e.driverId = d.id",
+  "type": "object",
+  "required": [
+    "problemDefinition",
+    "components",
+    "useCases",
+    "decisionDrivers",
+    "options",
+    "evaluationMatrix",
+    "proposal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "problemDefinition": {
+      "type": "string",
+      "description": "Description of the problem being addressed"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "useCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "decisionDrivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "A plain text description of the decision driver. Should not contain formatting, markdown, or special characters. Maximum 500 characters."
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "A brief, plain text description of the option. Should be concise and not contain formatting. Maximum 200 characters."
+          },
+          "moreLink": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional URL link to more detailed information about this option"
+          },
+          "architectureDiagramLink": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional URL link to an architecture diagram for this option"
+          },
+          "architectureDiagramMermaid": {
+            "type": "string",
+            "description": "Optional Mermaid diagram code for architecture visualization"
+          }
+        }
+      }
+    },
+    "evaluationMatrix": {
+      "type": "array",
+      "description": "A complete evaluation matrix containing a score for each option/driver combination. Must contain exactly (options.length × decisionDrivers.length) entries, one for each option/driver pair.",
+      "items": {
+        "type": "object",
+        "required": ["optionId", "driverId", "rating", "evaluationDetails"],
+        "additionalProperties": false,
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "description": "Reference to an option.id from the options array"
+          },
+          "driverId": {
+            "type": "string",
+            "description": "Reference to a decisionDriver.id from the decisionDrivers array"
+          },
+          "rating": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Evaluation rating for how well this option satisfies this driver"
+          },
+          "evaluationDetails": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of detailed explanations for the evaluation"
+          }
+        }
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "required": ["description", "reasoning"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Brief description of the chosen solution"
+        },
+        "reasoning": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of reasons supporting this decision"
+        }
+      }
+    },
+    "selectedOption": {
+      "type": "string",
+      "description": "Optional ID of the selected option from the options array"
+    },
+    "confluenceLink": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional Confluence page URL where this decision is published"
+    },
+    "aiSessionId": {
+      "type": "string",
+      "description": "Optional AI agent session ID for maintaining conversation context"
+    }
+  }
+}

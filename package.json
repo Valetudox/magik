@@ -26,6 +26,8 @@
     "format:ws:check": "for dir in apps/* packages/*; do [ -f \"$dir/package.json\" ] && (cd \"$dir\" && bun run format:check 2>/dev/null || true); done",
     "build": "bun ./scripts/build.ts build",
     "build:list": "bun ./scripts/build.ts list",
+    "service:list": "bun ./scripts/remove-service.ts list",
+    "service:remove": "bun ./scripts/remove-service.ts remove",
     "test:e2e": "bun ./scripts/e2e.ts test",
     "test:e2e:list": "bun ./scripts/e2e.ts list",
     "test": "bun run test:e2e",
