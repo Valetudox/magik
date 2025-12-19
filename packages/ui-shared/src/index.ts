@@ -117,3 +117,10 @@ export {
   type DetailSocketConfig,
   type DetailAgentConfig,
 } from './types/detail-page.schema'
+
+// Export menu config
+export {
+  getMenuConfig,
+  type MenuItemConfig,
+  type MenuGroupConfig,
+} from './config/menuConfig'

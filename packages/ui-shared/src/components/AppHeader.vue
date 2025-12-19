@@ -1,6 +1,5 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+<script lang="ts">
+import { getMenuConfig } from '../config/menuConfig'
 
 export interface HeaderSubMenuItem {
   title: string
@@ -17,6 +16,32 @@ export interface HeaderMenuItem {
   children?: HeaderSubMenuItem[]
 }
 
+// Build menu items from injected config (defined outside setup for use in defineProps)
+function buildMenuItemsFromConfig(): HeaderMenuItem[] {
+  const isDev = import.meta.env.DEV
+  const menuConfig = getMenuConfig()
+
+  if (menuConfig.length === 0) {
+    return []
+  }
+
+  return menuConfig.map((group) => ({
+    title: group.title,
+    icon: group.icon,
+    children: group.items.map((item) => ({
+      title: item.title,
+      to: isDev ? item.devUrl : item.prodUrl,
+      icon: item.icon,
+      external: true,
+    })),
+  }))
+}
+</script>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
 interface Props {
   appTitle?: string
   menuItems?: HeaderMenuItem[]
@@ -24,59 +49,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   appTitle: 'Magik',
-  menuItems: () => {
-    const isDev = import.meta.env.DEV
-    const devUrls = {
-      decisions: 'http://localhost:5173/',
-      audio: 'http://localhost:5174/',
-      tableDocuments: 'http://localhost:5175/',
-      specifications: 'http://localhost:5003/',
-    }
-    const prodUrls = {
-      decisions: '/decisions/',
-      audio: '/audio/',
-      tableDocuments: '/table-documents/',
-      specifications: '/specifications/',
-    }
-    return [
-      {
-        title: 'Architect',
-        icon: 'mdi-drawing',
-        children: [
-          {
-            title: 'Decisions',
-            to: isDev ? devUrls.decisions : prodUrls.decisions,
-            icon: 'mdi-file-document-multiple',
-            external: true,
-          },
-          {
-            title: 'Specifications',
-            to: isDev ? devUrls.specifications : prodUrls.specifications,
-            icon: 'mdi-file-document-outline',
-            external: true,
-          },
-        ],
-      },
-      {
-        title: 'Tools',
-        icon: 'mdi-tools',
-        children: [
-          {
-            title: 'Audio',
-            to: isDev ? devUrls.audio : prodUrls.audio,
-            icon: 'mdi-microphone',
-            external: true,
-          },
-          {
-            title: 'Table Documents',
-            to: isDev ? devUrls.tableDocuments : prodUrls.tableDocuments,
-            icon: 'mdi-table-large',
-            external: true,
-          },
-        ],
-      },
-    ]
-  },
+  menuItems: buildMenuItemsFromConfig,
 })
 
 // Detect if we're in development mode

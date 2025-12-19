@@ -1,5 +1,30 @@
 import configData from './config.json' with { type: 'json' }
 
+// Menu types
+export interface MenuItem {
+  ui: string
+  icon: string
+}
+
+export interface MenuGroup {
+  title: string
+  icon: string
+  items: MenuItem[]
+}
+
+// UI config types
+export interface UIConfig {
+  name: string
+  basePath: string
+  containerName: string
+  dependsOn: string[]
+  port: number
+  openapiSpec: string
+  vitePort: number
+  needsSpecs?: boolean
+}
+
+// Service config types
 export interface ServiceConfig {
   dev: number
   prod: number
@@ -8,6 +33,9 @@ export interface ServiceConfig {
   backendMode?: 'endpoint-only' | 'custom'
 }
 
+// Exports
+export const MENU = configData.menu as MenuGroup[]
+export const UIS = configData.uis as Record<string, UIConfig>
 export const SERVICES = configData.services as Record<string, ServiceConfig>
 
 export type ServiceName = keyof typeof SERVICES

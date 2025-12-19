@@ -1,6 +1,22 @@
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import configData from '../../config/config.json' with { type: 'json' }
+
+// Build menu config for runtime injection
+const menuConfig = configData.menu.map((group) => ({
+  title: group.title,
+  icon: group.icon,
+  items: group.items.map((item) => {
+    const ui = configData.uis[item.ui as keyof typeof configData.uis]
+    return {
+      title: ui.name,
+      icon: item.icon,
+      devUrl: `http://localhost:${ui.vitePort}/`,
+      prodUrl: ui.basePath + '/',
+    }
+  }),
+}))
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +27,9 @@ export default defineConfig({
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
     },
+  },
+  define: {
+    'import.meta.env.VITE_MENU_CONFIG': JSON.stringify(JSON.stringify(menuConfig)),
   },
   resolve: {
     alias: {

@@ -1,4 +1,22 @@
 {
+  "menu": [
+    {
+      "title": "Architect",
+      "icon": "mdi-drawing",
+      "items": [
+        { "ui": "UI_DECISION", "icon": "mdi-file-document-multiple" },
+        { "ui": "UI_SPECIFICATION", "icon": "mdi-file-document-outline" }
+      ]
+    },
+    {
+      "title": "Tools",
+      "icon": "mdi-tools",
+      "items": [
+        { "ui": "UI_AUDIO", "icon": "mdi-microphone" },
+        { "ui": "UI_TABLEDOCUMENT", "icon": "mdi-table-large" }
+      ]
+    }
+  ],
   "services": {
     "BACKEND_DECISION": {
       "dev": 4000,
@@ -43,6 +61,7 @@
   },
   "uis": {
     "UI_DECISION": {
+      "name": "Decisions",
       "basePath": "/decisions",
       "containerName": "ui-decision",
       "dependsOn": ["backend-decision", "backend-socket"],
@@ -51,6 +70,7 @@
       "vitePort": 5173
     },
     "UI_AUDIO": {
+      "name": "Audio",
       "basePath": "/audio",
       "containerName": "ui-audio",
       "dependsOn": ["backend-audio", "backend-socket"],
@@ -60,6 +80,7 @@
       "needsSpecs": true
     },
     "UI_SPECIFICATION": {
+      "name": "Specifications",
       "basePath": "/specifications",
       "containerName": "ui-specification",
       "dependsOn": ["backend-specification", "backend-socket"],
@@ -68,6 +89,7 @@
       "vitePort": 5176
     },
     "UI_TABLEDOCUMENT": {
+      "name": "Table Documents",
       "basePath": "/table-documents",
       "containerName": "ui-tabledocument",
       "dependsOn": ["backend-tabledocument", "backend-socket"],
