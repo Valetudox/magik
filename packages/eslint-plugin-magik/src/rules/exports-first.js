@@ -1,12 +1,5 @@
-import type { Rule } from 'eslint'
-
-type ExportInfo = {
-  line: number
-  type: 'exported' | 'non-exported'
-  name: string
-}
-
-export const exportsFirst: Rule.RuleModule = {
+/** @type {import('eslint').Rule.RuleModule} */
+export const exportsFirst = {
   meta: {
     type: 'suggestion',
     docs: {
@@ -20,13 +13,15 @@ export const exportsFirst: Rule.RuleModule = {
     },
   },
   create(context) {
-    const declarations: ExportInfo[] = []
+    /** @type {Array<{line: number, type: 'exported' | 'non-exported', name: string}>} */
+    const declarations = []
 
-    function addDeclaration(
-      node: Rule.Node,
-      type: 'exported' | 'non-exported',
-      name: string
-    ): void {
+    /**
+     * @param {import('eslint').Rule.Node} node
+     * @param {'exported' | 'non-exported'} type
+     * @param {string} name
+     */
+    function addDeclaration(node, type, name) {
       if (node.loc) {
         declarations.push({
           line: node.loc.start.line,
@@ -36,7 +31,11 @@ export const exportsFirst: Rule.RuleModule = {
       }
     }
 
-    function getDeclarationName(node: Rule.Node): string | null {
+    /**
+     * @param {import('eslint').Rule.Node} node
+     * @returns {string | null}
+     */
+    function getDeclarationName(node) {
       // Handle FunctionDeclaration
       if (node.type === 'FunctionDeclaration' && node.id) {
         return node.id.name
@@ -59,9 +58,9 @@ export const exportsFirst: Rule.RuleModule = {
       // Track exported declarations
       ExportNamedDeclaration(node) {
         if (node.declaration) {
-          const name = getDeclarationName(node.declaration as Rule.Node)
+          const name = getDeclarationName(node.declaration)
           if (name) {
-            addDeclaration(node as Rule.Node, 'exported', name)
+            addDeclaration(node, 'exported', name)
           }
         }
       },
@@ -70,11 +69,8 @@ export const exportsFirst: Rule.RuleModule = {
       FunctionDeclaration(node) {
         // Only track if it's a direct child of the program (module level)
         // and not wrapped in an export
-        if (
-          node.parent?.type === 'Program' &&
-          node.id
-        ) {
-          addDeclaration(node as Rule.Node, 'non-exported', node.id.name)
+        if (node.parent?.type === 'Program' && node.id) {
+          addDeclaration(node, 'non-exported', node.id.name)
         }
       },
 
@@ -82,13 +78,10 @@ export const exportsFirst: Rule.RuleModule = {
       VariableDeclaration(node) {
         // Only track if it's a direct child of the program (module level)
         // and not wrapped in an export
-        if (
-          node.parent?.type === 'Program' &&
-          node.declarations.length > 0
-        ) {
+        if (node.parent?.type === 'Program' && node.declarations.length > 0) {
           const firstDeclarator = node.declarations[0]
           if (firstDeclarator.id.type === 'Identifier') {
-            addDeclaration(node as Rule.Node, 'non-exported', firstDeclarator.id.name)
+            addDeclaration(node, 'non-exported', firstDeclarator.id.name)
           }
         }
       },
@@ -97,29 +90,13 @@ export const exportsFirst: Rule.RuleModule = {
       ClassDeclaration(node) {
         // Only track if it's a direct child of the program (module level)
         // and not wrapped in an export
-        if (
-          node.parent?.type === 'Program' &&
-          node.id
-        ) {
-          addDeclaration(node as Rule.Node, 'non-exported', node.id.name)
+        if (node.parent?.type === 'Program' && node.id) {
+          addDeclaration(node, 'non-exported', node.id.name)
         }
       },
 
       // Check order at the end of the file
       'Program:exit'(node) {
-        // Find the last non-exported declaration's line
-        let lastNonExportLine = -1
-        let lastNonExportName = ''
-
-        for (const decl of declarations) {
-          if (decl.type === 'non-exported') {
-            if (decl.line > lastNonExportLine) {
-              lastNonExportLine = decl.line
-              lastNonExportName = decl.name
-            }
-          }
-        }
-
         // Find the first non-exported declaration's line
         let firstNonExportLine = Infinity
         let firstNonExportName = ''
@@ -137,7 +114,7 @@ export const exportsFirst: Rule.RuleModule = {
         for (const decl of declarations) {
           if (decl.type === 'exported' && decl.line > firstNonExportLine) {
             context.report({
-              node: node as Rule.Node,
+              node,
               messageId: 'exportAfterNonExport',
               data: {
                 exportName: decl.name,

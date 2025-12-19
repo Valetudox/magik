@@ -1,19 +1,21 @@
-import baseConfig from '../../eslint.config.base.js'
+import eslint from '@eslint/js'
 
 export default [
-  ...baseConfig,
+  // ESLint recommended rules only for this simple JS package
+  eslint.configs.recommended,
 
   // eslint-plugin-magik specific configuration
   {
-    files: ['**/*.{ts,js}'],
+    files: ['**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+    },
     rules: {
-      // Allow unresolved imports for eslint types
-      'import/no-unresolved': [
-        'error',
-        {
-          ignore: ['^eslint$', '^@magik/'],
-        },
-      ],
+      // Basic code quality
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'prefer-const': 'error',
+      'no-var': 'error',
     },
   },
 ]

@@ -285,6 +285,17 @@
         "@types/node": "^22.10.2",
       },
     },
+    "packages/eslint-plugin-magik": {
+      "name": "@magik/eslint-plugin",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@types/eslint": "^9.6.0",
+        "typescript": "^5.6.0",
+      },
+      "peerDependencies": {
+        "eslint": ">=9.0.0",
+      },
+    },
     "packages/gemini": {
       "name": "@magik/gemini",
       "version": "1.0.0",
@@ -621,6 +632,8 @@
 
     "@magik/decisions": ["@magik/decisions@workspace:packages/decisions"],
 
+    "@magik/eslint-plugin": ["@magik/eslint-plugin@workspace:packages/eslint-plugin-magik"],
+
     "@magik/gemini": ["@magik/gemini@workspace:packages/gemini"],
 
     "@magik/meeting": ["@magik/meeting@workspace:packages/meeting"],
@@ -850,6 +863,8 @@
     "@types/ejs": ["@types/ejs@3.1.5", "", {}, "sha512-nv+GSx77ZtXiJzwKdsASqi+YQ5Z7vwHsTP0JY2SiQgjGckkBRKZnk8nIM+7oUZ1VCtuTz0+By4qVR7fqzp/Dfg=="],
 
     "@types/es-aggregate-error": ["@types/es-aggregate-error@1.0.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-qJ7LIFp06h1QE1aVxbVd+zJP2wdaugYXYfd6JxsyRMrYHaxb6itXPogW2tz+ylUJ1n1b+JF1PHyYCfYHm0dvUg=="],
+
+    "@types/eslint": ["@types/eslint@9.6.1", "", { "dependencies": { "@types/estree": "*", "@types/json-schema": "*" } }, "sha512-FXx2pKgId/WyYo2jXw63kk7/+TY7u7AziEJxJAnSFzHlqTAS3Ync6SvgYAN/k4/PQpnnVuzoMuVnByKK2qp0ag=="],
 
     "@types/estree": ["@types/estree@1.0.8", "", {}, "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="],
 
