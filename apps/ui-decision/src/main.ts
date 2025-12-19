@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, type Component } from 'vue'
 // Vuetify
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
@@ -16,4 +16,4 @@ const vuetify = createVuetify({
   },
 })
 
-createApp(App).use(vuetify).use(router).mount('#app')
+createApp(App as Component).use(vuetify).use(router).mount('#app')
