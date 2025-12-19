@@ -13,8 +13,7 @@ const EXPECTED_TSCONFIG = {
   extends: '../../tsconfig.json',
   compilerOptions: {
     outDir: './dist',
-    module: 'NodeNext',
-    moduleResolution: 'NodeNext',
+    module: 'ESNext',
   },
   include: ['src/**/*', '../../config/config.ts'],
   exclude: ['node_modules'],
