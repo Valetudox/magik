@@ -16,6 +16,10 @@ import type { UnifiedTask } from './types';
 const scriptDir = resolve(dirname(fileURLToPath(import.meta.url)));
 const rootDir = resolve(scriptDir, '..', '..');
 
+// Load config once
+const configPath = resolve(rootDir, 'config/config.json');
+const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+
 const program = new Command();
 
 program
@@ -24,50 +28,80 @@ program
   .version('1.0.0');
 
 /**
- * Discovers services in the apps directory with the given prefix.
+ * Discovers backend services from config.json.
+ * Returns folder names (containerName) for each service.
  */
-function discoverServices(prefix: string): string[] {
-  const appsDir = resolve(rootDir, 'apps');
+function discoverBackendServices(): string[] {
   const services: string[] = [];
 
-  try {
-    const entries = readdirSync(appsDir);
-
-    for (const entry of entries) {
-      if (entry.startsWith(prefix)) {
-        const fullPath = resolve(appsDir, entry);
-        if (statSync(fullPath).isDirectory()) {
-          services.push(entry);
-        }
-      }
+  for (const [key, value] of Object.entries(config.services || {})) {
+    if (key.startsWith('BACKEND_')) {
+      const containerName = (value as { containerName: string }).containerName;
+      services.push(containerName);
     }
-  } catch {
-    // Directory might not exist
   }
 
   return services.sort();
 }
 
 /**
- * Discovers packages in the packages directory.
+ * Discovers frontend services from config.json.
+ * Returns folder names (containerName) for each UI.
+ */
+function discoverFrontendServices(): string[] {
+  const services: string[] = [];
+
+  for (const [key, value] of Object.entries(config.uis || {})) {
+    if (key.startsWith('UI_')) {
+      const containerName = (value as { containerName: string }).containerName;
+      services.push(containerName);
+    }
+  }
+
+  return services.sort();
+}
+
+/**
+ * Discovers packages from config.json packages section.
+ * Falls back to scanning packages directory if not defined in config.
  */
 function discoverPackages(): string[] {
   const packagesDir = resolve(rootDir, 'packages');
   const packages: string[] = [];
 
-  try {
-    const entries = readdirSync(packagesDir);
+  // Get package names from config.packages keys
+  const configPackages = Object.keys(config.packages || {});
 
-    for (const entry of entries) {
-      const fullPath = resolve(packagesDir, entry);
+  if (configPackages.length > 0) {
+    // Use packages defined in config
+    for (const pkgName of configPackages) {
+      const fullPath = resolve(packagesDir, pkgName);
       const packageJsonPath = resolve(fullPath, 'package.json');
-      // Only include directories that have a package.json
-      if (statSync(fullPath).isDirectory() && statSync(packageJsonPath).isFile()) {
-        packages.push(entry);
+      // Verify the package exists
+      try {
+        if (statSync(fullPath).isDirectory() && statSync(packageJsonPath).isFile()) {
+          packages.push(pkgName);
+        }
+      } catch {
+        // Package directory doesn't exist, skip
       }
     }
-  } catch {
-    // Directory might not exist
+  } else {
+    // Fallback: scan packages directory
+    try {
+      const entries = readdirSync(packagesDir);
+
+      for (const entry of entries) {
+        const fullPath = resolve(packagesDir, entry);
+        const packageJsonPath = resolve(fullPath, 'package.json');
+        // Only include directories that have a package.json
+        if (statSync(fullPath).isDirectory() && statSync(packageJsonPath).isFile()) {
+          packages.push(entry);
+        }
+      }
+    } catch {
+      // Directory might not exist
+    }
   }
 
   return packages.sort();
@@ -88,7 +122,7 @@ function buildUnifiedTasks(options: {
 
   // Build backend tasks
   if (options.lintBackends) {
-    const allBackends = discoverServices('backend-');
+    const allBackends = discoverBackendServices();
     const backends = options.specificBackends && options.specificBackends.length > 0
       ? allBackends.filter(s => options.specificBackends!.includes(s))
       : allBackends;
@@ -115,7 +149,7 @@ function buildUnifiedTasks(options: {
 
   // Build frontend tasks
   if (options.lintFrontends) {
-    const allFrontends = discoverServices('ui-');
+    const allFrontends = discoverFrontendServices();
     const frontends = options.specificFrontends && options.specificFrontends.length > 0
       ? allFrontends.filter(s => options.specificFrontends!.includes(s))
       : allFrontends;
@@ -182,12 +216,9 @@ program
   .option('--frontends', 'List only frontend services')
   .option('--packages', 'List only packages')
   .action((options) => {
-    const configPath = resolve(rootDir, 'config/config.json');
-    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-
-    const backendKeys = Object.keys(config.services || {}).filter(k => k.startsWith('BACKEND_'));
-    const frontendKeys = Object.keys(config.uis || {}).filter(k => k.startsWith('UI_'));
-    const packageKeys = discoverPackages();
+    const backendServices = discoverBackendServices();
+    const frontendServices = discoverFrontendServices();
+    const packageNames = discoverPackages();
 
     const showAll = !options.backends && !options.frontends && !options.packages;
 
@@ -195,46 +226,42 @@ program
       // Show all
       console.log('Available services and packages:\n');
 
-      if (backendKeys.length > 0) {
+      if (backendServices.length > 0) {
         console.log('Backend services:');
-        backendKeys.forEach(key => {
-          const name = key.replace('BACKEND_', 'backend-').toLowerCase();
+        backendServices.forEach(name => {
           console.log(`  - ${name}`);
         });
         console.log('');
       }
 
-      if (frontendKeys.length > 0) {
+      if (frontendServices.length > 0) {
         console.log('Frontend services:');
-        frontendKeys.forEach(key => {
-          const name = key.replace('UI_', 'ui-').toLowerCase();
+        frontendServices.forEach(name => {
           console.log(`  - ${name}`);
         });
         console.log('');
       }
 
-      if (packageKeys.length > 0) {
+      if (packageNames.length > 0) {
         console.log('Packages:');
-        packageKeys.forEach(name => {
+        packageNames.forEach(name => {
           console.log(`  - ${name}`);
         });
         console.log('');
       }
     } else if (options.backends) {
       console.log('Backend services:');
-      backendKeys.forEach(key => {
-        const name = key.replace('BACKEND_', 'backend-').toLowerCase();
+      backendServices.forEach(name => {
         console.log(`  - ${name}`);
       });
     } else if (options.frontends) {
       console.log('Frontend services:');
-      frontendKeys.forEach(key => {
-        const name = key.replace('UI_', 'ui-').toLowerCase();
+      frontendServices.forEach(name => {
         console.log(`  - ${name}`);
       });
     } else if (options.packages) {
       console.log('Packages:');
-      packageKeys.forEach(name => {
+      packageNames.forEach(name => {
         console.log(`  - ${name}`);
       });
     }
