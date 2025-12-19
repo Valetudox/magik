@@ -1,12 +1,12 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateComponent as updateComponentService } from '../../../../../services/component.service'
 
-interface UpdateComponentParams {
+type UpdateComponentParams = {
   id: string
   componentId: string
 }
 
-interface UpdateComponentBody {
+type UpdateComponentBody = {
   name: string
   description: string
 }

@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import type { Server } from 'socket.io'
 
-interface BroadcastBody {
+type BroadcastBody = {
   channel: string
   payload?: unknown
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SectionedBox, BoxSection } from '@magik/ui-shared'
 
-export interface Proposal {
+export type Proposal = {
   description: string
   reasoning: string[]
 }

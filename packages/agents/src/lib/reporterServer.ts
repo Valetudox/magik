@@ -10,7 +10,7 @@ export function getToolFullName(agentName: string): string {
   return `mcp__${agentName}_reporter_server__${TOOL_NAME}`
 }
 
-export interface ReporterServerConfig {
+export type ReporterServerConfig = {
   /** Name of the MCP server */
   serverName: string
   /** Tool description */

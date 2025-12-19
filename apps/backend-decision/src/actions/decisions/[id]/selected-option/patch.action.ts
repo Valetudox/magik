@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateSelectedOption as updateSelectedOptionService } from '../../../../services/decision.service'
 
-interface UpdateSelectedOptionParams {
+type UpdateSelectedOptionParams = {
   id: string
 }
 
-interface UpdateSelectedOptionBody {
+type UpdateSelectedOptionBody = {
   optionId: string | null
 }
 

@@ -3,7 +3,7 @@ import { join, basename, dirname, relative } from 'path'
 import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
 
-export interface DecisionSummary {
+export type DecisionSummary = {
   id: string
   name: string
   directory: string

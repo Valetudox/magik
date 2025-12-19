@@ -1,14 +1,14 @@
 /// <reference types="vite/client" />
 
 // Type for runtime menu config (injected by Vite at build time)
-export interface MenuItemConfig {
+export type MenuItemConfig = {
   title: string
   icon: string
   devUrl: string
   prodUrl: string
 }
 
-export interface MenuGroupConfig {
+export type MenuGroupConfig = {
   title: string
   icon: string
   items: MenuItemConfig[]

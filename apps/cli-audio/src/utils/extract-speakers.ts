@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises'
 
-export interface TranscriptResult {
+export type TranscriptResult = {
   type: string
   alternatives?: {
     speaker?: string
@@ -8,7 +8,7 @@ export interface TranscriptResult {
   }[]
 }
 
-export interface TranscriptData {
+export type TranscriptData = {
   results: TranscriptResult[]
 }
 

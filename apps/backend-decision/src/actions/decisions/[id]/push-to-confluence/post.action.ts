@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { pushToConfluence as pushToConfluenceService } from '../../../../services/confluence.service'
 
-interface PushToConfluenceParams {
+type PushToConfluenceParams = {
   id: string
 }
 
-interface PushToConfluenceBody {
+type PushToConfluenceBody = {
   confluenceUrl: string
 }
 

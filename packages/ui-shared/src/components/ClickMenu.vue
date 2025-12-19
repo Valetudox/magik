@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, useSlots, cloneVNode, type VNode } from 'vue'
 
-export interface ClickMenuItem {
+export type ClickMenuItem = {
   key: string
   title: string
   icon?: string

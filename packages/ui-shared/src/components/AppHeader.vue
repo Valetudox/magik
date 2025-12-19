@@ -1,14 +1,14 @@
 <script lang="ts">
 import { getMenuConfig } from '../config/menuConfig'
 
-export interface HeaderSubMenuItem {
+export type HeaderSubMenuItem = {
   title: string
   to: string
   icon?: string
   external?: boolean
 }
 
-export interface HeaderMenuItem {
+export type HeaderMenuItem = {
   title: string
   to?: string
   icon?: string

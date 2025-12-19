@@ -5,7 +5,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 import { createReporterServer, TOOL_NAME } from './reporterServer.js'
 import { sessionExists } from './sessionManager.js'
 
-export interface TypedAgentConfig<TDocument> {
+export type TypedAgentConfig<TDocument> = {
   /** Name of the agent (used for server naming) */
   name: string
   /** Zod schema for the document */
@@ -14,7 +14,7 @@ export interface TypedAgentConfig<TDocument> {
   model?: string
 }
 
-export interface TypedAgentResult<TDocument> {
+export type TypedAgentResult<TDocument> = {
   data: TDocument
   sessionId?: string
 }

@@ -1,13 +1,13 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { getSpecificationById } from '../../../services/specification.service'
 
-interface GetSpecificationParams {
+type GetSpecificationParams = {
   id: string
 }
 
-interface NodeError extends Error {
+type NodeError = {
   code?: string
-}
+} & Error
 
 export async function getSpecification(
   request: FastifyRequest<{ Params: GetSpecificationParams }>,

@@ -14,7 +14,7 @@ import {
 import OptionDialog from '../OptionDialog.vue'
 import ConfirmDialog from '../ConfirmDialog.vue'
 
-export interface Option {
+export type Option = {
   id: string
   name: string
   description: string
@@ -23,13 +23,13 @@ export interface Option {
   architectureDiagramLink?: string
 }
 
-export interface Driver {
+export type Driver = {
   id: string
   name: string
   description: string
 }
 
-export interface Evaluation {
+export type Evaluation = {
   optionId: string
   driverId: string
   rating?: 'high' | 'medium' | 'low'

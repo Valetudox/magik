@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateEvaluationRating } from '../../../../services/evaluation.service'
 
-interface UpdateEvaluationParams {
+type UpdateEvaluationParams = {
   id: string
 }
 
-interface UpdateEvaluationBody {
+type UpdateEvaluationBody = {
   optionId: string
   driverId: string
   rating: 'high' | 'medium' | 'low'

@@ -7,7 +7,7 @@ import { join } from 'path'
  */
 export function sessionExists(sessionId: string): boolean {
   const projectsDir = join(homedir(), '.claude', 'projects')
-  if (!existsSync(projectsDir)) return false
+  if (!existsSync(projectsDir)) {return false}
 
   const projectFolders = readdirSync(projectsDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())

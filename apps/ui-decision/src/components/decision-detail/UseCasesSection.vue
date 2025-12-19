@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { ListBox, NameDescriptionDialog } from '@magik/ui-shared'
 import ConfirmDialog from '../ConfirmDialog.vue'
 
-export interface UseCaseItem {
+export type UseCaseItem = {
   id: string
   name: string
   description: string

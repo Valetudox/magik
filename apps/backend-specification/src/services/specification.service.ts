@@ -2,11 +2,11 @@ import { readdir, readFile } from 'fs/promises'
 import { join, relative } from 'path'
 import { SPECIFICATIONS_DIR } from '../config'
 
-interface NodeError extends Error {
+type NodeError = {
   code?: string
-}
+} & Error
 
-export interface SpecificationRequirementItem {
+export type SpecificationRequirementItem = {
   type:
     | 'ubiquitous'
     | 'event-driven'
@@ -22,18 +22,18 @@ export interface SpecificationRequirementItem {
   unwantedConditions?: string[]
 }
 
-export interface SpecificationSection {
+export type SpecificationSection = {
   sectionName: string
   items: SpecificationRequirementItem[]
 }
 
-export interface Specification {
+export type Specification = {
   title: string
   description: string
   requirements: SpecificationSection[]
 }
 
-export interface SpecificationSummary {
+export type SpecificationSummary = {
   id: string
   title: string
   description: string
@@ -41,9 +41,9 @@ export interface SpecificationSummary {
   project: string
 }
 
-export interface SpecificationDetail extends Specification {
+export type SpecificationDetail = {
   id: string
-}
+} & Specification
 
 async function findJsonFiles(dir: string): Promise<string[]> {
   const files: string[] = []

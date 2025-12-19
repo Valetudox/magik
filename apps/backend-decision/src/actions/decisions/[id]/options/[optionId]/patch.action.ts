@@ -1,12 +1,12 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { updateOption as updateOptionService } from '../../../../../services/option.service'
 
-interface UpdateOptionParams {
+type UpdateOptionParams = {
   id: string
   optionId: string
 }
 
-interface UpdateOptionBody {
+type UpdateOptionBody = {
   name: string
   description: string
   moreLink?: string

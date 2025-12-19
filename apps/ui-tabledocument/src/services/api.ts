@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4004'
 
-export interface TableRow {
+export type TableRow = {
   id: string
   use_case: string
   diagram?: string
@@ -10,7 +10,7 @@ export interface TableRow {
   notes?: string[]
 }
 
-export interface TableDocumentSummary {
+export type TableDocumentSummary = {
   id: string
   name: string
   directory: string
@@ -20,7 +20,7 @@ export interface TableDocumentSummary {
   updatedAt: string
 }
 
-export interface TableDocumentDetail {
+export type TableDocumentDetail = {
   id: string
   confluence_url?: string
   table: TableRow[]
