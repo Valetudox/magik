@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { SpecificationRequirementItem } from '../services/api'
 
-interface Props {
+type Props = {
   requirement: SpecificationRequirementItem
   searchQuery?: string
 }

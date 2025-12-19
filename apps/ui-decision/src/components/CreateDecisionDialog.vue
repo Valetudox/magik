@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { api } from '../services/api'
 
-interface Props {
+type Props = {
   modelValue: boolean
 }
 

@@ -82,6 +82,9 @@ export default tseslint.config(
 
       // Disable func-style for Vue files (arrow functions are idiomatic in Vue)
       'func-style': 'off',
+
+      // Enforce types over interfaces (consistent with base config)
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     },
   }
 )
