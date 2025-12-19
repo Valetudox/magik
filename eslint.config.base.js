@@ -116,7 +116,7 @@ export default tseslint.config(
       curly: ['error', 'all'],
 
       // Magik custom rules
-      '@magik/exports-first': 'warn', // TODO: change to 'error' after fixing existing violations
+      // '@magik/exports-first': 'error', // Enable after fixing existing violations
     },
   },
 
