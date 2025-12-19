@@ -1,6 +1,6 @@
 ---
 to: apps/backend-<%= serviceName %>/src/types.ts
 ---
-export interface PlaceholderType {
+export type PlaceholderType = {
   id: string
 }
