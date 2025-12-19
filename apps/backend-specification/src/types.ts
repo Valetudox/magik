@@ -1,4 +1,4 @@
-export interface SpecificationResponse {
+export type SpecificationResponse = {
   id: string
   [key: string]: unknown
 }

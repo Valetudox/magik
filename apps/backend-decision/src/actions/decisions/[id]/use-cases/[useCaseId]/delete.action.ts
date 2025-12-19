@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { deleteUseCase as deleteUseCaseService } from '../../../../../services/useCase.service'
 
-interface DeleteUseCaseParams {
+type DeleteUseCaseParams = {
   id: string
   useCaseId: string
 }

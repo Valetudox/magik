@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { DECISIONS_DIR, JIRA_USERNAME, JIRA_TOKEN } from '../config'
 
-export interface ConfluenceUploadResult {
+export type ConfluenceUploadResult = {
   success: boolean
   message?: string
   output?: string

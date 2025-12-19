@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint'
 import importPlugin from 'eslint-plugin-import'
 import promisePlugin from 'eslint-plugin-promise'
 import nPlugin from 'eslint-plugin-n'
-import magikPlugin from '@magik/eslint-plugin'
+import magikPlugin from './packages/eslint-plugin-magik/src/index.js'
 
 export default tseslint.config(
   // ESLint recommended rules

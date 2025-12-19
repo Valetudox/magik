@@ -34,8 +34,12 @@ export const serviceConfigSchema = z.object({
   dataFolders: z.array(z.string()).optional(),
 })
 
+// Package config schema
+export const packageConfigSchema = z.object({})
+
 // Full config schema (without cross-validation)
 const baseConfigSchema = z.object({
+  packages: z.record(z.string(), packageConfigSchema),
   menu: z.array(menuGroupSchema),
   services: z.record(z.string(), serviceConfigSchema),
   uis: z.record(z.string(), uiConfigSchema),
@@ -187,4 +191,5 @@ export type MenuItem = z.infer<typeof menuItemSchema>
 export type MenuGroup = z.infer<typeof menuGroupSchema>
 export type UIConfig = z.infer<typeof uiConfigSchema>
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>
+export type PackageConfig = z.infer<typeof packageConfigSchema>
 export type Config = z.infer<typeof configSchema>

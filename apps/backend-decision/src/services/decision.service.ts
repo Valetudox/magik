@@ -3,7 +3,7 @@ import { join, basename, dirname, relative } from 'path'
 import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
 
-export interface DecisionSummary {
+export type DecisionSummary = {
   id: string
   name: string
   directory: string
@@ -12,22 +12,6 @@ export interface DecisionSummary {
   confluenceLink?: string
   createdAt: string
   updatedAt: string
-}
-
-async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true })
-  const files: string[] = []
-
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      files.push(...(await findAllJsonFiles(fullPath, baseDir)))
-    } else if (entry.name.endsWith('.json')) {
-      const relativePath = relative(baseDir, fullPath).slice(0, -5)
-      files.push(relativePath)
-    }
-  }
-  return files
 }
 
 export async function listAllDecisions(): Promise<DecisionSummary[]> {
@@ -172,4 +156,21 @@ export async function updateSelectedOption(
 
   await writeFile(filePath, JSON.stringify(decisionData, null, 2), 'utf-8')
   return decisionData.selectedOption
+}
+
+//Private helper functions (after exports)
+async function findAllJsonFiles(dir: string, baseDir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true })
+  const files: string[] = []
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...(await findAllJsonFiles(fullPath, baseDir)))
+    } else if (entry.name.endsWith('.json')) {
+      const relativePath = relative(baseDir, fullPath).slice(0, -5)
+      files.push(relativePath)
+    }
+  }
+  return files
 }

@@ -1,8 +1,6 @@
 import type { decision } from '@magik/decisions'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
-
-export interface DecisionSummary {
+export type DecisionSummary = {
   id: string
   name: string
   directory: string
@@ -13,9 +11,9 @@ export interface DecisionSummary {
   updatedAt: string
 }
 
-export interface DecisionDetail extends decision {
+export type DecisionDetail = {
   id: string
-}
+} & decision
 
 export const api = {
   async getDecisions(): Promise<DecisionSummary[]> {
@@ -382,3 +380,6 @@ export const api = {
     return response.json() as Promise<{ success: boolean }>
   },
 }
+
+// Private configuration (after exports)
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000/api'

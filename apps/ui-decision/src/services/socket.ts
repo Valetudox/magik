@@ -1,10 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import type { DecisionDetail } from './api'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:4001'
-
-let socket: Socket | null = null
-
 export function initSocket() {
   if (socket) {
     return socket
@@ -69,3 +65,8 @@ export function onDecisionDeleted(callback: (data: { id: string }) => void): () 
     sock.off('decision:deleted', callback)
   }
 }
+
+// Private configuration (after exports)
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL as string | undefined) ?? 'http://localhost:4001'
+
+let socket: Socket | null = null

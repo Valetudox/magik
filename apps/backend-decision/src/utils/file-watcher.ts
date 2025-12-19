@@ -3,13 +3,13 @@ import { relative } from 'path'
 import type { decision } from '@magik/decisions'
 import { watch, type FSWatcher } from 'chokidar'
 
-export interface FileChangeEvent {
+export type FileChangeEvent = {
   type: 'updated' | 'deleted'
   id: string
   decision?: decision
 }
 
-export interface Observable<T> {
+export type Observable<T> = {
   subscribe(observer: (value: T) => void | Promise<void>): void
   unsubscribe(): void
 }

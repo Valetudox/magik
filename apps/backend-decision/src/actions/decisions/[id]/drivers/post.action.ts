@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createDriver as createDriverService } from '../../../../services/driver.service'
 
-interface CreateDriverParams {
+type CreateDriverParams = {
   id: string
 }
 
-interface CreateDriverBody {
+type CreateDriverBody = {
   name: string
   description: string
 }

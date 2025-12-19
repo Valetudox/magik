@@ -1,11 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { createUseCase as createUseCaseService } from '../../../../services/useCase.service'
 
-interface CreateUseCaseParams {
+type CreateUseCaseParams = {
   id: string
 }
 
-interface CreateUseCaseBody {
+type CreateUseCaseBody = {
   name: string
   description: string
 }

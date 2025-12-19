@@ -3,7 +3,7 @@ import { join } from 'path'
 import type { decision } from '@magik/decisions'
 import { DECISIONS_DIR } from '../config'
 
-export interface Evaluation {
+export type Evaluation = {
   optionId: string
   driverId: string
   rating: 'high' | 'medium' | 'low'
