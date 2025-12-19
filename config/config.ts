@@ -1,49 +1,33 @@
 import configData from './config.json' with { type: 'json' }
+import {
+  configSchema,
+  type Config,
+  type MenuItem,
+  type MenuGroup,
+  type UIConfig,
+  type ServiceConfig,
+} from './config.schema'
 
-// Menu types
-export interface MenuItem {
-  ui: string
-  icon: string
-}
+// Re-export types and schemas
+export * from './config.schema'
 
-export interface MenuGroup {
-  title: string
-  icon: string
-  items: MenuItem[]
-}
-
-// UI config types
-export interface UIConfig {
-  name: string
-  basePath: string
-  containerName: string
-  dependsOn: string[]
-  port: number
-  openapiSpec: string
-  vitePort: number
-  needsSpecs?: boolean
-}
-
-// Service config types
-export interface ServiceConfig {
-  dev: number
-  prod: number
-  apiRoute: string
-  containerName: string
-  backendMode?: 'endpoint-only' | 'custom'
-}
+// Parse and validate config
+const parsedConfig: Config = configSchema.parse(configData)
 
 // Exports
-export const MENU = configData.menu as MenuGroup[]
-export const UIS = configData.uis as Record<string, UIConfig>
-export const SERVICES = configData.services as Record<string, ServiceConfig>
+export const MENU = parsedConfig.menu
+export const UIS = parsedConfig.uis
+export const SERVICES = parsedConfig.services
 
 export type ServiceName = keyof typeof SERVICES
 
-export const PORTS = Object.entries(SERVICES).reduce((acc, [key, value]) => {
-  acc[key] = { dev: value.dev, prod: value.prod }
-  return acc
-}, {} as Record<string, { dev: number; prod: number }>)
+export const PORTS = Object.entries(SERVICES).reduce(
+  (acc, [key, value]) => {
+    acc[key] = { dev: value.dev, prod: value.prod }
+    return acc
+  },
+  {} as Record<string, { dev: number; prod: number }>
+)
 
 export function getPort(service: ServiceName): number {
   const serviceConfig = SERVICES[service]
@@ -87,17 +71,23 @@ export function getServiceConfig(service: ServiceName): ServiceConfig {
 }
 
 export function getAllPorts(environment: 'dev' | 'prod' = 'dev'): Record<string, number> {
-  return Object.entries(SERVICES).reduce((acc, [key, value]) => {
-    acc[key] = value[environment]
-    return acc
-  }, {} as Record<string, number>)
+  return Object.entries(SERVICES).reduce(
+    (acc, [key, value]) => {
+      acc[key] = value[environment]
+      return acc
+    },
+    {} as Record<string, number>
+  )
 }
 
 export function getAllApiRoutes(): Record<string, string> {
-  return Object.entries(SERVICES).reduce((acc, [key, value]) => {
-    acc[key] = value.apiRoute
-    return acc
-  }, {} as Record<string, string>)
+  return Object.entries(SERVICES).reduce(
+    (acc, [key, value]) => {
+      acc[key] = value.apiRoute
+      return acc
+    },
+    {} as Record<string, string>
+  )
 }
 
 export function getBackendMode(service: ServiceName): 'endpoint-only' | 'custom' {
