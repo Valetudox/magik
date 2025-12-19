@@ -61,7 +61,7 @@ export interface SummaryStats {
  * Unified task type representing a complete linting target.
  * All task types (backend, frontend, openapi) follow the same structure.
  */
-export type UnifiedTaskType = 'backend' | 'frontend' | 'openapi';
+export type UnifiedTaskType = 'backend' | 'frontend' | 'package' | 'openapi';
 
 export interface UnifiedTask {
   /** Unique identifier, e.g., "backend-decision", "ui-decision", "openapi" */

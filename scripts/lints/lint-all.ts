@@ -9,6 +9,7 @@ import { CIReporter } from './reporters/ci-reporter';
 import { CLIReporter } from './reporters/cli-reporter';
 import { createBackendTasks, BACKEND_TASK_NAMES } from './configs/backend-tasks';
 import { createFrontendTasks, FRONTEND_TASK_NAMES } from './configs/frontend-tasks';
+import { createPackageTasks, PACKAGE_TASK_NAMES } from './configs/package-tasks';
 import type { UnifiedTask } from './types';
 
 // Get root directory
@@ -48,13 +49,40 @@ function discoverServices(prefix: string): string[] {
 }
 
 /**
+ * Discovers packages in the packages directory.
+ */
+function discoverPackages(): string[] {
+  const packagesDir = resolve(rootDir, 'packages');
+  const packages: string[] = [];
+
+  try {
+    const entries = readdirSync(packagesDir);
+
+    for (const entry of entries) {
+      const fullPath = resolve(packagesDir, entry);
+      const packageJsonPath = resolve(fullPath, 'package.json');
+      // Only include directories that have a package.json
+      if (statSync(fullPath).isDirectory() && statSync(packageJsonPath).isFile()) {
+        packages.push(entry);
+      }
+    }
+  } catch {
+    // Directory might not exist
+  }
+
+  return packages.sort();
+}
+
+/**
  * Builds a list of unified tasks based on CLI options.
  */
 function buildUnifiedTasks(options: {
   lintBackends: boolean;
   lintFrontends: boolean;
+  lintPackages: boolean;
   specificBackends?: string[];
   specificFrontends?: string[];
+  specificPackages?: string[];
 }): UnifiedTask[] {
   const tasks: UnifiedTask[] = [];
 
@@ -112,25 +140,60 @@ function buildUnifiedTasks(options: {
     }
   }
 
+  // Build package tasks
+  if (options.lintPackages) {
+    const allPackages = discoverPackages();
+    const packages = options.specificPackages && options.specificPackages.length > 0
+      ? allPackages.filter(p => options.specificPackages!.includes(p))
+      : allPackages;
+
+    // Validate requested packages exist
+    if (options.specificPackages && options.specificPackages.length > 0) {
+      const invalidPackages = options.specificPackages.filter(p => !allPackages.includes(p));
+      if (invalidPackages.length > 0) {
+        console.error(`Error: Invalid package(s): ${invalidPackages.join(', ')}`);
+        console.error(`Available packages: ${allPackages.join(', ')}`);
+        process.exit(1);
+      }
+    }
+
+    for (const pkg of packages) {
+      const subtasks = createPackageTasks(pkg, rootDir);
+      // Only add if there are subtasks to run
+      if (subtasks.length > 0) {
+        tasks.push({
+          id: pkg,
+          name: pkg,
+          type: 'package',
+          subtasks,
+        });
+      }
+    }
+  }
+
   return tasks;
 }
 
 // List command - lists all available services
 program
   .command('list')
-  .description('List all available services')
+  .description('List all available services and packages')
   .option('--backends', 'List only backend services')
   .option('--frontends', 'List only frontend services')
+  .option('--packages', 'List only packages')
   .action((options) => {
     const configPath = resolve(rootDir, 'config/config.json');
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
 
     const backendKeys = Object.keys(config.services || {}).filter(k => k.startsWith('BACKEND_'));
     const frontendKeys = Object.keys(config.uis || {}).filter(k => k.startsWith('UI_'));
+    const packageKeys = discoverPackages();
 
-    if (!options.backends && !options.frontends) {
+    const showAll = !options.backends && !options.frontends && !options.packages;
+
+    if (showAll) {
       // Show all
-      console.log('Available services:\n');
+      console.log('Available services and packages:\n');
 
       if (backendKeys.length > 0) {
         console.log('Backend services:');
@@ -149,6 +212,14 @@ program
         });
         console.log('');
       }
+
+      if (packageKeys.length > 0) {
+        console.log('Packages:');
+        packageKeys.forEach(name => {
+          console.log(`  - ${name}`);
+        });
+        console.log('');
+      }
     } else if (options.backends) {
       console.log('Backend services:');
       backendKeys.forEach(key => {
@@ -161,36 +232,53 @@ program
         const name = key.replace('UI_', 'ui-').toLowerCase();
         console.log(`  - ${name}`);
       });
+    } else if (options.packages) {
+      console.log('Packages:');
+      packageKeys.forEach(name => {
+        console.log(`  - ${name}`);
+      });
     }
   });
 
 // Lint command - lint services with optional filtering
 program
   .command('lint')
-  .description('Lint services (all by default)')
+  .description('Lint services and packages (all by default)')
   .option('--ci', 'Use CI mode (streaming output)')
   .option('--concurrency <number>', 'Max concurrent services to lint', '5')
   .option('--backends [services...]', 'Lint only specified backend services (or all if no services specified)')
   .option('--frontends [services...]', 'Lint only specified frontend services (or all if no services specified)')
+  .option('--packages [packages...]', 'Lint only specified packages (or all if no packages specified)')
   .action(async (options) => {
     const isCIMode = options.ci || false;
 
-    // Determine what to lint
-    const lintBackends = !options.frontends; // Lint backends unless only frontends specified
-    const lintFrontends = !options.backends; // Lint frontends unless only backends specified
+    // Determine what to lint based on which flags are specified
+    const hasBackendsFlag = options.backends !== undefined;
+    const hasFrontendsFlag = options.frontends !== undefined;
+    const hasPackagesFlag = options.packages !== undefined;
+    const hasAnyFlag = hasBackendsFlag || hasFrontendsFlag || hasPackagesFlag;
+
+    // If no flags specified, lint everything. Otherwise, only lint what's specified.
+    const lintBackends = hasAnyFlag ? hasBackendsFlag : true;
+    const lintFrontends = hasAnyFlag ? hasFrontendsFlag : true;
+    const lintPackages = hasAnyFlag ? hasPackagesFlag : true;
+
     const specificBackends = Array.isArray(options.backends) ? options.backends : undefined;
     const specificFrontends = Array.isArray(options.frontends) ? options.frontends : undefined;
+    const specificPackages = Array.isArray(options.packages) ? options.packages : undefined;
 
     // Build unified task list
     const unifiedTasks = buildUnifiedTasks({
       lintBackends,
       lintFrontends,
+      lintPackages,
       specificBackends,
       specificFrontends,
+      specificPackages,
     });
 
     if (unifiedTasks.length === 0) {
-      console.log('No services to lint.');
+      console.log('No services or packages to lint.');
       process.exit(0);
     }
 
@@ -198,6 +286,7 @@ program
     const allTaskNames: Record<string, string> = {
       ...BACKEND_TASK_NAMES,
       ...FRONTEND_TASK_NAMES,
+      ...PACKAGE_TASK_NAMES,
     };
 
     // Create reporter
@@ -208,12 +297,12 @@ program
     // Header
     if (!isCIMode) {
       console.log('\x1b[0;34m========================================\x1b[0m');
-      console.log('\x1b[0;34m  Linting Services\x1b[0m');
+      console.log('\x1b[0;34m  Linting Services & Packages\x1b[0m');
       console.log('\x1b[0;34m========================================\x1b[0m');
       console.log('');
     } else {
       console.log('\x1b[0;34m========================================\x1b[0m');
-      console.log('\x1b[0;34m  Linting Services (CI Mode)\x1b[0m');
+      console.log('\x1b[0;34m  Linting Services & Packages (CI Mode)\x1b[0m');
       console.log('\x1b[0;34m========================================\x1b[0m');
       console.log('');
     }
@@ -221,6 +310,7 @@ program
     // Show what we're linting
     const backendTasks = unifiedTasks.filter(t => t.type === 'backend');
     const frontendTasks = unifiedTasks.filter(t => t.type === 'frontend');
+    const packageTasks = unifiedTasks.filter(t => t.type === 'package');
 
     if (specificBackends && specificBackends.length > 0) {
       console.log(`\x1b[0;36mLinting specific backend(s): ${specificBackends.join(', ')}\x1b[0m`);
@@ -232,6 +322,12 @@ program
       console.log(`\x1b[0;36mLinting specific frontend(s): ${specificFrontends.join(', ')}\x1b[0m`);
     } else if (frontendTasks.length > 0) {
       console.log(`\x1b[0;36mDiscovered ${frontendTasks.length} frontend service(s)\x1b[0m`);
+    }
+
+    if (specificPackages && specificPackages.length > 0) {
+      console.log(`\x1b[0;36mLinting specific package(s): ${specificPackages.join(', ')}\x1b[0m`);
+    } else if (packageTasks.length > 0) {
+      console.log(`\x1b[0;36mDiscovered ${packageTasks.length} package(s)\x1b[0m`);
     }
 
     console.log('');

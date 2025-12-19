@@ -5,7 +5,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 import { createReporterServer, TOOL_NAME } from './reporterServer.js'
 import { sessionExists } from './sessionManager.js'
 
-export interface TypedAgentConfig<TDocument> {
+export type TypedAgentConfig<TDocument> = {
   /** Name of the agent (used for server naming) */
   name: string
   /** Zod schema for the document */
@@ -14,12 +14,10 @@ export interface TypedAgentConfig<TDocument> {
   model?: string
 }
 
-export interface TypedAgentResult<TDocument> {
+export type TypedAgentResult<TDocument> = {
   data: TDocument
   sessionId?: string
 }
-
-const MAX_ITERATIONS = 5
 
 /**
  * Factory function that creates a typed agent with consistent configuration.
@@ -30,6 +28,7 @@ const MAX_ITERATIONS = 5
  * - Continues session and asks agent to fix data on validation failures
  */
 export function createTypedAgent<TDocument>(config: TypedAgentConfig<TDocument>) {
+  const MAX_ITERATIONS = 5
   const { name, documentSchema, model = 'claude-haiku-4-5' } = config
 
   const serverName = `${name}_reporter_server`
@@ -77,7 +76,7 @@ export function createTypedAgent<TDocument>(config: TypedAgentConfig<TDocument>)
       throw new Error(`Failed after ${MAX_ITERATIONS} iterations. Unable to generate valid document.`)
     }
 
-    const shouldResume = sessionId && sessionExists(sessionId)
+    const shouldResume = !!(sessionId && sessionExists(sessionId))
     const server = createReporterServer({
       serverName,
       description: `Submit jq operations to transform the ${name} document.`,

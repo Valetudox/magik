@@ -17,11 +17,11 @@ export function createTodoTools() {
             todo.status === 'completed' ? '✅' : todo.status === 'in_progress' ? '🔄' : '⏳'
           console.log(`   ${icon} [${todo.status}] ${todo.task}`)
         }
-        return {
+        return await Promise.resolve({
           success: true,
           message: `Updated ${todos.length} todo items`,
           todos,
-        }
+        })
       },
     }),
 
@@ -29,9 +29,9 @@ export function createTodoTools() {
       description: 'Read the current todo list to check progress and see remaining tasks',
       parameters: todoReadInput,
       execute: async () => {
-        return {
+        return await Promise.resolve({
           todos: todoList,
-        }
+        })
       },
     }),
   }

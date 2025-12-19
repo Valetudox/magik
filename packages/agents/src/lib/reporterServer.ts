@@ -10,22 +10,21 @@ export function getToolFullName(agentName: string): string {
   return `mcp__${agentName}_reporter_server__${TOOL_NAME}`
 }
 
-export interface ReporterServerConfig {
+export type ReporterServerConfig = {
   /** Name of the MCP server */
   serverName: string
   /** Tool description */
   description?: string
 }
 
-/** Schema for jq operations */
-const jqOperationsSchema = {
-  operations: z.array(z.string()).describe('Array of jq filter expressions to apply sequentially'),
-}
-
 /**
  * Creates a reporter MCP server that accepts jq operations.
  */
 export function createReporterServer(config: ReporterServerConfig) {
+  /** Schema for jq operations */
+  const jqOperationsSchema = {
+    operations: z.array(z.string()).describe('Array of jq filter expressions to apply sequentially'),
+  }
   const {
     serverName,
     description = 'Submit jq operations to transform the document.',
@@ -40,7 +39,7 @@ export function createReporterServer(config: ReporterServerConfig) {
         description,
         jqOperationsSchema,
         async (_args: unknown): Promise<{ content: { type: string; text: string }[]; isError: boolean }> => {
-          return {
+          return await Promise.resolve({
             content: [
               {
                 type: 'text',
@@ -48,7 +47,7 @@ export function createReporterServer(config: ReporterServerConfig) {
               },
             ],
             isError: false,
-          }
+          })
         }
       ),
     ],

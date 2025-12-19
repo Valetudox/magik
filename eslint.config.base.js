@@ -84,6 +84,7 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-unnecessary-condition': 'warn',
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
 
       // Import rules
       'import/order': [

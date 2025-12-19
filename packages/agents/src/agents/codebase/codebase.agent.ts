@@ -3,18 +3,22 @@ import { generateText } from 'ai'
 import { createSystemPrompt } from './codebase.systemPrompt.js'
 import { createCodebaseTools } from './codebase.tools.js'
 
-export interface CodebaseAgentOptions {
+type StepEvent = {
+  toolCalls?: { toolName: string; args: unknown }[]
+}
+
+export type CodebaseAgentOptions = {
   basePath: string
   query: string
   model?: 'claude-opus-4-20250514' | 'claude-sonnet-4-20250514' | 'claude-3-5-haiku-20241022'
-  onStepFinish?: (step: any) => void
+  onStepFinish?: (step: StepEvent) => void
 }
 
-export interface CodebaseAgentResult {
+export type CodebaseAgentResult = {
   response: string
   toolCalls: {
     tool: string
-    args: any
+    args: unknown
   }[]
 }
 
@@ -38,7 +42,7 @@ export async function runCodebaseAgent(
     tools,
     maxSteps: 150,
     onStepFinish: (event) => {
-      if (event.toolCalls && event.toolCalls.length > 0) {
+      if (event.toolCalls.length > 0) {
         for (const toolCall of event.toolCalls) {
           console.log(`\n🔧 Tool: ${toolCall.toolName}`)
           console.log(`   Args: ${JSON.stringify(toolCall.args)}`)
@@ -52,13 +56,11 @@ export async function runCodebaseAgent(
   })
 
   for (const step of result.steps) {
-    if (step.toolCalls) {
-      for (const toolCall of step.toolCalls) {
-        toolCalls.push({
-          tool: toolCall.toolName,
-          args: toolCall.args,
-        })
-      }
+    for (const toolCall of step.toolCalls) {
+      toolCalls.push({
+        tool: toolCall.toolName,
+        args: toolCall.args,
+      })
     }
   }
 
